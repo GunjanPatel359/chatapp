@@ -5,10 +5,397 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "mongodb"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("MONGO_URI")
+}
+
+// temporary status for the user to display after their status 
+type Status {
+  // show the message
+  message  String
+  // status like active, idle, sleep, silent will be shown after avatar
+  status   String
+  // can define duration of the status
+  duration DateTime
+}
+
+// display some awesome color or img behind user avatar 
+enum BannerType {
+  color
+  // img will be available for the nitro users
+  img
+}
+
+type Banner {
+  type   BannerType
+  banner Status
+}
+
+model Profile {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  userName String @unique
+
+  name        String
+  pronouns    String
+  description String
+
+  banner Banner
+
+  imageURL String?
+  email    String  @unique
+  // phoneNumber BigInt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  serverProfile ServerProfile[]
+
+  isDeleted Boolean @default(false)
+}
+
+model ServerProfile {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  userName String @unique
+
+  display Boolean @default(false)
+
+  name        String
+  pronouns    String
+  description String
+  imageURL    String?
+
+  banner Banner
+  status Status
+
+  profileId String  @db.ObjectId
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberId Member?
+
+  isDeleted Boolean @default(false)
+
+  @@index([profileId])
+}
+
+// type ServerRole {
+//   // roleId      Role 
+//   order       Int         
+// }
+
+model Server {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  imageURL String
+
+  inviteCode String @unique
+
+  members  Member[]
+  channels Channel[]
+  category Category[]
+  roles    ServerRoles[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isDeleted Boolean @default(false)
+
+  ownerServerId String @db.ObjectId
+
+}
+model Category {
+  id   String      @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  
+  serverId String @db.ObjectId
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  roles CategoryRoles[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serverId])
+
+  userSpecificCategoryRoles UserSpecificCategoryRoles[]
+
+  userSpecificCategoryMembersIds String[]   @db.ObjectId
+  userSpecificCategoryMembers  Member[] @relation(fields: [userSpecificCategoryMembersIds], references: [id])
+}
+
+enum ChannelType {
+  TEXT
+  AUDIO
+  VIDEO
+}
+model Channel {
+  id   String      @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  type ChannelType @default(TEXT)
+
+  serverId String @db.ObjectId
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  roles ChannelRoles[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serverId])
+
+  userSpecificRoles UserSpecificChannelRoles[]
+
+  userSpecificChannelMembersIds String[]   @db.ObjectId
+  userSpecificChannelMembers  Member[] @relation(fields: [userSpecificChannelMembersIds], references: [id])
+}
+
+// server rolse have permissoin true or either false
+model ServerRoles {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+
+  viewChannel Boolean @default(true)
+
+  manageChannels Boolean @default(false)
+  manageRoles    Boolean @default(false)
+  manageServer   Boolean @default(false)
+  createInvite   Boolean @default(true)
+  changeNickname Boolean @default(true)
+  manageNickname Boolean @default(false)
+  kickMembers    Boolean @default(false)
+  banMembers     Boolean @default(false)
+  timeOutMembers Boolean @default(false)
+
+  sendMessage    Boolean @default(true)
+  attachFiles    Boolean @default(false)
+  // mention        Boolean      @default(true)
+  manageMessage  Boolean @default(false)
+  messageHistory Boolean @default(true)
+
+  connect       Boolean @default(true)
+  speak         Boolean @default(false)
+  video         Boolean @default(false)
+  muteMembers   Boolean @default(false)
+  deafenMembers Boolean @default(false)
+
+  adminPower Boolean @default(false)
+
+  memberIds String[] @db.ObjectId
+  memberId  Member[] @relation(fields: [memberIds], references: [id])
+
+  serverId String @db.ObjectId
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([serverId])
+
+  // categoryRoles CategoryRoles?
+  // channelRoles ChannelRoles?
+  CategoryRoles CategoryRoles[]
+  ChannelRoles ChannelRoles[]
+}
+
+enum RolePermissionRank {
+  denied
+  nuteral
+  granted
+}
+
+// channel roles and category roles have three permission red,gray,green
+// red means permission denied 
+// gray means permission nuteral, or inherite from the category roles, if category also have neutral then inherite from the server roles
+// green means permission accepted 
+// gray means - 0 as it override by any permission
+// green means - 2 
+// red means - 1
+// first for channel , channel roles will be seen if it is 1 or 2 then apply if it is 0 then check in the category , same goes here if it is 0 then check it in the server roles. server roles only have to option  true or false
+model CategoryRoles {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+
+  viewChannel RolePermissionRank @default(nuteral)
+
+  manageChannels RolePermissionRank @default(nuteral)
+  manageRoles    RolePermissionRank @default(nuteral)
+  manageServer   RolePermissionRank @default(nuteral)
+  createInvite   RolePermissionRank @default(nuteral)
+  changeNickname RolePermissionRank @default(nuteral)
+  manageNickname RolePermissionRank @default(nuteral)
+  kickMembers    RolePermissionRank @default(nuteral)
+  banMembers     RolePermissionRank @default(nuteral)
+  timeOutMembers RolePermissionRank @default(nuteral)
+
+  sendMessage    RolePermissionRank @default(nuteral)
+  attachFiles    RolePermissionRank @default(nuteral)
+  // mention        RolePermissionRank      @default(true)
+  manageMessage  RolePermissionRank @default(nuteral)
+  messageHistory RolePermissionRank @default(nuteral)
+
+  connect       RolePermissionRank @default(nuteral)
+  speak         RolePermissionRank @default(nuteral)
+  video         RolePermissionRank @default(nuteral)
+  muteMembers   RolePermissionRank @default(nuteral)
+  deafenMembers RolePermissionRank @default(nuteral)
+
+  adminPower Boolean @default(false)
+
+  serverRoleIds String @db.ObjectId @unique
+  serverRoleId  ServerRoles   @relation(fields: [serverRoleIds], references: [id], onDelete: Cascade)
+
+  categoryIds String  @db.ObjectId
+  categoryId   Category @relation(fields: [categoryIds], references: [id], onDelete: Cascade)
+
+  @@index([categoryIds])
+}
+model ChannelRoles {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+
+  viewChannel RolePermissionRank @default(nuteral)
+
+  manageChannels RolePermissionRank @default(nuteral)
+  manageRoles    RolePermissionRank @default(nuteral)
+  manageServer   RolePermissionRank @default(nuteral)
+  createInvite   RolePermissionRank @default(nuteral)
+  changeNickname RolePermissionRank @default(nuteral)
+  manageNickname RolePermissionRank @default(nuteral)
+  kickMembers    RolePermissionRank @default(nuteral)
+  banMembers     RolePermissionRank @default(nuteral)
+  timeOutMembers RolePermissionRank @default(nuteral)
+
+  sendMessage    RolePermissionRank @default(nuteral)
+  attachFiles    RolePermissionRank @default(nuteral)
+  // mention        RolePermissionRank      @default(true)
+  manageMessage  RolePermissionRank @default(nuteral)
+  messageHistory RolePermissionRank @default(nuteral)
+
+  connect       RolePermissionRank @default(nuteral)
+  speak         RolePermissionRank @default(nuteral)
+  video         RolePermissionRank @default(nuteral)
+  muteMembers   RolePermissionRank @default(nuteral)
+  deafenMembers RolePermissionRank @default(nuteral)
+
+  adminPower Boolean @default(false)
+
+  serverRoleIds String @db.ObjectId @unique
+  serverRoleId  ServerRoles   @relation(fields: [serverRoleIds], references: [id], onDelete: Cascade)
+
+  channelIds String  @db.ObjectId
+  channelId   Channel @relation(fields: [channelIds], references: [id], onDelete: Cascade)
+
+  @@index([channelIds])
+}
+model UserSpecificChannelRoles {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+
+  viewChannel RolePermissionRank @default(nuteral)
+
+  manageChannels RolePermissionRank @default(nuteral)
+  manageRoles    RolePermissionRank @default(nuteral)
+  manageServer   RolePermissionRank @default(nuteral)
+  createInvite   RolePermissionRank @default(nuteral)
+  changeNickname RolePermissionRank @default(nuteral)
+  manageNickname RolePermissionRank @default(nuteral)
+  kickMembers    RolePermissionRank @default(nuteral)
+  banMembers     RolePermissionRank @default(nuteral)
+  timeOutMembers RolePermissionRank @default(nuteral)
+
+  sendMessage    RolePermissionRank @default(nuteral)
+  attachFiles    RolePermissionRank @default(nuteral)
+  // mention        RolePermissionRank      @default(true)
+  manageMessage  RolePermissionRank @default(nuteral)
+  messageHistory RolePermissionRank @default(nuteral)
+
+  connect       RolePermissionRank @default(nuteral)
+  speak         RolePermissionRank @default(nuteral)
+  video         RolePermissionRank @default(nuteral)
+  muteMembers   RolePermissionRank @default(nuteral)
+  deafenMembers RolePermissionRank @default(nuteral)
+
+  adminPower Boolean @default(false)
+
+  memberIds String @db.ObjectId
+  memberId  Member @relation(fields: [memberIds], references: [id])
+
+  channelId String  @db.ObjectId
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+}
+model UserSpecificCategoryRoles {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+
+  viewChannel RolePermissionRank @default(nuteral)
+
+  manageChannels RolePermissionRank @default(nuteral)
+  manageRoles    RolePermissionRank @default(nuteral)
+  manageServer   RolePermissionRank @default(nuteral)
+  createInvite   RolePermissionRank @default(nuteral)
+  changeNickname RolePermissionRank @default(nuteral)
+  manageNickname RolePermissionRank @default(nuteral)
+  kickMembers    RolePermissionRank @default(nuteral)
+  banMembers     RolePermissionRank @default(nuteral)
+  timeOutMembers RolePermissionRank @default(nuteral)
+
+  sendMessage    RolePermissionRank @default(nuteral)
+  attachFiles    RolePermissionRank @default(nuteral)
+  // mention        RolePermissionRank      @default(true)
+  manageMessage  RolePermissionRank @default(nuteral)
+  messageHistory RolePermissionRank @default(nuteral)
+
+  connect       RolePermissionRank @default(nuteral)
+  speak         RolePermissionRank @default(nuteral)
+  video         RolePermissionRank @default(nuteral)
+  muteMembers   RolePermissionRank @default(nuteral)
+  deafenMembers RolePermissionRank @default(nuteral)
+
+  adminPower Boolean @default(false)
+
+  memberIds String @db.ObjectId
+  memberId  Member @relation(fields: [memberIds], references: [id])
+
+  categoryIds String  @db.ObjectId
+  categoryId   Category @relation(fields: [categoryIds], references: [id], onDelete: Cascade)
+
+  @@index([categoryIds])
+}
+
+model Member {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  serverProfileId String        @unique @db.ObjectId
+  serverProfile   ServerProfile @relation(fields: [serverProfileId], references: [id], onDelete: Cascade)
+
+  serverId String @db.ObjectId
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  serverRoles String[]      @db.ObjectId
+  serverRole  ServerRoles[] @relation(fields: [serverRoles], references: [id])
+
+  // categoryRoles String[]       @db.ObjectId
+  // categoryRole  CategoryRoles[] @relation(fields: [categoryRoles], references: [id])
+  
+  // channelRoles String[]       @db.ObjectId
+  // channelRole  ChannelRoles[] @relation(fields: [channelRoles], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serverId])
+
+  userSpecificChannelRoles UserSpecificChannelRoles[]
+  userSpecificCategoryRoles UserSpecificCategoryRoles[]
+
+  userSpecificRolesChannelIds String[]   @db.ObjectId
+  userSpecificRolesChannel  Channel[] @relation(fields: [userSpecificRolesChannelIds], references: [id])
+
+  userSpecificRolesCategoryIds String[]   @db.ObjectId
+  userSpecificRolesCategory  Category[] @relation(fields: [userSpecificRolesCategoryIds], references: [id])
 }
