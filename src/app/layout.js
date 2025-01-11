@@ -8,10 +8,28 @@ export const metadata = {
   description: "organize your mettings easily with chatter",
 };
 
+import {
+  ClerkProvider,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton
+} from '@clerk/nextjs'
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <ClerkProvider>
+          {/* <SignedOut>
+            <SignInButton />
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn> */}
+          {children}
+        </ClerkProvider>
+      </body>
     </html>
   );
 }
