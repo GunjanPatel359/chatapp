@@ -11,7 +11,7 @@ import {
 const SideBar = () => {
     return (
         <div
-            className="fixed top-0 left-0 h-screen w-20 flex flex-col
+            className="h-screen w-20 flex flex-col
       bg-white shadow-lg justify-between"
         >
             <div>
@@ -32,7 +32,7 @@ const SideBar = () => {
             </div>
             <div>
                 <Divider />
-                <SideBarIcon icon={<BsPlus size="32" />} text="Add" />
+                <SideBarIcon icon={<BsPlus size="32" />} text="Create server" />
                 <SideBarIcon icon={<BsGearFill size="22" />} text="Settings" />
             </div>
         </div>
@@ -49,7 +49,7 @@ const SideBarIcon = ({ icon, text = 'tooltip 💡' }) => (
                     bg-white border border-dashed border-indigo-500 hover:bg-indigo-600 text-indigo-500 hover:text-white
                     hover:rounded-xl rounded-3xl transition-all duration-300 ease-linear cursor-pointer shadow-lg group"
     >
-                    <div className='absolute -translate-x-10 w-2 h-8 rounded bg-indigo-500'/>
+                    <div className='absolute -translate-x-10 w-2 h-10 rounded bg-indigo-500'/>
                     {icon}
                 </div>
             </TooltipTrigger>
@@ -65,7 +65,7 @@ const Divider = () => (
     <hr
         className="bg-indigo-500
     border border-indigo-500 rounded-full
-    mx-2"
+    mx-4"
     />
 );
 
