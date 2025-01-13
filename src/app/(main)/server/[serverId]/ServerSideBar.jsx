@@ -73,7 +73,7 @@ const ServerSideBar = () => {
                     </div>
                     <div className="flex-1 ml-2">
                         <h3 className="text-sm font-bold text-indigo-500">gunjanpatel</h3>
-                        <p className="text-xs text-gray-400">Idle</p>
+                        <p className="text-xs text-indigo-400">Idle</p>
                     </div>
                     <div className="flex space-x-2 text-gray-400">
                         <button>
@@ -87,7 +87,7 @@ const ServerSideBar = () => {
 };
 
 const SidebarItem = ({ name, icon: Icon, badge }) => (
-    <div className="flex items-center justify-between p-2 hover:bg-gray-700 rounded-md cursor-pointer">
+    <div className="flex items-center justify-between p-2 hover:bg-gray-200 rounded-md cursor-pointer">
         <div className="flex items-center space-x-2">
             <Icon className="w-5 h-5" />
             <span className="text-sm">{name}</span>
@@ -99,7 +99,7 @@ const SidebarItem = ({ name, icon: Icon, badge }) => (
 const SidebarSection = ({ title, children, isOpen, toggleOpen }) => (
     <div>
         <div
-            className="flex items-center justify-between px-2 py-1 cursor-pointer hover:bg-gray-700 rounded-md"
+            className="flex items-center justify-between px-2 py-1 cursor-pointer hover:bg-gray-200 rounded-md"
             onClick={toggleOpen}
         >
             <span className="text-sm font-semibold uppercase">{title}</span>

@@ -8,47 +8,43 @@ datasource db {
 }
 
 model User {
-  id            String          @id @default(cuid()) @map("_id")
-  email         String          @unique
-  username      String          @unique
-  avatarUrl     String?
-  joinedServers ServerProfile[] @relation("UserServers")
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  Server        Server[]
-  ServerProfile ServerProfile[]
+  id              String          @id @default(cuid()) @map("_id")
+  email           String          @unique
+  username        String          @unique
+  avatarUrl       String?
+  serverProfiles  ServerProfile[] // Servers the user has joined
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  ownedServers    Server[]        // Servers the user owns
 }
 
 model Server {
   id             String          @id @default(cuid()) @map("_id")
   name           String
-  description    String?
+  description    String
+  imageUrl       String?
   ownerId        String
   owner          User            @relation(fields: [ownerId], references: [id])
-  serverRoles    ServerRole[] // Global roles for the server
-  categories     Category[]
-  channels       Channel[] // Non-category channels
-  serverProfiles ServerProfile[] @relation("UserServers")
+  roles          ServerRole[]    // Global roles for the server
+  categories     Category[]      @relation("serverCategory")
+  channels       Channel[]       @relation("serverChannel") // Non-category channels
+  serverProfiles ServerProfile[] // Profiles for users in this server
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
-  ServerProfile  ServerProfile[]
 }
 
 model ServerProfile {
   id                String               @id @default(cuid()) @map("_id")
-  userId            String
-  Userid            String
-  serverId          String
   roles             UserRoleAssignment[] // Roles assigned to this user for the server
-  userCategoryRoles UserCategoryRole[] // User-specific roles for categories
-  userChannelRoles  UserChannelRole[] // User-specific roles for channels
+  categoryRoles     UserCategoryRole[]   // User-specific roles for categories
+  channelRoles      UserChannelRole[]    // User-specific roles for channels
+  userId            String
   user              User                 @relation(fields: [userId], references: [id])
+  serverId          String
   server            Server               @relation(fields: [serverId], references: [id])
-  User              User                 @relation("UserServers", fields: [Userid], references: [id])
-  Server            Server               @relation("UserServers", fields: [Serverid], references: [id])
-  Serverid          String
 
-  @@unique([userId, serverId]) // Ensure one profile per user per server
+  // Ensure one profile per user per server
+  @@unique([userId, serverId])
 }
 
 model ServerRole {
@@ -96,8 +92,8 @@ model Category {
   id               String             @id @default(cuid()) @map("_id")
   name             String
   serverId         String
-  server           Server             @relation(fields: [serverId], references: [id])
-  channels         Channel[] // Channels inside this category
+  server           Server             @relation("serverCategory",fields: [serverId], references: [id])
+  channels         Channel[]          @relation("categoryChannels")
   categoryRoles    CategoryRole[] // Roles for this category
   UserCategoryRole UserCategoryRole[]
 }
@@ -112,14 +108,18 @@ model CategoryRole {
   permissionsId String        @unique
 }
 
+enum ChannelType {
+  TEXT
+  VOICE
+}
 model Channel {
   id              String            @id @default(cuid()) @map("_id")
   name            String
-  type            String // "TEXT", "VOICE"
-  serverId        String
-  server          Server            @relation(fields: [serverId], references: [id])
+  type            ChannelType
+  serverId        String?
+  server          Server?           @relation("serverChannel",fields: [serverId], references: [id])
   categoryId      String?
-  category        Category?         @relation(fields: [categoryId], references: [id])
+  category        Category?         @relation("categoryChannels",fields: [categoryId], references: [id])
   channelRoles    ChannelRole[] // Roles for this channel
   UserChannelRole UserChannelRole[]
 }

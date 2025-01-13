@@ -1,5 +1,6 @@
 "use client"
-
+import { FaCircleCheck } from "react-icons/fa6";
+import { MdError } from "react-icons/md";
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,
@@ -16,10 +17,19 @@ export function Toaster() {
   return (
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, ...props }) {
+        const {variant}=props
+        console.log(variant)
         return (
           <Toast key={id} {...props}>
-            <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
+            <div className="grid">
+              {
+              title && 
+              <ToastTitle>
+                {variant=="success" && <FaCircleCheck className="my-auto mr-2" size={20} />}
+                {variant=="destructive" && <MdError className="my-auto mr-2" size={20} />} 
+                {title}
+              </ToastTitle>
+              }
               {description && (
                 <ToastDescription>{description}</ToastDescription>
               )}

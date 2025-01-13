@@ -1,14 +1,56 @@
 "use server"
 
 import { isAuthUser } from "@/lib/authMiddleware"
+import prisma from "@/lib/db"
 
-export const createServer=async(name,description,categories)=>{
+export const createServer = async (name, description, categories) => {
     try {
-        if(!name && !description){
+        if (!name && !description) {
             throw new Error("name and description is required")
         }
-        const user=await isAuthUser()
-        if(!user) return console.log('no user')
+
+        const user = await isAuthUser()
+        if (!user) {
+            throw new Error("Please login to continue")
+        }
+
+        const server = await prisma.$transaction(async (prisma) => {
+            // Create the server
+            const createdServer = await prisma.server.create({
+                data: {
+                    name,
+                    description,
+                    ownerId: user.id, 
+                    categories: categories.length > 0
+                        ? {
+                            create: categories.map(category => ({
+                                name: category.name.toUpperCase(),
+                                channels: category.channels?.length > 0
+                                    ? {
+                                        create: category.channels.map(channel => ({
+                                            name: channel.name.toLowerCase(),
+                                            type: "TEXT", // Ensure you pass the correct type
+                                        })),
+                                    }
+                                    : undefined, 
+                            })),
+                        }
+                        : undefined,
+                },
+            });
+
+            // Create a server profile for the user
+            await prisma.serverProfile.create({
+                data: {
+                    userId: user.id,
+                    serverId: createdServer.id
+                },
+            });
+
+            return createdServer;
+        });
+        
+        return {success:true}
     } catch (error) {
         throw new Error(error)
     }

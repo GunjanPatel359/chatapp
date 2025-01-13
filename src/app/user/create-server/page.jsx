@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { HiSpeakerWave } from "react-icons/hi2";
 import { FaHashtag } from "react-icons/fa6";
-import { DndContext,closestCenter, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, closestCenter, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import {
     SortableContext,
     arrayMove,
@@ -18,9 +18,10 @@ import {
     useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { createServer } from "@/actions/server";
 
 const CreateServerPage = () => {
-    const {toast}=useToast()
+    const { toast } = useToast()
     const [formData, setFormData] = useState({
         name: "",
         description: "",
@@ -42,34 +43,56 @@ const CreateServerPage = () => {
     };
 
     const handleCategoryNameChange = (id, value) => {
-        // Set a default name if the value is empty
-        const updatedName = value.trim() === "" ? "Default Category" : value;
-    
+        setCategories((prev) =>
+            prev.map((category) =>
+                category.id === id ? { ...category, name: value } : category
+            )
+        );
+    };
+
+    const handleCategoryNameBlur = (id, value) => {
+        const updatedName = value.trim() === "" ? "Default Category" : value.trim();
         setCategories((prev) =>
             prev.map((category) =>
                 category.id === id ? { ...category, name: updatedName } : category
             )
         );
     };
-    
+
     const handleChannelNameChange = (categoryId, channelId, value) => {
-        // Set a default name if the value is empty
-        const updatedName = value.trim() === "" ? "Default Channel" : value;
-    
         setCategories((prev) =>
             prev.map((category) =>
                 category.id === categoryId
                     ? {
-                          ...category,
-                          channels: category.channels.map((channel) =>
-                              channel.id === channelId ? { ...channel, name: updatedName } : channel
-                          ),
-                      }
+                        ...category,
+                        channels: category.channels.map((channel) =>
+                            channel.id === channelId ? { ...channel, name: value } : channel
+                        ),
+                    }
                     : category
             )
         );
     };
-    
+
+    const handleChannelNameBlur = (categoryId, channelId, value) => {
+        const updatedName = value.trim() === "" ? "Default Channel" : value.trim();
+        setCategories((prev) =>
+            prev.map((category) =>
+                category.id === categoryId
+                    ? {
+                        ...category,
+                        channels: category.channels.map((channel) =>
+                            channel.id === channelId
+                                ? { ...channel, name: updatedName }
+                                : channel
+                        ),
+                    }
+                    : category
+            )
+        );
+    };
+
+
 
     // Function to add a new category
     const handleAddCategory = () => {
@@ -118,13 +141,28 @@ const CreateServerPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(formData);
-        try {
+        if (!formData.name && !formData.description) {
             toast({
-                title:"hello working"
+                title: "Error",
+                description: "name and description is required",
+                variant: "destructive"
             })
+        }
+        try {
+            const res = await createServer(formData.name, formData.description, categories)
+            console.log(res)
+            if (res.success) {
+                toast({
+                    title: "Success",
+                    description: "Server created successfully",
+                    variant: "success"
+                })
+            }
         } catch (error) {
-            console.log(error)
+            toast({
+                title: "error",
+                variant: "destructive"
+            })
         }
     };
 
@@ -141,7 +179,7 @@ const CreateServerPage = () => {
                 {/* Server Structure Preview */}
                 <div className="w-1/3 bg-gray-100 m-8 p-4 rounded-lg shadow-md">
                     <h2 className="text-lg font-bold text-indigo-700">Server Structure</h2>
-                    <div className="h-[2px] bg-indigo-300 mb-1"/>
+                    <div className="h-[2px] bg-indigo-300 mb-1" />
                     <ChannelManager
                         categories={categories}
                         setCategories={setCategories}
@@ -149,6 +187,8 @@ const CreateServerPage = () => {
                         handleAddChannel={handleAddChannel}
                         handleDeleteChannel={handleDeleteChannel}
                         handleChannelNameChange={handleChannelNameChange}
+                        handleCategoryNameBlur={handleCategoryNameBlur}
+                        handleChannelNameBlur={handleChannelNameBlur}
                     />
                 </div>
 
@@ -198,7 +238,7 @@ const CreateServerPage = () => {
                                         Reorder Categories
                                     </h1>
                                     <CategoryManager
-                                    setCategories={setCategories}
+                                        setCategories={setCategories}
                                         categories={categories}
                                         handleDeleteCategory={handleDeleteCategory}
                                     />
@@ -237,8 +277,8 @@ const SortableChannel = ({ id, channel, handleDeleteChannel }) => {
         >
             {/* Drag Handle */}
             <div className="mr-2 cursor-grab"
-            {...attributes}
-            {...listeners}>
+                {...attributes}
+                {...listeners}>
                 <GripVertical size={20} className="text-indigo-500" />
             </div>
 
@@ -250,6 +290,7 @@ const SortableChannel = ({ id, channel, handleDeleteChannel }) => {
                 type="text"
                 value={channel.name}
                 onChange={(e) => channel.onChange(e.target.value)}
+                onBlur={(e) => channel.onBlur(e.target.value)}
                 className="flex-1 px-1 py-1 rounded-md text-indigo-500 font-semibold bg-transparent text-sm lowercase outline-none"
             />
 
@@ -271,6 +312,8 @@ const ChannelManager = ({
     handleAddChannel,
     handleDeleteChannel,
     handleChannelNameChange,
+    handleCategoryNameBlur,
+    handleChannelNameBlur
 }) => {
     const [activeChannel, setActiveChannel] = useState(null);
 
@@ -352,7 +395,7 @@ const ChannelManager = ({
 
     return (
         <DndContext
-        sensors={sensors}
+            sensors={sensors}
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
@@ -369,6 +412,7 @@ const ChannelManager = ({
                                 onChange={(e) =>
                                     handleCategoryNameChange(category.id, e.target.value)
                                 }
+                                onBlur={(e)=>handleCategoryNameBlur(category.id,e.target.value)}
                                 className="w-full my-1 rounded-md text-indigo-600 bg-transparent text-sm uppercase outline-none border-none font-semibold"
                             />
                             <div
@@ -400,6 +444,11 @@ const ChannelManager = ({
                                                     channel.id,
                                                     value
                                                 ),
+                                            onBlur: (value) => handleChannelNameBlur(
+                                                category.id,
+                                                channel.id,
+                                                value
+                                            )
                                         }}
                                         handleDeleteChannel={handleDeleteChannel}
                                     />
@@ -442,9 +491,9 @@ const SortableItem = ({ id, category, handleDeleteCategory }) => {
             className="flex items-center mb-2 bg-gray-200 p-2 rounded-md"
         >
             {/* Drag Handle */}
-            <div className="mr-2 cursor-grab"             
-            {...attributes}
-            {...listeners}>
+            <div className="mr-2 cursor-grab"
+                {...attributes}
+                {...listeners}>
                 <GripVertical size={20} className="text-indigo-500" />
             </div>
 

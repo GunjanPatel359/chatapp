@@ -1,8 +1,9 @@
-import HomeSideBar from "./HomeSideBar"
+import ServerSideBar from "./ServerSideBar"
+
 const LayoutPage=({children})=>{
     return (
         <div className="flex">
-            <HomeSideBar />
+            <ServerSideBar />
             {children}
         </div>
     )
