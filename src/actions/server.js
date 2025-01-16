@@ -55,4 +55,3 @@ export const createServer = async (name, description, categories) => {
         throw new Error(error)
     }
 }
-

@@ -31,8 +31,12 @@ const SideBar = () => {
 
     useEffect(()=>{
         const initiatePage=async()=>{
-            const userJoinedServer = await getAllUserJoinedServer();
-            setServer(userJoinedServer.joinedServer)
+            try {
+                const userJoinedServer = await getAllUserJoinedServer();
+                setServer(userJoinedServer.joinedServer)
+            } catch (error) {
+                console.log(error)
+            }
         }
         initiatePage()
     },[])

@@ -1,116 +1,139 @@
 "use client"
-import React, { useState } from "react";
-import { FaUserFriends, FaHashtag, FaBell, FaCog } from "react-icons/fa";
+import { getServer } from "@/actions/user";
+import { useParams, useRouter } from "next/navigation";
+import React, { useEffect, useMemo, useState } from "react";
+import { FaHashtag } from "react-icons/fa";
 import { HiSpeakerphone } from "react-icons/hi";
 import { IoSettingsSharp } from "react-icons/io5";
-import { MdForum } from "react-icons/md";
+import { IoIosArrowForward } from "react-icons/io";
+import { HiSpeakerWave } from "react-icons/hi2";
+import { FaPlus } from "react-icons/fa6";
 
 const ServerSideBar = () => {
-    // State to handle collapsible sections
-    const [isForumsOpen, setForumsOpen] = useState(true);
-    const [isGeneralOpen, setGeneralOpen] = useState(true);
+    const router=useRouter()
+    const params = useParams()
+    const [server, setServer] = useState(null)
+    const serverId=useMemo(()=>params.serverId,[params?.serverId])
+    const channelId=useMemo(()=>params.channelId,[params?.channelId])
+
+    useEffect(() => {
+        const initiatePage = async () => {
+            try {
+                const res = await getServer(serverId)
+                if (res.success) {
+                    setServer(res.server)
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        if (serverId) {
+            initiatePage()
+        }
+    }, [serverId])
 
     return (
         <div className="w-[300px] h-screen bg-gray-50 text-indigo-500 flex flex-col">
-            {/* Server Header */}
-            <div className="p-2 pl-4 bg-gray-100 flex items-center space-x-2 border-b border-gray-100 shadow">
-                {/* <img
-                    src="https://via.placeholder.com/40"
-                    alt="Server Icon"
-                    className="w-10 h-10 rounded-full"
-                /> */}
-                <div className="w-10 h-10 rounded-full bg-gray-400">
-                    N
+            {server ? (
+                <>
+                    {/* Server Header */}
+                    <div className="p-2 pl-4 h-12 bg-gray-100 flex items-center space-x-2 border-b border-gray-100 shadow">
+                    {/* <img src="https://via.placeholder.com/40" alt="Server Icon" className="w-10 h-10 rounded-full"/> */}
+                        <div className="w-8 h-8 rounded-full bg-gray-400">
+                            {server?.imageUrl? (
+                                <div>
+                                    <Image src={server.imageUrl} alt="Server Icon" className="w-8 h-8" />
+                                </div>
+                            ):(
+                                <div className="text-3xl text-center translate-y-[-4px]">
+                                    {`${(server.name).slice(0,1).toLowerCase()}`}
+                                </div>
+                            )}
+                        </div>
+                        <span className="font-bold text-indigo-500">{server.name}</span>
+                    </div>
+
+                    <div className="p-2 flex-1 overflow-y-auto scrollbar-none">
+                            {server && server.categories.map((category) => {
+                                return (
+                                    <SidebarSection key={category.id} category={category} channelId={channelId} serverId={serverId} />
+                                )
+                            })}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-1 space-x-2 border-t border-indigo-200 bg-gray-200 shadow">
+                        <div className="hover:bg-gray-50 flex items-center p-2 py-1 rounded cursor-pointer">
+                            <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white">
+                                G
+                            </div>
+                            <div className="flex-1 ml-2">
+                                <h3 className="text-sm font-bold text-indigo-500">gunjanpatel</h3>
+                                <p className="text-xs text-indigo-400">Idle</p>
+                            </div>
+                            <div className="flex space-x-2 text-gray-400">
+                                <button>
+                                    <IoSettingsSharp size={22} className="text-indigo-500 transition-all duration-500 hover:rotate-90" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </>
+                ) : (
+                <div>
+                    Loading
                 </div>
-                <span className="font-bold text-indigo-500">Neon</span>
-            </div>
-
-            {/* Menu Items */}
-            <div className="p-4 space-y-4 flex-1 overflow-y-auto scrollbar-hide">
-                {/* Section: Welcome */}
-                <SidebarSection title="welcome">
-                    <SidebarItem name="announcements" icon={FaBell} />
-                    <SidebarItem name="neon-blog" icon={FaHashtag} />
-                    <SidebarItem name="neon-changelog" icon={FaHashtag} />
-                </SidebarSection>
-
-                {/* Section: Forums */}
-                <SidebarSection
-                    title="Forums"
-                    isOpen={isForumsOpen}
-                    toggleOpen={() => setForumsOpen(!isForumsOpen)}
-                >
-                    {isForumsOpen && (
-                        <>
-                            <SidebarItem name="questions-answers" icon={MdForum} badge="12 New" />
-                            <SidebarItem name="feedback" icon={MdForum} badge="2 New" />
-                        </>
-                    )}
-                </SidebarSection>
-
-                {/* Section: General */}
-                <SidebarSection
-                    title="General"
-                    isOpen={isGeneralOpen}
-                    toggleOpen={() => setGeneralOpen(!isGeneralOpen)}
-                >
-                    {isGeneralOpen && (
-                        <>
-                            <SidebarItem name="neon-status" icon={FaHashtag} />
-                            <SidebarItem name="gpt-help" icon={FaHashtag} />
-                            <SidebarItem name="neon-early-access" icon={FaHashtag} />
-                            <SidebarItem name="showcase" icon={FaHashtag} badge="1 New" />
-                        </>
-                    )}
-                </SidebarSection>
-            </div>
-
-            {/* Footer */}
-            <div className="p-1 space-x-2 border-t border-indigo-200">
-                <div className="hover:bg-gray-200 flex items-center p-2 rounded cursor-pointer">
-                    <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white">
-                        G
-                    </div>
-                    <div className="flex-1 ml-2">
-                        <h3 className="text-sm font-bold text-indigo-500">gunjanpatel</h3>
-                        <p className="text-xs text-indigo-400">Idle</p>
-                    </div>
-                    <div className="flex space-x-2 text-gray-400">
-                        <button>
-                            <IoSettingsSharp size={22} className="text-indigo-500 transition-all duration-500 hover:rotate-90" />
-                        </button>
-                    </div>
-                </div>
-            </div>
+            )
+            }
         </div>
     );
 };
 
-const SidebarItem = ({ name, icon: Icon, badge }) => (
-    <div className="flex items-center justify-between p-2 hover:bg-gray-200 rounded-md cursor-pointer">
-        <div className="flex items-center space-x-2">
-            <Icon className="w-5 h-5" />
-            <span className="text-sm">{name}</span>
+const SidebarItem = ({channel,channelId,serverId}) => {
+    console.log(channelId)
+    const router=useRouter()
+    return (
+    <div className={`flex items-center justify-between p-2 rounded-md cursor-pointer ${channelId==channel.id?"bg-gray-300":"hover:bg-gray-200"}`} onClick={()=>router.push(`/server/${serverId}/channel/${channel.id}`)}>
+        <div className="flex items-center space-x-1">
+            {channel.type=="TEXT" && <FaHashtag />}
+            {channel.type=="VOICE" && <HiSpeakerWave />}
+            <span className="text-sm">{channel.name}</span>
         </div>
-        {badge && <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">{badge}</span>}
     </div>
-);
+)}
 
-const SidebarSection = ({ title, children, isOpen, toggleOpen }) => (
-    <div>
-        <div
-            className="flex items-center justify-between px-2 py-1 cursor-pointer hover:bg-gray-200 rounded-md"
-            onClick={toggleOpen}
-        >
-            <span className="text-sm font-semibold uppercase">{title}</span>
-            {toggleOpen && (
-                <span className="text-sm">
-                    {isOpen ? "-" : "+"}
+const SidebarSection = ({ category,channelId,serverId }) => {
+    const [isOpen, setIsOpen] = useState(true)
+    return (
+        <div>
+            <div
+                className="flex items-center justify-between px-2 py-1 cursor-pointer hover:bg-gray-200 rounded-md"
+            >
+                <span onClick={() => setIsOpen(!isOpen)} className="flex-1">
+                    <span className="text-sm cursor-pointer pr-1">
+                        <IoIosArrowForward className={`transition-all my-auto ${isOpen ? "rotate-90" : ""} inline`} />
+                    </span>
+                    <span className="text-sm font-semibold uppercase">{category.name}</span>
                 </span>
-            )}
+                <span>
+                    <FaPlus className="my-auto" size={15} />
+                </span>
+            </div>
+            <div className={`${isOpen?"h-full opacity-100":"h-0 overflow-hidden opacity-0"} transition-all duration-500`}>
+            {category?.channels &&
+                (
+                    <div>
+                        {category.channels.map((channel) => {
+                            return (
+                                <SidebarItem channel={channel} channelId={channelId} serverId={serverId} />
+                            )
+                        })}
+                    </div>
+                )
+            }
+            </div>
         </div>
-        {children}
-    </div>
-);
+    )
+}
 
 export default ServerSideBar;
