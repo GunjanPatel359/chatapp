@@ -158,9 +158,17 @@ const CreateServerPage = () => {
                     variant: "success"
                 })
             }
+            if(!res.success){
+                toast({
+                    title: "Error",
+                    description: res.message,
+                    variant: "destructive"
+                })
+            }
         } catch (error) {
             toast({
-                title: "error",
+                title: "Error",
+                description: error.message,
                 variant: "destructive"
             })
         }

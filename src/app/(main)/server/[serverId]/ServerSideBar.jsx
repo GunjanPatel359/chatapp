@@ -39,7 +39,7 @@ const ServerSideBar = () => {
                     {/* Server Header */}
                     <div className="p-2 pl-4 h-12 bg-gray-100 flex items-center space-x-2 border-b border-gray-100 shadow">
                     {/* <img src="https://via.placeholder.com/40" alt="Server Icon" className="w-10 h-10 rounded-full"/> */}
-                        <div className="w-8 h-8 rounded-full bg-gray-400">
+                        <div className="w-8 h-8 rounded-full bg-white">
                             {server?.imageUrl? (
                                 <div>
                                     <Image src={server.imageUrl} alt="Server Icon" className="w-8 h-8" />
@@ -93,7 +93,7 @@ const SidebarItem = ({channel,channelId,serverId}) => {
     console.log(channelId)
     const router=useRouter()
     return (
-    <div className={`flex items-center justify-between p-2 rounded-md cursor-pointer ${channelId==channel.id?"bg-gray-300":"hover:bg-gray-200"}`} onClick={()=>router.push(`/server/${serverId}/channel/${channel.id}`)}>
+    <div className={`flex items-center justify-between p-2 py-1 rounded-md cursor-pointer ${channelId==channel.id?"bg-gray-300":"hover:bg-gray-200"}`} onClick={()=>router.push(`/server/${serverId}/channel/${channel.id}`)}>
         <div className="flex items-center space-x-1">
             {channel.type=="TEXT" && <FaHashtag />}
             {channel.type=="VOICE" && <HiSpeakerWave />}
@@ -105,9 +105,9 @@ const SidebarItem = ({channel,channelId,serverId}) => {
 const SidebarSection = ({ category,channelId,serverId }) => {
     const [isOpen, setIsOpen] = useState(true)
     return (
-        <div>
+        <div className="mb-[2px]">
             <div
-                className="flex items-center justify-between px-2 py-1 cursor-pointer hover:bg-gray-200 rounded-md"
+                className="flex items-center justify-between px-2 py-1 cursor-pointer hover:bg-gray-200 rounded-md mb-[1px]"
             >
                 <span onClick={() => setIsOpen(!isOpen)} className="flex-1">
                     <span className="text-sm cursor-pointer pr-1">
@@ -122,7 +122,7 @@ const SidebarSection = ({ category,channelId,serverId }) => {
             <div className={`${isOpen?"h-full opacity-100":"h-0 overflow-hidden opacity-0"} transition-all duration-500`}>
             {category?.channels &&
                 (
-                    <div>
+                    <div className="flex flex-col space-y-[2px]">
                         {category.channels.map((channel) => {
                             return (
                                 <SidebarItem channel={channel} channelId={channelId} serverId={serverId} />

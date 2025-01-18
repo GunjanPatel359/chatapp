@@ -6,12 +6,12 @@ import prisma from "@/lib/db"
 export const createServer = async (name, description, categories) => {
     try {
         if (!name && !description) {
-            throw new Error("name and description is required")
+            return {success:false,message:"name and description is required"}
         }
 
         const user = await isAuthUser()
         if (!user) {
-            throw new Error("Please login to continue")
+            return {success:false,message:"Please login to continue"}
         }
 
         const server = await prisma.$transaction(async (prisma) => {
@@ -55,3 +55,4 @@ export const createServer = async (name, description, categories) => {
         throw new Error(error)
     }
 }
+
