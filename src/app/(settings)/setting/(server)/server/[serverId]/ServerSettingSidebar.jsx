@@ -20,7 +20,7 @@ const ServerSettingSideBar = () => {
             <h2 className="font-bold uppercase text-indigo-500 mb-1">Guni Esports</h2>
             <div className="h-[1px] w-full bg-indigo-400 mb-1" />
             <div className="space-y-[2px]">
-                <div onClick={()=>router.push("server-info")} className={`flex rounded cursor-pointer ${active == "server-info" ? "bg-gray-300" : "hover:bg-gray-200"}`}>
+                <div onClick={()=>router.push(`${serverId}/server-info`)} className={`flex rounded cursor-pointer ${active == "server-info" ? "bg-gray-300" : "hover:bg-gray-200"}`}>
                     <div className="my-auto mx-1 text-indigo-500">
                         <IoInformationCircle size={20} />
                     </div>
@@ -28,7 +28,7 @@ const ServerSettingSideBar = () => {
                         Overview
                     </div>
                 </div>
-                <div onClick={()=>router.push("server-roles")} className={`flex rounded cursor-pointer ${active == "server-roles" ? "bg-gray-300" : "hover:bg-gray-200"}`}>
+                <div onClick={()=>router.push(`${serverId}/server-roles`)} className={`flex rounded cursor-pointer ${active == "server-roles" ? "bg-gray-300" : "hover:bg-gray-200"}`}>
                     <div className="my-auto mx-1 text-indigo-500">
                         <HiMiniUsers size={20} />
                     </div>
@@ -36,7 +36,7 @@ const ServerSettingSideBar = () => {
                         Roles
                     </div>
                 </div>
-                <div onClick={()=>router.push("server-categories")} className={`flex rounded cursor-pointer ${active == "server-categories" ? "bg-gray-300" : "hover:bg-gray-200"}`}>
+                <div onClick={()=>router.push(`${serverId}/server-categories`)} className={`flex rounded cursor-pointer ${active == "server-categories" ? "bg-gray-300" : "hover:bg-gray-200"}`}>
                     <div className="my-auto mx-1 text-indigo-500">
                         <MdEventNote size={20} />
                     </div>
@@ -44,7 +44,7 @@ const ServerSettingSideBar = () => {
                         Categories
                     </div>
                 </div>
-                <div onClick={()=>router.push("server-channels")} className={`flex rounded cursor-pointer ${active == "server-channels" ? "bg-gray-300" : "hover:bg-gray-200"}`}>
+                <div onClick={()=>router.push(`${serverId}/server-channels`)} className={`flex rounded cursor-pointer ${active == "server-channels" ? "bg-gray-300" : "hover:bg-gray-200"}`}>
                     <div className="my-auto mx-1 text-indigo-500">
                         <MdOutlineNotes size={20} />
                     </div>
@@ -57,7 +57,7 @@ const ServerSettingSideBar = () => {
             <h2 className="font-bold uppercase text-indigo-500 mt-1 mb-1">User Management</h2>
             <div className="h-[1px] w-full bg-indigo-400 mb-1" />
             <div>
-                <div onClick={()=>router.push("manage-members")} className={`flex rounded cursor-pointer ${active == "manage-members" ? "bg-gray-300" : "hover:bg-gray-200"}`}>
+                <div onClick={()=>router.push(`${serverId}/manage-members`)} className={`flex rounded cursor-pointer ${active == "manage-members" ? "bg-gray-300" : "hover:bg-gray-200"}`}>
                     <div className="my-auto mx-1 text-indigo-500">
                         <FaUsersCog size={20} />
                     </div>
@@ -65,7 +65,7 @@ const ServerSettingSideBar = () => {
                         Members
                     </div>
                 </div>
-                <div onClick={()=>router.push("manage-invites")} className={`flex rounded cursor-pointer ${active == "manage-invites" ? "bg-gray-300" : "hover:bg-gray-200"}`}>
+                <div onClick={()=>router.push(`${serverId}/manage-invites`)} className={`flex rounded cursor-pointer ${active == "manage-invites" ? "bg-gray-300" : "hover:bg-gray-200"}`}>
                     <div className="my-auto mx-1 text-indigo-500">
                         <FaUserPlus size={20} />
                     </div>

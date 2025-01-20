@@ -90,7 +90,6 @@ const ServerSideBar = () => {
 };
 
 const SidebarItem = ({channel,channelId,serverId}) => {
-    console.log(channelId)
     const router=useRouter()
     return (
     <div className={`flex items-center justify-between p-2 py-1 rounded-md cursor-pointer ${channelId==channel.id?"bg-gray-300":"hover:bg-gray-200"}`} onClick={()=>router.push(`/server/${serverId}/channel/${channel.id}`)}>
@@ -123,9 +122,9 @@ const SidebarSection = ({ category,channelId,serverId }) => {
             {category?.channels &&
                 (
                     <div className="flex flex-col space-y-[2px]">
-                        {category.channels.map((channel) => {
+                        {category.channels.map((channel,id) => {
                             return (
-                                <SidebarItem channel={channel} channelId={channelId} serverId={serverId} />
+                                <SidebarItem key={id} channel={channel} channelId={channelId} serverId={serverId} />
                             )
                         })}
                     </div>

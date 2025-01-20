@@ -81,8 +81,7 @@ const SideBarServerIcon = ({ icon, text = "tooltip 💡",active,itemId }) => {
             <Tooltip>
                 <TooltipTrigger asChild>
                     <div 
-                    className={`relative flex items-center justify-center h-12 w-12 mt-2 mb-2 mx-auto transition-all duration-300 ease-linear cursor-pointer shadow-lg group hover:rounded-2xl
-                    ${active?"bg-indigo-600 text-white rounded-xl":"border border-dashed border-indigo-500 hover:bg-indigo-600 text-indigo-500 hover:text-white hover:rounded-2xl rounded-3xl bg-white"} `}
+                    className={`relative flex items-center justify-center h-12 w-12 mt-2 mb-2 mx-auto transition-all duration-300 ease-linear cursor-pointer shadow-lg group hover:rounded-2xl ${active?"bg-indigo-600 text-white rounded-xl":"border border-dashed border-indigo-500 hover:bg-indigo-600 text-indigo-500 hover:text-white hover:rounded-2xl rounded-3xl bg-white"}`}
                     onClick={()=>router.push(`/server/${itemId}`)}
                     >
                         <div className={`absolute -translate-x-10 w-2 rounded bg-indigo-500 transition-all ${active?"h-10":"h-4 group-hover:h-8"}`} />

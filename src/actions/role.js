@@ -219,17 +219,17 @@ export const editServerRole = async (serverId, roleId, role) => {
         //     }
         // })
     } catch (error) {
-        throw new Error("editServerRole",error)
+        throw new Error("editServerRole", error)
     }
 }
 //testing needed
-export const addMemberToServerRole=async(serverId,roleId,userServerProfileId)=>{
+export const addMemberToServerRole = async (serverId, roleId, userServerProfileId) => {
     try {
-        if(!serverId && !roleId && !userServerProfileId){
+        if (!serverId && !roleId && !userServerProfileId) {
             throw new Error("serverId,roleId,userServerProfileId are required")
         }
-        const user=await isAuthUser()
-        if(!user){
+        const user = await isAuthUser()
+        if (!user) {
             throw new Error("user is not authenticated")
         }
         const userServerProfile = await prisma.serverProfile.findUnique({
@@ -239,17 +239,17 @@ export const addMemberToServerRole=async(serverId,roleId,userServerProfileId)=>{
                     serverId: serverId
                 }
             },
-            include:{
-                roles:{
-                    include:{
-                        role:true
+            include: {
+                roles: {
+                    include: {
+                        role: true
                     }
                 }
             }
         })
         if (!userServerProfile) throw new Error("user server profile not found")
-        const checkAlreadyAssignedTheRole=userServerProfile.roles.map((item)=>item.id)
-        if(checkAlreadyAssignedTheRole.includes(roleId)){
+        const checkAlreadyAssignedTheRole = userServerProfile.roles.map((item) => item.id)
+        if (checkAlreadyAssignedTheRole.includes(roleId)) {
             throw new Error("role is already assigned to the user")
         }
         const server = await prisma.server.findUnique({
@@ -267,7 +267,7 @@ export const addMemberToServerRole=async(serverId,roleId,userServerProfileId)=>{
         })
         if (!server) throw new Error("server not found")
         if (server.ownerId == user.id) {
-            const roleAssignment=await prisma.userRoleAssignment.create({
+            const roleAssignment = await prisma.userRoleAssignment.create({
                 data: {
                     userId: userServerProfile.id,
                     roleId: roleId,
@@ -306,7 +306,7 @@ export const addMemberToServerRole=async(serverId,roleId,userServerProfileId)=>{
             throw new Error("you can not edit your own or upper roles than you")
         }
         if (permissionCheck == "success") {
-            const roleAssignment=await prisma.userRoleAssignment.create({
+            const roleAssignment = await prisma.userRoleAssignment.create({
                 data: {
                     userId: userServerProfile.id,
                     roleId: roleId,
@@ -318,7 +318,72 @@ export const addMemberToServerRole=async(serverId,roleId,userServerProfileId)=>{
         }
         throw new Error("somthing went wrong")
     } catch (error) {
-        throw new Error("addMemberToServerRole",error)
+        throw new Error("addMemberToServerRole", error)
     }
 }
 
+// testing needed
+export const getServerRoles = async (serverId) => {
+    try {
+        if (!serverId) {
+            throw new Error("serverId is required")
+        }
+        const user = await isAuthUser()
+        if(!user){
+            throw new Error("you are not logged in")
+        }
+        const userServerProfile = await prisma.serverProfile.findUnique({
+            where: {
+                userId_serverId: {
+                    userId: user.id,
+                    serverId: serverId
+                }
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            }
+        })
+        if (!userServerProfile) {
+            throw new Error("you are not a member of this server")
+        }
+        const server = await prisma.server.findUnique({
+            where: {
+                id: serverId,
+                serverProfiles: {
+                    some: {
+                        id: userServerProfile.id
+                    }
+                }
+            },
+            include: {
+                roles: true
+            }
+        })
+        if (!server) throw new Error("server not found")
+        if (server.ownerId == user.id) {
+            return {
+                success: true,
+                roles: JSON.parse(JSON.stringify(server.roles))
+            }
+        }
+        if (userServerProfile.roles?.length == 0) {
+            throw new Error("you do not have permission to edit this role")
+        }
+        const userServerRolesPermission = userServerProfile.roles.map(role => {
+            if (role.role.adminPermission || role.role.manageRoles) {
+                return role.role.id
+            }
+        }).filter(role => role !== undefined)
+        if (userServerRolesPermission.length == 0) {
+            throw new Error("you do not have permission")
+        }
+        return {success:true,roles: JSON.parse(JSON.stringify(server.roles))}
+    } catch (error) {
+        console.log(error)
+        throw new Error(error)
+    }
+}
