@@ -37,8 +37,9 @@ const ServerSideBar = () => {
             {server ? (
                 <>
                     {/* Server Header */}
-                    <div className="p-2 pl-4 h-12 bg-gray-100 flex items-center space-x-2 border-b border-gray-100 shadow">
+                    <div className="p-2 pl-4 h-12 bg-gray-100 flex justify-between space-x-2 border-b border-gray-100 shadow">
                     {/* <img src="https://via.placeholder.com/40" alt="Server Icon" className="w-10 h-10 rounded-full"/> */}
+                    <div className="flex">
                         <div className="w-8 h-8 rounded-full bg-white">
                             {server?.imageUrl? (
                                 <div>
@@ -50,7 +51,11 @@ const ServerSideBar = () => {
                                 </div>
                             )}
                         </div>
-                        <span className="font-bold text-indigo-500">{server.name}</span>
+                        <span className="font-bold text-indigo-500 my-auto ml-2">{server.name}</span>
+                    </div>
+                        <div className="flex">
+                            <IoSettingsSharp size={22} className="inline text-indigo-500 transition-all duration-500 hover:rotate-90 my-auto cursor-pointer mx-1" onClick={()=>router.push(`/setting/server/${serverId}`)} />
+                        </div>
                     </div>
 
                     <div className="p-2 flex-1 overflow-y-auto scrollbar-none">

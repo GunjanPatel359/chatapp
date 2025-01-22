@@ -179,7 +179,7 @@ const SortableRow = ({ id, roleName, roleCount }) => {
       style={style}
       {...attributes} 
       {...listeners}
-      className="border-b hover:bg-gray-300"
+      className="border-b hover:bg-gray-300 rounded"
     >
       <td className="w-[2px] px-2 pr-0 py-2" >
         <BsThreeDotsVertical className="cursor-grab" />

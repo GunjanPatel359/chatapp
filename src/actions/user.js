@@ -57,3 +57,48 @@ export const getServer = async (serverId) =>{
         throw new Error(error);
     }
 }
+
+export const serverSettingFetch=async(serverId)=>{
+    try {
+        if(!serverId){
+            throw new Error("Please provide a server id")
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            throw new Error("Please login to continue")
+        }
+        let serverSetting=await prisma.serverProfile.findUnique({
+            where:{
+                userId_serverId:{
+                serverId:serverId,
+                userId:user.id
+                }
+            },
+            include:{
+                roles:{
+                    include:{
+                        role:true
+                    }
+                },
+                server:true
+            }
+        })
+        if(!serverSetting){
+            throw new Error("Server setting not found")
+        }
+        if(serverSetting.server.ownerId==user.id){
+            return {success:true,serverSetting:JSON.parse(JSON.stringify(serverSetting)),user:JSON.parse(JSON.stringify(user))}
+        }
+        serverSetting.roles=serverSetting.roles.sort((a,b)=>a.role.order - b.role.order)
+        const isVerifiedToLook = serverSetting.roles.some(
+            (role) => role.role.adminPermission || role.role.manageRoles
+        );
+        if(!isVerifiedToLook){
+            return {success:false,message:"You don't have permission to view this server"}
+        }
+        return {success:true,serverSetting:JSON.parse(JSON.stringify(serverSetting)),user:JSON.parse(JSON.stringify(user))}
+    } catch (error) {
+        console.log(error)
+        throw new Error(`serverSettingFetch: ${error}`)
+    }
+}
