@@ -5,13 +5,13 @@ import prisma from "@/lib/db"
 
 export const createServer = async (name, description, categories) => {
     try {
-        if (!name && !description) {
-            return {success:false,message:"name and description is required"}
+        if (!name || !description) {
+            return { success: false, message: "name and description is required" }
         }
 
         const user = await isAuthUser()
         if (!user) {
-            return {success:false,message:"Please login to continue"}
+            return { success: false, message: "Please login to continue" }
         }
 
         const server = await prisma.$transaction(async (prisma) => {
@@ -20,7 +20,7 @@ export const createServer = async (name, description, categories) => {
                 data: {
                     name,
                     description,
-                    ownerId: user.id, 
+                    ownerId: user.id,
                     categories: categories.length > 0
                         ? {
                             create: categories.map(category => ({
@@ -32,10 +32,13 @@ export const createServer = async (name, description, categories) => {
                                             type: "TEXT", // Ensure you pass the correct type
                                         })),
                                     }
-                                    : undefined, 
+                                    : undefined,
                             })),
                         }
                         : undefined,
+                    defaultServerRole: {
+                        create: true
+                    }
                 },
             });
 
@@ -49,10 +52,9 @@ export const createServer = async (name, description, categories) => {
 
             return createdServer;
         });
-        
-        return {success:true}
+
+        return { success: true }
     } catch (error) {
         throw new Error(error)
     }
 }
-
