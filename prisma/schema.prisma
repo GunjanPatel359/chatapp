@@ -59,10 +59,10 @@ model DefaultServerRole {
   server   Server @relation(fields: [serverId], references: [id])
 
   // general permission
-  viewChannel    Boolean @default(false)
+  viewChannel Boolean @default(false)
 
   //member permission
-  createInvite   Boolean @default(true)
+  createInvite Boolean @default(true)
   // changeNickname Boolean @default(true)
   // manageNickname Boolean @default(false)
 
@@ -72,9 +72,9 @@ model DefaultServerRole {
   seemessageHistory Boolean @default(true)
 
   // voice channel permission
-  connect       Boolean @default(true)
-  speak         Boolean @default(false)
-  video         Boolean @default(false)
+  connect Boolean @default(true)
+  speak   Boolean @default(false)
+  video   Boolean @default(false)
 }
 
 model DefaultCategoryRole {
@@ -85,10 +85,10 @@ model DefaultCategoryRole {
   category   Category @relation(fields: [categoryId], references: [id])
 
   // general permission
-  viewChannel    Boolean @default(false)
+  viewChannel Boolean @default(false)
 
   //member permission
-  createInvite   Boolean @default(true)
+  createInvite Boolean @default(true)
   // changeNickname Boolean @default(true)
   // manageNickname Boolean @default(false)
 
@@ -98,22 +98,22 @@ model DefaultCategoryRole {
   seemessageHistory Boolean @default(true)
 
   // voice channel permission
-  connect       Boolean @default(true)
-  speak         Boolean @default(false)
-  video         Boolean @default(false)
+  connect Boolean @default(true)
+  speak   Boolean @default(false)
+  video   Boolean @default(false)
 }
 
 model DefaultChannelRole {
   id   String @id @default(cuid()) @map("_id")
   name String @default("everyone")
 
-  channelId      String  @unique
-  channel        Channel @relation(fields: [channelId], references: [id])
+  channelId   String  @unique
+  channel     Channel @relation(fields: [channelId], references: [id])
   // general permission
-  viewChannel    Boolean @default(false)
+  viewChannel Boolean @default(false)
 
   //member permission
-  createInvite   Boolean @default(true)
+  createInvite Boolean @default(true)
   // changeNickname Boolean @default(true)
   // manageNickname Boolean @default(false)
 
@@ -123,9 +123,9 @@ model DefaultChannelRole {
   seemessageHistory Boolean @default(true)
 
   // voice channel permission
-  connect       Boolean @default(true)
-  speak         Boolean @default(false)
-  video         Boolean @default(false)
+  connect Boolean @default(true)
+  speak   Boolean @default(false)
+  video   Boolean @default(false)
 }
 
 model ServerRole {
@@ -199,7 +199,10 @@ model CategoryRole {
   manageRoles    PermissionType @default(NEUTRAL)
 
   //member permission
-  createInvite PermissionType @default(NEUTRAL)
+  createInvite   PermissionType @default(NEUTRAL)
+  kickMembers    Boolean        @default(false)
+  banMembers     Boolean        @default(false)
+  timeOutMembers Boolean        @default(false)
 
   // text channel permission
   sendMessage       PermissionType @default(NEUTRAL)
@@ -223,6 +226,7 @@ enum ChannelType {
 model Channel {
   id           String        @id @default(cuid()) @map("_id")
   name         String
+  description  String
   type         ChannelType
   // serverId        String
   // server          Server           @relation("serverChannel",fields: [serverId], references: [id])
@@ -241,25 +245,27 @@ model ChannelRole {
   serverRole   ServerRole @relation(fields: [serverRoleId], references: [id])
 
   //general permission
-  viewChannel    Boolean @default(true)
-  manageChannels Boolean @default(false)
-  manageRoles    Boolean @default(false)
+  viewChannel    PermissionType @default(NEUTRAL)
+  manageRoles    PermissionType @default(NEUTRAL)
+  kickMembers    Boolean        @default(false)
+  banMembers     Boolean        @default(false)
+  timeOutMembers Boolean        @default(false)
 
   // member permission
-  createInvite Boolean @default(true)
+  createInvite PermissionType @default(NEUTRAL)
 
   // text channel permission
-  sendMessage       Boolean @default(true)
-  attachFiles       Boolean @default(false)
-  manageMessage     Boolean @default(false)
-  seemessageHistory Boolean @default(true)
+  sendMessage       PermissionType @default(NEUTRAL)
+  attachFiles       PermissionType @default(NEUTRAL)
+  manageMessage     PermissionType @default(NEUTRAL)
+  seemessageHistory PermissionType @default(NEUTRAL)
 
   // voice channel permission
-  connect       Boolean @default(true)
-  speak         Boolean @default(false)
-  video         Boolean @default(false)
-  muteMembers   Boolean @default(false)
-  deafenMembers Boolean @default(false)
+  connect       PermissionType @default(NEUTRAL)
+  speak         PermissionType @default(NEUTRAL)
+  video         PermissionType @default(NEUTRAL)
+  muteMembers   PermissionType @default(NEUTRAL)
+  deafenMembers PermissionType @default(NEUTRAL)
 }
 
 model UserRoleAssignment {

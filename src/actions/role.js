@@ -3,6 +3,18 @@
 import { isAuthUser } from "@/lib/authMiddleware"
 import prisma from "@/lib/db"
 
+// Helper function to assign the role
+const helperAssignServerRole = async (userServerProfileId, roleId) => {
+    const roleAssignment = await prisma.userRoleAssignment.create({
+        data: {
+            serverProfileId: userServerProfileId,
+            roleId,
+        },
+    });
+    console.log("Role Assigned:", roleAssignment);
+    return { success: true, message: "Role assigned successfully." };
+};
+
 const helperCreateServerRole = async (serverId, role, order) => {
     const newRole = await prisma.serverRole.create({
         data: {
@@ -44,17 +56,9 @@ const helperUpdateServerRole = async (roleId, role) => {
     return { success: true, message: "Role updated successfully." };
 };
 
-// Helper function to assign the role
-const helperAssignServerRole = async (userServerProfileId, roleId) => {
-    const roleAssignment = await prisma.userRoleAssignment.create({
-        data: {
-            serverProfileId: userServerProfileId,
-            roleId,
-        },
-    });
-    console.log("Role Assigned:", roleAssignment);
-    return { success: true, message: "Role assigned successfully." };
-};
+const helperRemoveServerRole = async ()=>{
+
+}
 
 // Helper function to assign the role 
 const helperAddCategoryRole = async (categoryId, roleId) => {
@@ -68,7 +72,7 @@ const helperAddCategoryRole = async (categoryId, roleId) => {
     return { success: true, message: "role added to category" }
 }
 
-const helperUpdateCategoryRole=async (categoryRoleId,updates)=>{
+const helperUpdateCategoryRole = async (categoryRoleId, updates) => {
     const updateCategoryRole = await prisma.categoryRole.update({
         where: {
             id: categoryRoleId
@@ -78,6 +82,9 @@ const helperUpdateCategoryRole=async (categoryRoleId,updates)=>{
             manageChannels: updates?.manageChannels || "NEUTRAL",
             manageRoles: updates?.manageRoles || "NEUTRAL",
             createInvite: updates?.createInvite || "NEUTRAL",
+            kickMembers: updates?.kickMembers || "NEUTRAL",
+            banMembers: updates?.banMembers || "NEUTRAL",
+            timeOutMembers: updates?.timeOutMembers || "NEUTRAL",
             sendMessage: updates?.sendMessage || "NEUTRAL",
             attachFiles: updates?.attachFiles || "NEUTRAL",
             manageMessage: updates?.manageMessage || "NEUTRAL",
@@ -93,18 +100,141 @@ const helperUpdateCategoryRole=async (categoryRoleId,updates)=>{
     return { success: true, message: "role added to category" }
 }
 
-const helperAddChannelRole=async(channelId,roleId)=>{
+const helperRemoveCategoryRole = async (categoryRoleId) => {
+    const removeCategoryRole = await prisma.categoryRole.delete({
+        where: {
+            id: categoryRoleId
+        }
+    })
+    console.log(removeCategoryRole)
+    return { success: true, message: "role removed from category" }
+}
+
+const helperAddChannelRole = async (channelId, roleId) => {
     const addChannelRole = await prisma.channelRole.create({
-        data:{
-            channelId:channelId,
-            serverRoleId:roleId
+        data: {
+            channelId: channelId,
+            serverRoleId: roleId
         }
     })
     console.log(addChannelRole)
-    return {success:true,message:"role added to server"}
+    return { success: true, message: "role added to server" }
+}
+
+const helperUpdateChannelRole = async (channelRoleId, updates) => {
+    const updateChannelRole = await prisma.channelRole.update({
+        where: {
+            id: channelRoleId
+        },
+        data: {
+            viewChannel: updates?.viewChannel || "NEUTRAL",
+            manageRoles: updates?.manageRoles || "NEUTRAL",
+            createInvite: updates?.createInvite || "NEUTRAL",
+            kickMembers: updates?.kickMembers || "NEUTRAL",
+            banMembers: updates?.banMembers || "NEUTRAL",
+            timeOutMembers: updates?.timeOutMembers || "NEUTRAL",
+            sendMessage: updates?.sendMessage || "NEUTRAL",
+            attachFiles: updates?.attachFiles || "NEUTRAL",
+            manageMessage: updates?.manageMessage || "NEUTRAL",
+            seemessageHistory: updates?.seemessageHistory || "NEUTRAL",
+            connect: updates?.connect || "NEUTRAL",
+            speak: updates?.speak || "NEUTRAL",
+            video: updates?.video || "NEUTRAL",
+            muteMembers: updates?.muteMembers || "NEUTRAL",
+            deafenMembers: updates?.deafenMembers || "NEUTRAL",
+        }
+    })
+    console.log(updateChannelRole)
+    return { success: true, message: "role updated in channel" }
+}
+
+const helperRemoveChannelRole = async (channelRoleId) => {
+    const deleteChannelRole = await prisma.channelRole.delete({
+        where: {
+            id: channelRoleId
+        }
+    })
+    console.log(deleteChannelRole)
+    return { success: true, message: "role deleted from channel" }
 }
 
 //////////////////////////////////////////////////
+
+//testing needed
+export const addMemberToServerRole = async (serverId, roleId, userServerProfileId) => {
+    try {
+        if (!serverId || !roleId || !userServerProfileId) {
+            throw new Error("serverId, roleId, and userServerProfileId are required.");
+        }
+
+        const user = await isAuthUser();
+        if (!user) {
+            throw new Error("User is not authenticated.");
+        }
+
+        // Fetch the user's server profile with roles
+        const userServerProfile = await prisma.serverProfile.findUnique({
+            where: { userId_serverId: { userId: user.id, serverId } },
+            include: { roles: { include: { role: true } } },
+        });
+        if (!userServerProfile) throw new Error("User server profile not found.");
+
+        // Check if the role is already assigned
+        const isRoleAlreadyAssigned = await prisma.userRoleAssignment.findFirst({
+            where: { serverProfileId: userServerProfileId, roleId },
+        });
+        if (isRoleAlreadyAssigned) {
+            throw new Error("Role is already assigned to the user.");
+        }
+
+        // Fetch the server and include its roles
+        const server = await prisma.server.findUnique({
+            where: { id: serverId },
+            select: {
+                roles: true
+            }
+        });
+        if (!server) throw new Error("Server not found.");
+        // Validate if the role exists in the server
+        const roleExistsInServer = server.roles.some((role) => role.id === roleId);
+        if (!roleExistsInServer) {
+            throw new Error("The specified role does not belong to this server.");
+        }
+
+        // If the user is the server owner, directly assign the role
+        if (server.ownerId === user.id) {
+            return await helperAssignServerRole(userServerProfileId, roleId);
+        }
+
+        // Order the user's roles by hierarchy
+        const orderedUserRoles = userServerProfile.roles
+            .sort((a, b) => a.role.order - b.role.order);
+
+        // Find the user's highest role with permissions
+        const highestRoleWithPermission = orderedUserRoles.find(
+            (role) => role.role.adminPermission || role.role.manageRoles
+        );
+        if (!highestRoleWithPermission) {
+            throw new Error("You do not have permission to manage this role.");
+        }
+
+        // Fetch the role to be assigned
+        const roleToAssign = await prisma.serverRole.findUnique({ where: { id: roleId } });
+        if (!roleToAssign) throw new Error("Role not found.");
+
+        // Validate role hierarchy: cannot assign roles higher or equal to the user's highest role
+        if (roleToAssign.order <= highestRoleWithPermission.role.order) {
+            throw new Error("You cannot assign roles higher or equal to your own.");
+        }
+
+        // Assign the role
+        return await helperAssignServerRole(userServerProfileId, roleId);
+    } catch (error) {
+        console.error("addMemberToServerRole Error:", error.message);
+        throw new Error(error.message || "An error occurred while assigning the role.");
+    }
+};
+
 // testing needed
 export const getServerRoles = async (serverId) => {
     try {
@@ -288,81 +418,6 @@ export const editServerRole = async (serverId, roleId, role) => {
     }
 };
 
-//testing needed
-export const addMemberToServerRole = async (serverId, roleId, userServerProfileId) => {
-    try {
-        if (!serverId || !roleId || !userServerProfileId) {
-            throw new Error("serverId, roleId, and userServerProfileId are required.");
-        }
-
-        const user = await isAuthUser();
-        if (!user) {
-            throw new Error("User is not authenticated.");
-        }
-
-        // Fetch the user's server profile with roles
-        const userServerProfile = await prisma.serverProfile.findUnique({
-            where: { userId_serverId: { userId: user.id, serverId } },
-            include: { roles: { include: { role: true } } },
-        });
-        if (!userServerProfile) throw new Error("User server profile not found.");
-
-        // Check if the role is already assigned
-        const isRoleAlreadyAssigned = await prisma.userRoleAssignment.findFirst({
-            where: { serverProfileId: userServerProfileId, roleId },
-        });
-        if (isRoleAlreadyAssigned) {
-            throw new Error("Role is already assigned to the user.");
-        }
-
-        // Fetch the server and include its roles
-        const server = await prisma.server.findUnique({
-            where: { id: serverId },
-            select: {
-                roles: true
-            }
-        });
-        if (!server) throw new Error("Server not found.");
-        // Validate if the role exists in the server
-        const roleExistsInServer = server.roles.some((role) => role.id === roleId);
-        if (!roleExistsInServer) {
-            throw new Error("The specified role does not belong to this server.");
-        }
-
-        // If the user is the server owner, directly assign the role
-        if (server.ownerId === user.id) {
-            return await helperAssignServerRole(userServerProfileId, roleId);
-        }
-
-        // Order the user's roles by hierarchy
-        const orderedUserRoles = userServerProfile.roles
-            .sort((a, b) => a.role.order - b.role.order);
-
-        // Find the user's highest role with permissions
-        const highestRoleWithPermission = orderedUserRoles.find(
-            (role) => role.role.adminPermission || role.role.manageRoles
-        );
-        if (!highestRoleWithPermission) {
-            throw new Error("You do not have permission to manage this role.");
-        }
-
-        // Fetch the role to be assigned
-        const roleToAssign = await prisma.serverRole.findUnique({ where: { id: roleId } });
-        if (!roleToAssign) throw new Error("Role not found.");
-
-        // Validate role hierarchy: cannot assign roles higher or equal to the user's highest role
-        if (roleToAssign.order <= highestRoleWithPermission.role.order) {
-            throw new Error("You cannot assign roles higher or equal to your own.");
-        }
-
-        // Assign the role
-        return await helperAssignServerRole(userServerProfileId, roleId);
-    } catch (error) {
-        console.error("addMemberToServerRole Error:", error.message);
-        throw new Error(error.message || "An error occurred while assigning the role.");
-    }
-};
-
 // test needed
 export const addCategoryRole = async (serverId, categoryId, roleId) => {
     try {
@@ -433,7 +488,7 @@ export const addCategoryRole = async (serverId, categoryId, roleId) => {
             include: {
                 categoryRoles: {
                     where: {
-                        serverRoleId: { in: [...userServerRolesId,roleId] },
+                        serverRoleId: { in: [...userServerRolesId, roleId] },
                         manageRoles: { in: ["ALLOW", "NEUTRAL"] }
                     },
                     include: { serverRole: true }
@@ -447,7 +502,7 @@ export const addCategoryRole = async (serverId, categoryId, roleId) => {
 
         // Sorting by serverRole order
         const categoryRoles = category.categoryRoles.sort((a, b) => a.serverRole.order - b.serverRole.order);
-        
+
         let manageRoleFoundBeforeTarget = false;
 
         for (const role of categoryRoles) {
@@ -521,23 +576,24 @@ export const updateCategoryRole = async (serverId, categoryId, categoryRoleId, u
         if (server.categories.length === 0) {
             throw new Error("No matching categories found in this server.");
         }
-        const verifyCategoryRoleExist=await prisma.categoryRole.findUnique({
-            where:{
-                id:categoryId
+        const verifyCategoryRoleExist = await prisma.categoryRole.findUnique({
+            where: {
+                id: categoryRoleId,
+                categoryId
             }
         })
-        if(!verifyCategoryRoleExist){
+        if (!verifyCategoryRoleExist) {
             throw new Error("Category Role does not exist")
         }
         if (server.ownerId == user.id) {
-            return await helperUpdateCategoryRole(categoryRoleId,updates)
+            return await helperUpdateCategoryRole(categoryRoleId, updates)
         }
         if (!userServerProfile.roles.length) {
             throw new Error("You do not have any permission")
         }
         const isAdmin = userServerProfile.roles.some((item) => item.role.adminPermission)
         if (isAdmin) {
-             return await helperUpdateCategoryRole(categoryRoleId,updates)
+            return await helperUpdateCategoryRole(categoryRoleId, updates)
         }
         const userServerRolesId = userServerProfile.roles.map((item) => item.roleId)
         const category = await prisma.category.findUnique({
@@ -547,8 +603,8 @@ export const updateCategoryRole = async (serverId, categoryId, categoryRoleId, u
             include: {
                 categoryRoles: {
                     where: {
-                        serverRoleId:{
-                            in:[...userServerRolesId,categoryId]
+                        serverRoleId: {
+                            in: [...userServerRolesId, categoryRoleId]
                         },
                         manageRoles: {
                             in: ["ALLOW", "NEUTRAL"],
@@ -587,118 +643,672 @@ export const updateCategoryRole = async (serverId, categoryId, categoryRoleId, u
         if (!manageRoleFoundBeforeTarget) {
             throw new Error("You do not have permission to add this role");
         }
-        return await helperUpdateCategoryRole(categoryRoleId,updates)
+        return await helperUpdateCategoryRole(categoryRoleId, updates)
     } catch (error) {
         console.error("Error updating CategoryRole:", error.message);
         throw new Error("Unable to update category role");
     }
 };
 
-//working
+// remaining
 export const addChannelRole = async (serverId, categoryId, channelId, roleId) => {
     try {
-        if(!serverId || !categoryId || !channelId || !roleId){
-            throw new Error("please provide all the fields")
+        if (!serverId || !categoryId || !channelId || !roleId) {
+            throw new Error("Please provide all the fields");
         }
-        const user=await isAuthUser()
-        if(!user){
-            throw new Error("use not defined")
+
+        const user = await isAuthUser();
+        if (!user) {
+            throw new Error("User not defined");
         }
-        const userServerProfile=await prisma.serverProfile.findUnique({
-            where:{
-                userId_serverId:{
-                    userId:user.id,
-                    serverId:serverId
-                }
+
+        const userServerProfile = await prisma.serverProfile.findUnique({
+            where: {
+                userId_serverId: {
+                    userId: user.id,
+                    serverId: serverId,
+                },
             },
-            include:{
-                roles:{
-                    include:{
-                        role:true,
-                    }
-                }
-            }
-        })
-        if(!userServerProfile){
-            throw new  Error("you are not member of this server")
+            include: {
+                roles: {
+                    include: {
+                        role: true,
+                    },
+                },
+            },
+        });
+
+        if (!userServerProfile) {
+            throw new Error("You are not a member of this server");
         }
+
         const verifyChannel = await prisma.channel.findFirst({
             where: {
                 id: channelId,
                 category: {
                     id: categoryId,
-                    serverId: serverId, // Filter by serverId within the related category
+                    serverId: serverId, // Ensure the category belongs to the server
                 },
-                channelRoles: {
-                    some: {
-                        serverRoleId: roleId, // Check if the channel has the specified role
-                    },
-                },
-            }
+            },
         });
-        
+
         if (!verifyChannel) {
-            throw new Error("Channel does not belong to the specified server or does not have the specified role.");
+            throw new Error("Channel does not belong to the specified server.");
         }
-        
-        const server=await prisma.server.findUnique({
-            where:{
-                id:serverId
+
+        const categoryRoleAlreadyExistVerify = await prisma.channelRole.findFirst({
+            where: {
+                channelId,
+                serverRoleId: roleId
             }
         })
-        if(!server){
-            throw new Error("server not found")
+        if (categoryRoleAlreadyExistVerify) {
+            throw new Error("Role already exists in this channel");
         }
-        if(server.ownerId==user.id){
-            return await helperAddChannelRole()
-        }
-        if(!userServerProfile.roles.length){
-            throw new Error("you do not have any roles")
-        }
-        const isAdmin=userServerProfile.roles.some((item)=>item.role.adminPermission)
-        if(isAdmin){
-            return await helperAddChannelRole(channelId,roleId)
-        }
-        const userServerProfileIds=userServerProfile.roles.map((item)=>item.roleId)
+        const server = await prisma.server.findUnique({
+            where: { id: serverId },
+        });
 
-        let channelRoles=await prisma.channel.findFirst({
-            where:{
-                id:channelId
-            },
-            include:{
-                channelRoles:{
-                    where:{
-                        serverRoleId:{
-                            in:[...userServerProfileIds,roleId]
-                        },
+        if (!server) {
+            throw new Error("Server not found");
+        }
+
+        // If user is the server owner, allow action
+        if (server.ownerId === user.id) {
+            return await helperAddChannelRole(channelId, roleId);
+        }
+
+        if (!userServerProfile.roles.length) {
+            throw new Error("You do not have any roles");
+        }
+
+        // If user has admin permission, allow action
+        const isAdmin = userServerProfile.roles.some((item) => item.role.adminPermission);
+        if (isAdmin) {
+            return await helperAddChannelRole(channelId, roleId);
+        }
+
+        const userServerProfileIds = userServerProfile.roles.map((item) => item.roleId);
+
+        let channelRoles = await prisma.channel.findFirst({
+            where: { id: channelId },
+            include: {
+                channelRoles: {
+                    where: {
+                        serverRoleId: { in: [...userServerProfileIds, roleId] },
                     },
-                    include:{
-                        serverRole:true
+                    include: { serverRole: true },
+                },
+            },
+        });
+
+        let categoryRoles = await prisma.category.findFirst({
+            where: { id: categoryId },
+            include: {
+                categoryRoles: {
+                    where: {
+                        serverRoleId: { in: [...userServerProfileIds, roleId] },
+                    },
+                    include: { serverRole: true },
+                },
+            },
+        });
+
+        // Filter and sort roles
+        channelRoles.channelRoles = channelRoles.channelRoles
+            .sort((a, b) => a.serverRole.order - b.serverRole.order);
+
+        categoryRoles.categoryRoles = categoryRoles.categoryRoles
+            .sort((a, b) => a.serverRole.order - b.serverRole.order);
+
+        let visitedRoles = [];
+        let isVerify = false;
+
+        for (const role of channelRoles.channelRoles) {
+            const { serverRoleId, manageRoles } = role;
+            if (serverRoleId === roleId) {
+                break;
+            }
+
+            visitedRoles.push(serverRoleId);
+
+            if (manageRoles === "ALLOW") {
+                isVerify = true;
+                break;
+            }
+
+            if (manageRoles === "NEUTRAL") {
+                const temp = categoryRoles.categoryRoles.find((item) => item.serverRoleId === serverRoleId);
+                if (temp) {
+                    if (temp.manageRoles === "ALLOW" || (temp.manageRoles === "NEUTRAL" && temp.serverRole.manageRoles)) {
+                        isVerify = true;
+                        break;
+                    }
+                } else {
+                    if (role.serverRole.manageRoles) {
+                        isVerify = true;
+                        break;
                     }
                 }
             }
-        })
-        let categoryRoles=await prisma.category.findFirst({
-            where:{
-                id:categoryId
-            },
-            include:{
-                categoryRoles:{
-                    where:{
-                        serverRoleId:{
-                            in:[...userServerProfileIds,roleId]
-                        }
-                    },
-                    include:{
-                        serverRole:true
-                    }
-                }
-            }
-        })
-        // channelRoles.channelRoles=channelRoles.channelRoles.sort((a,b)=>a.serverRole.order - b.serverRole.order)
+        }
 
+        if (isVerify) {
+            return await helperAddChannelRole(channelId, roleId);
+        }
+
+        if (visitedRoles.length > 0) {
+            categoryRoles.categoryRoles = categoryRoles.categoryRoles.filter(
+                (item) => !visitedRoles.includes(item.serverRoleId)
+            );
+        }
+
+        if (categoryRoles.categoryRoles.length === 0) {
+            throw new Error("Permission denied");
+        }
+
+        for (const role of categoryRoles.categoryRoles) {
+            const { serverRoleId, manageRoles } = role;
+            if (serverRoleId === roleId) {
+                break;
+            }
+
+            if (manageRoles === "ALLOW") {
+                isVerify = true;
+                break;
+            }
+
+            if (manageRoles === "NEUTRAL" && role.serverRole.manageRoles) {
+                isVerify = true;
+                break;
+            }
+        }
+
+        if (isVerify) {
+            return await helperAddChannelRole(channelId, roleId);
+        }
+
+        throw new Error("Something went wrong");
     } catch (error) {
-        console.log(error)
-        throw new Error(error)
+        console.error("Error in addChannelRole:", error);
+        throw new Error(error.message || "Something went wrong");
+    }
+};
+
+export const updateChannelRole = async (serverId, categoryId, channelId, channelRoleId, updates) => {
+    try {
+        if (!serverId || !categoryId || !channelId || !channelRoleId || !updates) {
+            throw new Error("Please provide all the fields");
+        }
+
+        const user = await isAuthUser();
+        if (!user) {
+            throw new Error("User not defined");
+        }
+
+        const userServerProfile = await prisma.serverProfile.findUnique({
+            where: {
+                userId_serverId: {
+                    userId: user.id,
+                    serverId: serverId,
+                },
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true,
+                    },
+                },
+            },
+        });
+
+        if (!userServerProfile) {
+            throw new Error("You are not a member of this server");
+        }
+
+        const verifyChannel = await prisma.channel.findFirst({
+            where: {
+                id: channelId,
+                category: {
+                    id: categoryId,
+                    serverId: serverId, // Ensure the category belongs to the server
+                },
+            },
+        });
+
+        if (!verifyChannel) {
+            throw new Error("Channel does not belong to the specified server.");
+        }
+
+        const channelRole = await prisma.channelRole.findFirst({
+            where: {
+                id: channelRoleId,
+                channelId,
+            }
+        })
+        if (!channelRole) {
+            throw new Error("Role do not exists in this channel");
+        }
+        const server = await prisma.server.findUnique({
+            where: { id: serverId },
+        });
+
+        if (!server) {
+            throw new Error("Server not found");
+        }
+
+        // If user is the server owner, allow action
+        if (server.ownerId === user.id) {
+            return await helperUpdateChannelRole(channelRoleId, updates);
+        }
+
+        if (!userServerProfile.roles.length) {
+            throw new Error("You do not have any roles");
+        }
+
+        // If user has admin permission, allow action
+        const isAdmin = userServerProfile.roles.some((item) => item.role.adminPermission);
+        if (isAdmin) {
+            return await helperUpdateChannelRole(channelRoleId, updates);
+        }
+
+        const userServerProfileIds = userServerProfile.roles.map((item) => item.roleId);
+
+        let channelRoles = await prisma.channel.findFirst({
+            where: { id: channelId },
+            include: {
+                channelRoles: {
+                    where: {
+                        serverRoleId: { in: [...userServerProfileIds, channelRole.serverRoleId] },
+                    },
+                    include: { serverRole: true },
+                },
+            },
+        });
+
+        let categoryRoles = await prisma.category.findFirst({
+            where: { id: categoryId },
+            include: {
+                categoryRoles: {
+                    where: {
+                        serverRoleId: { in: [...userServerProfileIds, channelRole.serverRoleId] },
+                    },
+                    include: { serverRole: true },
+                },
+            },
+        });
+
+        // Filter and sort roles
+        channelRoles.channelRoles = channelRoles.channelRoles
+            .sort((a, b) => a.serverRole.order - b.serverRole.order);
+
+        categoryRoles.categoryRoles = categoryRoles.categoryRoles
+            .sort((a, b) => a.serverRole.order - b.serverRole.order);
+
+        let visitedRoles = [];
+        let isVerify = false;
+
+        for (const role of channelRoles.channelRoles) {
+            const { serverRoleId, manageRoles } = role;
+            if (serverRoleId === channelRole.serverRoleId) {
+                break;
+            }
+
+            visitedRoles.push(serverRoleId);
+
+            if (manageRoles === "ALLOW") {
+                isVerify = true;
+                break;
+            }
+
+            if (manageRoles === "NEUTRAL") {
+                const temp = categoryRoles.categoryRoles.find((item) => item.serverRoleId === serverRoleId);
+                if (temp) {
+                    if (temp.manageRoles === "ALLOW" || (temp.manageRoles === "NEUTRAL" && temp.serverRole.manageRoles)) {
+                        isVerify = true;
+                        break;
+                    }
+                } else {
+                    if (role.serverRole.manageRoles) {
+                        isVerify = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (isVerify) {
+            return await helperUpdateChannelRole(channelRoleId, updates);
+        }
+
+        if (visitedRoles.length > 0) {
+            categoryRoles.categoryRoles = categoryRoles.categoryRoles.filter(
+                (item) => !visitedRoles.includes(item.serverRoleId)
+            );
+        }
+
+        if (categoryRoles.categoryRoles.length === 0) {
+            throw new Error("Permission denied");
+        }
+
+        for (const role of categoryRoles.categoryRoles) {
+            const { serverRoleId, manageRoles } = role;
+            if (serverRoleId === channelRole.serverRoleId) {
+                break;
+            }
+
+            if (manageRoles === "ALLOW") {
+                isVerify = true;
+                break;
+            }
+
+            if (manageRoles === "NEUTRAL" && role.serverRole.manageRoles) {
+                isVerify = true;
+                break;
+            }
+        }
+
+        if (isVerify) {
+            return await helperUpdateChannelRole(channelRoleId, updates);
+        }
+
+        throw new Error("Something went wrong");
+    } catch (error) {
+        console.error("Error in updateChannelRole:", error);
+        throw new Error(error.message || "Something went wrong");
     }
 }
+
+export const removeChannelRole = async (serverId, categoryId, channelId, channelRoleId) => {
+    try {
+        if (!serverId || !categoryId || !channelId || !channelRoleId) {
+            throw new Error("Server ID, Category ID, Channel ID, Channel Role ID are required");
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            throw new Error("User is not authenticated");
+        }
+        const userServerProfile = await prisma.serverProfile.findUnique({
+            where: {
+                userId_serverId: {
+                    userId: user.id,
+                    serverId: serverId
+                }
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true,
+                    },
+                },
+            },
+        })
+        if (!userServerProfile) {
+            throw new Error("User is not a member of the server");
+        }
+        const isVerifyChannel = await prisma.channel.findFirst({
+            where: {
+                id: channelId,
+                categoryId: categoryId,
+            },
+            include: {
+                category: true
+            }
+        })
+        if (!isVerifyChannel) {
+            throw new Error("Channel not found");
+        }
+        if (isVerifyChannel.category.serverId != serverId) {
+            throw new Error("Channel is not in the server");
+        }
+        const channelRole = await prisma.channelRole.findFirst({
+            where: {
+                id: channelRoleId,
+                channelId,
+            }
+        })
+        if (!channelRole) {
+            throw new Error("Role do not exists in this channel");
+        }
+        const server = await prisma.server.findUnique({
+            where: { id: serverId },
+        });
+
+        if (!server) {
+            throw new Error("Server not found");
+        }
+
+        // If user is the server owner, allow action
+        if (server.ownerId === user.id) {
+            return await helperRemoveChannelRole(channelRoleId)
+        }
+
+        if (!userServerProfile.roles.length) {
+            throw new Error("You do not have any roles");
+        }
+
+        // If user has admin permission, allow action
+        const isAdmin = userServerProfile.roles.some((item) => item.role.adminPermission);
+        if (isAdmin) {
+            return await helperRemoveChannelRole(channelRoleId)
+        }
+
+        const userServerProfileIds = userServerProfile.roles.map((item) => item.roleId);
+
+        let channelRoles = await prisma.channel.findFirst({
+            where: { id: channelId },
+            include: {
+                channelRoles: {
+                    where: {
+                        serverRoleId: { in: [...userServerProfileIds, channelRole.serverRoleId] },
+                    },
+                    include: { serverRole: true },
+                },
+            },
+        });
+
+        let categoryRoles = await prisma.category.findFirst({
+            where: { id: categoryId },
+            include: {
+                categoryRoles: {
+                    where: {
+                        serverRoleId: { in: [...userServerProfileIds, channelRole.serverRoleId] },
+                    },
+                    include: { serverRole: true },
+                },
+            },
+        });
+
+        // Filter and sort roles
+        channelRoles.channelRoles = channelRoles.channelRoles
+            .sort((a, b) => a.serverRole.order - b.serverRole.order);
+
+        categoryRoles.categoryRoles = categoryRoles.categoryRoles
+            .sort((a, b) => a.serverRole.order - b.serverRole.order);
+
+        let visitedRoles = [];
+        let isVerify = false;
+
+        for (const role of channelRoles.channelRoles) {
+            const { serverRoleId, manageRoles } = role;
+            if (serverRoleId === channelRole.serverRoleId) {
+                break;
+            }
+
+            visitedRoles.push(serverRoleId);
+
+            if (manageRoles === "ALLOW") {
+                isVerify = true;
+                break;
+            }
+
+            if (manageRoles === "NEUTRAL") {
+                const temp = categoryRoles.categoryRoles.find((item) => item.serverRoleId === serverRoleId);
+                if (temp) {
+                    if (temp.manageRoles === "ALLOW" || (temp.manageRoles === "NEUTRAL" && temp.serverRole.manageRoles)) {
+                        isVerify = true;
+                        break;
+                    }
+                } else {
+                    if (role.serverRole.manageRoles) {
+                        isVerify = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (isVerify) {
+            return await helperRemoveChannelRole(channelRoleId)
+        }
+
+        if (visitedRoles.length > 0) {
+            categoryRoles.categoryRoles = categoryRoles.categoryRoles.filter(
+                (item) => !visitedRoles.includes(item.serverRoleId)
+            );
+        }
+
+        if (categoryRoles.categoryRoles.length === 0) {
+            throw new Error("Permission denied");
+        }
+
+        for (const role of categoryRoles.categoryRoles) {
+            const { serverRoleId, manageRoles } = role;
+            if (serverRoleId === channelRole.serverRoleId) {
+                break;
+            }
+
+            if (manageRoles === "ALLOW") {
+                isVerify = true;
+                break;
+            }
+
+            if (manageRoles === "NEUTRAL" && role.serverRole.manageRoles) {
+                isVerify = true;
+                break;
+            }
+        }
+        if (isVerify) {
+            return await helperRemoveChannelRole(channelRoleId)
+        }
+        throw new Error("Something went wrong");
+    } catch (error) {
+        console.error("Error in deleteChannelRole:", error);
+        throw new Error(error.message || "Something went wrong");
+    }
+}
+
+export const removeCategoryRole = async (serverId, categoryId, categoryRoleId) => {
+    try {
+        if (!serverId || !categoryId || !categoryRoleId) {
+            throw new Error("Server ID, Category ID and Category Role ID are required");
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            throw new Error("User is not authenticated");
+        }
+        const userServerProfile = await prisma.serverProfile.findUnique({
+            where: {
+                userId_serverId: {
+                    userId: user.id,
+                    serverId: serverId
+                }
+            },
+            include:{
+                roles:{
+                    include:{
+                        role:true
+                    }
+                }
+            }
+        })
+        if (!userServerProfile) {
+            throw new Error("User is not in the server");
+        }
+        const isCategoryExist = await prisma.category.findFirst({
+            where: {
+                id: categoryId,
+                serverId
+            },
+            include: {
+                server: true
+            }
+        })
+        if (!isCategoryExist) {
+            throw new Error("Category does not exist");
+        }
+        const categoryRole = await prisma.categoryRole.findFirst({
+            where: {
+                id: categoryRoleId,
+                categoryId,
+            }
+        })
+        if (!categoryRole) {
+            throw new Error("Category Role does not exist");
+        }
+        if (isCategoryExist.server.ownerId == user.id) {
+            return await helperRemoveCategoryRole(categoryRoleId)
+        }
+        const isAdmin=userServerProfile.roles.map((role)=>role.role.adminPermission)
+        if (isAdmin) {
+            return await helperRemoveCategoryRole(categoryRoleId)
+        }
+        const userServerRolesId = userServerProfile.roles.map((item) => item.roleId)
+        const category = await prisma.category.findUnique({
+            where: {
+                id: categoryId
+            },
+            include: {
+                categoryRoles: {
+                    where: {
+                        serverRoleId: {
+                            in: [...userServerRolesId, categoryRoleId]
+                        },
+                        manageRoles: {
+                            in: ["ALLOW", "NEUTRAL"],
+                        }
+                    },
+                    include: {
+                        serverRole: true
+                    }
+                }
+            }
+        })
+        if (!category || category.categoryRoles.length === 0) {
+            throw new Error("You do not have permission to add roles");
+        }
+        const categoryRoles = category.categoryRoles.sort((a, b) => a.serverRole.order - b.serverRole.order)
+
+        let manageRoleFoundBeforeTarget = false;
+        for (const role of categoryRoles) {
+            const { manageRoles, id } = role;
+
+            if (id == categoryRoleId) {
+                if (!manageRoleFoundBeforeTarget) {
+                    throw new Error("You do not have permission to add this role");
+                }
+                break;
+            }
+
+            if (manageRoles == "NEUTRAL" && role.serverRole.manageRoles) {
+                manageRoleFoundBeforeTarget = true;
+            }
+
+            if (manageRoles == "ALLOW") {
+                manageRoleFoundBeforeTarget = true;
+            }
+        }
+        if (!manageRoleFoundBeforeTarget) {
+            throw new Error("You do not have permission to add this role");
+        }
+        return await helperRemoveCategoryRole(categoryRoleId)
+    } catch (error) {
+        console.error("Error in removeCategoryRole:", error);
+        throw new Error(error.message || "Something went wrong");
+    }
+}
+
+export const removeServerRole = async = () => {
+
+}
+
