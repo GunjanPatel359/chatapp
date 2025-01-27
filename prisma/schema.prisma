@@ -85,7 +85,7 @@ model DefaultCategoryRole {
   category   Category @relation(fields: [categoryId], references: [id])
 
   // general permission
-  viewChannel Boolean @default(false)
+  viewChannel Boolean @default(true)
 
   //member permission
   createInvite Boolean @default(true)
@@ -110,7 +110,7 @@ model DefaultChannelRole {
   channelId   String  @unique
   channel     Channel @relation(fields: [channelId], references: [id])
   // general permission
-  viewChannel Boolean @default(false)
+  viewChannel Boolean @default(true)
 
   //member permission
   createInvite Boolean @default(true)
@@ -200,9 +200,6 @@ model CategoryRole {
 
   //member permission
   createInvite   PermissionType @default(NEUTRAL)
-  kickMembers    Boolean        @default(false)
-  banMembers     Boolean        @default(false)
-  timeOutMembers Boolean        @default(false)
 
   // text channel permission
   sendMessage       PermissionType @default(NEUTRAL)
@@ -247,9 +244,6 @@ model ChannelRole {
   //general permission
   viewChannel    PermissionType @default(NEUTRAL)
   manageRoles    PermissionType @default(NEUTRAL)
-  kickMembers    Boolean        @default(false)
-  banMembers     Boolean        @default(false)
-  timeOutMembers Boolean        @default(false)
 
   // member permission
   createInvite PermissionType @default(NEUTRAL)

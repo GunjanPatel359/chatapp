@@ -29,15 +29,22 @@ export const createServer = async (name, description, categories) => {
                                     ? {
                                         create: category.channels.map(channel => ({
                                             name: channel.name.toLowerCase(),
+                                            description:`${channel.name}`,
                                             type: "TEXT", // Ensure you pass the correct type
+                                            defaultChannelRole: {
+                                                create: {}
+                                            }
                                         })),
                                     }
                                     : undefined,
+                                defaultCategoryRole: {
+                                    create: {} // This ensures a default category role is created
+                                }
                             })),
                         }
                         : undefined,
                     defaultServerRole: {
-                        create: true
+                        create: {}
                     }
                 },
             });

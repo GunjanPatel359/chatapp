@@ -18,7 +18,6 @@ export function Toaster() {
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, ...props }) {
         const {variant}=props
-        console.log(variant)
         return (
           <Toast key={id} {...props}>
             <div className="grid">

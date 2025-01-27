@@ -45,7 +45,7 @@ export const createCategory = async (serverId, categoryData) => {
                     name: categoryData.name,
                     serverId,
                     defaultCategoryRole:{
-                        create:true
+                        create:{}
                     }
                 },
             })
@@ -64,7 +64,7 @@ export const createCategory = async (serverId, categoryData) => {
                 name: categoryData.name,
                 serverId,
                 defaultCategoryRole:{
-                    create:true
+                    create:{}
                 }
             }
         })
@@ -73,69 +73,6 @@ export const createCategory = async (serverId, categoryData) => {
     } catch (error) {
         console.log(error)
         throw new Error("createCategory", error)
-    }
-}
-
-export const deleteCategory = async (serverId, categoryId) => {
-    try {
-        if(!serverId || !categoryId){
-            throw new Error("serverId and categoryId are required")
-        }
-        const user=await isAuthUser()
-        if(!user){
-            throw new Error("you are not logged in")
-        }
-        const userServerProfile=await prisma.serverProfile.findUnique({
-            where:{
-                userId_serverId:{
-                    userId:user.id,
-                    serverId
-                }
-            },
-            include:{
-                server:true,
-                roles:{
-                    include:{
-                        role:true
-                    }
-                }
-            }
-        })
-        if(!userServerProfile){
-            throw new Error("you are not a member of this server")
-        }
-        const verifyCategory=await prisma.category.findUnique({
-            where:{
-                id:categoryId,
-                serverId
-            }
-        })
-        if(!verifyCategory){
-            throw new Error("category not found")
-        }
-        if(userServerProfile.server.ownerId==user.id){
-            const deleteCategory=await prisma.category.delete({
-                where:{
-                    id:categoryId
-                }
-            })
-            console.log(deleteCategory)
-            return {success:true,message:"category deleted successfully"}
-        }
-        const isUserVerify=userServerProfile.roles.some((item)=>item.role.adminPermission)
-        if(!isUserVerify){
-            throw new Error("you dont have permission to delete this category")
-        }
-        const deleteCategory=await prisma.category.delete({
-            where:{
-                id:categoryId
-            }
-        })
-        console.log(deleteCategory)
-        return {success:true,message:"category deleted successfully"}
-    } catch (error) {
-        console.log(error)
-        throw new Error(error)
     }
 }
 
@@ -200,6 +137,69 @@ export const updateCategory = async (serverId,categoryId,update)=>{
         })
         console.log(updateCategory)
         return {success:true,message:"category updated successfully"}
+    } catch (error) {
+        console.log(error)
+        throw new Error(error)
+    }
+}
+
+export const deleteCategory = async (serverId, categoryId) => {
+    try {
+        if(!serverId || !categoryId){
+            throw new Error("serverId and categoryId are required")
+        }
+        const user=await isAuthUser()
+        if(!user){
+            throw new Error("you are not logged in")
+        }
+        const userServerProfile=await prisma.serverProfile.findUnique({
+            where:{
+                userId_serverId:{
+                    userId:user.id,
+                    serverId
+                }
+            },
+            include:{
+                server:true,
+                roles:{
+                    include:{
+                        role:true
+                    }
+                }
+            }
+        })
+        if(!userServerProfile){
+            throw new Error("you are not a member of this server")
+        }
+        const verifyCategory=await prisma.category.findUnique({
+            where:{
+                id:categoryId,
+                serverId
+            }
+        })
+        if(!verifyCategory){
+            throw new Error("category not found")
+        }
+        if(userServerProfile.server.ownerId==user.id){
+            const deleteCategory=await prisma.category.delete({
+                where:{
+                    id:categoryId
+                }
+            })
+            console.log(deleteCategory)
+            return {success:true,message:"category deleted successfully"}
+        }
+        const isUserVerify=userServerProfile.roles.some((item)=>item.role.adminPermission)
+        if(!isUserVerify){
+            throw new Error("you dont have permission to delete this category")
+        }
+        const deleteCategory=await prisma.category.delete({
+            where:{
+                id:categoryId
+            }
+        })
+        console.log(deleteCategory)
+        return {success:true,message:"category deleted successfully"}
     } catch (error) {
         console.log(error)
         throw new Error(error)
