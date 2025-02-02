@@ -5,6 +5,7 @@ import { inviteServer } from "@/actions/invite"
 import { useEffect } from "react";
 import { createChannel } from "@/actions/channel";
 import { toast } from "@/hooks/use-toast";
+// import { socket } from "@/server";
 
 export default function Home() {
   useEffect(()=>{
@@ -17,7 +18,7 @@ export default function Home() {
         // console.log(res)
         // const res=await createChannel(serverId,categoryId,{name:"test channel",description:"test data"})
         // console.log(res)
-        // const res=await addMemberToServerRole("cm6ccn9qu000wv30g49e63gbk","cm6ccv5b50001v3u42m4yligv", "cm6cd09mt0005v3u4np8frdfl")
+        // const res=await addMemberToServerRole(serverId,"cm6cd67d40009v3u46ky19dwb", "cm6f8symz0001v3xwmvd6kwj2")
         // console.log(res)
         // const res=await addMemberToServerRole("cm5v60skj0001v34k146dluul","cm6c81zd4000dv30gglzsw7ze", "cm5v60stk000ev34kvsoma1f7")
         // console.log(res)
@@ -47,8 +48,8 @@ export default function Home() {
         // console.log(res)
         // const res=await createCategory("cm6ccn9qu000wv30g49e63gbk",{name:"testing cate"})
         // console.log(res)
-        // const res=await inviteServer("cm6ccn9qu000wv30g49e63gbk","cm6ccqzxm0012v30gmhwpdjce")
-        // console.log(res)
+        // const res=await inviteServer(serverId,"cm6f7mwgx0000g4qg0mzevkvx")
+        console.log(res)
         if(res){
           toast({
             title: "success",
@@ -66,6 +67,12 @@ export default function Home() {
     }
     initiatePage()
   },[])
+
+  // useEffect(()=>{
+  //   if(socket.connected){
+  //     socket.on("connection")
+  //   }
+  // })
   return (
    <h1>Hello</h1>
   );

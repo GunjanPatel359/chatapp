@@ -16,6 +16,8 @@ model User {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   ownedServers   Server[] // Servers the user owns
+
+  Dms String[]
 }
 
 model Server {
@@ -25,20 +27,23 @@ model Server {
   imageUrl       String?
   ownerId        String
   owner          User            @relation(fields: [ownerId], references: [id])
-  // defaultRole    DefaultServerRole
+
   roles          ServerRole[] // Global roles for the server
   categories     Category[]      @relation("serverCategory")
   serverProfiles ServerProfile[] // Profiles for users in this server
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
-  // Channel        Channel[]       @relation("serverChannel")
-
-  defaultServerRole DefaultServerRole?
+  defaultServerRoleId String?
+  defaultServerRole   DefaultServerRole?
 }
 
 model ServerProfile {
-  id       String               @id @default(cuid()) @map("_id")
+  id          String  @id @default(cuid()) @map("_id")
+  name        String?
+  description String?
+  imageUrl    String?
+
   roles    UserRoleAssignment[] // Roles assigned to this user for the server
   // categoryRoles     UserCategoryRole[]   // User-specific roles for categories
   // channelRoles      UserChannelRole[]    // User-specific roles for channels
@@ -46,6 +51,8 @@ model ServerProfile {
   user     User                 @relation(fields: [userId], references: [id])
   serverId String
   server   Server               @relation(fields: [serverId], references: [id])
+
+  isDeleted Boolean @default(false)
 
   // Ensure one profile per user per server
   @@unique([userId, serverId])
@@ -59,7 +66,7 @@ model DefaultServerRole {
   server   Server @relation(fields: [serverId], references: [id])
 
   // general permission
-  viewChannel Boolean @default(false)
+  viewChannel Boolean @default(true)
 
   //member permission
   createInvite Boolean @default(true)
@@ -85,22 +92,22 @@ model DefaultCategoryRole {
   category   Category @relation(fields: [categoryId], references: [id])
 
   // general permission
-  viewChannel Boolean @default(true)
+  viewChannel PermissionType @default(ALLOW)
 
   //member permission
-  createInvite Boolean @default(true)
+  createInvite PermissionType @default(NEUTRAL)
   // changeNickname Boolean @default(true)
   // manageNickname Boolean @default(false)
 
   // text channel permission
-  sendMessage       Boolean @default(true)
-  attachFiles       Boolean @default(false)
-  seemessageHistory Boolean @default(true)
+  sendMessage       PermissionType @default(ALLOW)
+  attachFiles       PermissionType @default(NEUTRAL)
+  seemessageHistory PermissionType @default(ALLOW)
 
   // voice channel permission
-  connect Boolean @default(true)
-  speak   Boolean @default(false)
-  video   Boolean @default(false)
+  connect PermissionType @default(NEUTRAL)
+  speak   PermissionType @default(NEUTRAL)
+  video   PermissionType @default(NEUTRAL)
 }
 
 model DefaultChannelRole {
@@ -110,22 +117,22 @@ model DefaultChannelRole {
   channelId   String  @unique
   channel     Channel @relation(fields: [channelId], references: [id])
   // general permission
-  viewChannel Boolean @default(true)
+  viewChannel PermissionType @default(ALLOW)
 
   //member permission
-  createInvite Boolean @default(true)
+  createInvite PermissionType @default(NEUTRAL)
   // changeNickname Boolean @default(true)
   // manageNickname Boolean @default(false)
 
   // text channel permission
-  sendMessage       Boolean @default(true)
-  attachFiles       Boolean @default(false)
-  seemessageHistory Boolean @default(true)
+  sendMessage       PermissionType @default(ALLOW)
+  attachFiles       PermissionType @default(NEUTRAL)
+  seemessageHistory PermissionType @default(ALLOW)
 
   // voice channel permission
-  connect Boolean @default(true)
-  speak   Boolean @default(false)
-  video   Boolean @default(false)
+  connect PermissionType @default(NEUTRAL)
+  speak   PermissionType @default(NEUTRAL)
+  video   PermissionType @default(NEUTRAL)
 }
 
 model ServerRole {
@@ -177,7 +184,8 @@ model Category {
   channels      Channel[]      @relation("categoryChannels")
   categoryRoles CategoryRole[]
 
-  defaultCategoryRole DefaultCategoryRole?
+  defaultCategoryRoleId String?
+  defaultCategoryRole   DefaultCategoryRole?
 }
 
 enum PermissionType {
@@ -199,7 +207,7 @@ model CategoryRole {
   manageRoles    PermissionType @default(NEUTRAL)
 
   //member permission
-  createInvite   PermissionType @default(NEUTRAL)
+  createInvite PermissionType @default(NEUTRAL)
 
   // text channel permission
   sendMessage       PermissionType @default(NEUTRAL)
@@ -225,13 +233,13 @@ model Channel {
   name         String
   description  String
   type         ChannelType
-  // serverId        String
-  // server          Server           @relation("serverChannel",fields: [serverId], references: [id])
+
   categoryId   String
   category     Category      @relation("categoryChannels", fields: [categoryId], references: [id])
   channelRoles ChannelRole[] // Roles for this channel
 
-  defaultChannelRole DefaultChannelRole?
+  defaultChannelRoleId String?
+  defaultChannelRole   DefaultChannelRole?
 }
 
 model ChannelRole {
@@ -242,8 +250,8 @@ model ChannelRole {
   serverRole   ServerRole @relation(fields: [serverRoleId], references: [id])
 
   //general permission
-  viewChannel    PermissionType @default(NEUTRAL)
-  manageRoles    PermissionType @default(NEUTRAL)
+  viewChannel PermissionType @default(NEUTRAL)
+  manageRoles PermissionType @default(NEUTRAL)
 
   // member permission
   createInvite PermissionType @default(NEUTRAL)
@@ -268,4 +276,40 @@ model UserRoleAssignment {
   serverProfile   ServerProfile @relation(fields: [serverProfileId], references: [id])
   roleId          String
   role            ServerRole    @relation(fields: [roleId], references: [id])
+}
+
+model ChannelMessage {
+  id              String @id @default(cuid()) @map("_id")
+  channelId       String
+  serverProfileId String
+
+  content String
+  imgUrl  String
+  fileUrl String
+
+  timestamp DateTime  @default(now())
+  updated   DateTime?
+
+  isUpdated Boolean @default(false)
+  isDeleted Boolean @default(false)
+
+  @@index([channelId])
+}
+
+model DirectMessage {
+  id         String @id @default(cuid()) @map("_id")
+  senderId   String
+  receiverId String
+
+  content String
+  imgUrl  String
+  fileUrl String
+
+  timestamp DateTime  @default(now())
+  updated   DateTime?
+
+  isUpdated Boolean @default(false)
+  isDeleted Boolean @default(false)
+
+  @@index([senderId, receiverId])
 }

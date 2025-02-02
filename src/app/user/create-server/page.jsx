@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -9,6 +9,8 @@ import {
     GripVertical,
 } from "lucide-react";
 import { HiSpeakerWave } from "react-icons/hi2";
+import { GoPlus } from "react-icons/go";
+import { IoImageOutline } from "react-icons/io5";
 import { FaHashtag } from "react-icons/fa6";
 import { DndContext, closestCenter, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import {
@@ -22,6 +24,39 @@ import { createServer } from "@/actions/server";
 
 const CreateServerPage = () => {
     const { toast } = useToast()
+    const fileInputRef = useRef(null);
+    const [imageAvatar, setImageAvatar] = useState("")
+
+    const handleFileChange = (e) => {
+        if (!e.target.files || e.target.files.length === 0) return;
+
+        const file = e.target.files[0];
+        const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
+        const maxSize = 1 * 1024 * 1024; // 1MB
+
+        // Validate file type
+        if (!allowedTypes.includes(file.type)) {
+            toast({
+                title:"Invalid file type",
+                description:"Please upload a PNG, JPG, or JPEG file.",
+                variant:"destructive"
+            });
+            return;
+        }
+
+        // Validate file size
+        if (file.size > maxSize) {
+            toast({
+                title:"Invalid file size",
+                description:"File size exceeds 1MB. Please choose a smaller file.",
+                variant:"destructive"
+            });
+            return;
+        }
+
+        setImageAvatar(file);
+    };
+
     const [formData, setFormData] = useState({
         name: "",
         description: "",
@@ -148,8 +183,12 @@ const CreateServerPage = () => {
                 variant: "destructive"
             })
         }
+        const imagedata = new FormData();
+        if(imageAvatar){
+            imagedata.append("file", imageAvatar);
+        }
         try {
-            const res = await createServer(formData.name, formData.description, categories)
+            const res = await createServer(formData.name, formData.description, categories, imagedata)
             console.log(res)
             if (res.success) {
                 toast({
@@ -158,7 +197,7 @@ const CreateServerPage = () => {
                     variant: "success"
                 })
             }
-            if(!res.success){
+            if (!res.success) {
                 toast({
                     title: "Error",
                     description: res.message,
@@ -203,10 +242,28 @@ const CreateServerPage = () => {
                 {/* Add/Edit Section */}
                 <div className="w-2/3 p-8">
                     <div className="max-w-2xl mx-auto bg-gray-100 rounded-lg shadow-md p-6">
-                        <h1 className="text-xl font-semibold mb-4 text-indigo-700">Create a New Server</h1>
+                        <h1 className="text-xl font-semibold mb-2 text-indigo-700">Create a New Server</h1>
                         <form onSubmit={handleSubmit}>
+                            <div className="flex">
+                                <div className="bg-gray-200 text-white rounded-full w-36 h-36 mx-auto flex hover:cursor-pointer hover:bg-gray-300 transition-all border-2 border-indigo-500 shadow-lg"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    {imageAvatar ? (
+                                        <img src={URL.createObjectURL(imageAvatar)} alt="Preview" className="w-full h-full rounded-full object-cover" />
+                                    ) : (
+                                        <IoImageOutline className="mx-auto my-auto text-indigo-500" size={65} />
+                                    )}
+                                </div>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    onChange={handleFileChange}
+                                    accept="image/png, image/jpeg, image/jpg" // Restrict to images
+                                />
+                            </div>
                             <div className="mb-4">
-                                <label className="block text-indigo-400 font-medium mb-1">
+                                <label className="block text-indigo-500 font-medium mb-1">
                                     Server Name
                                 </label>
                                 <input
@@ -214,19 +271,19 @@ const CreateServerPage = () => {
                                     name="name"
                                     value={formData.name}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-indigo-300 rounded-md bg-white text-sm text-indigo-500"
+                                    className="w-full px-3 py-2 border border-indigo-400 rounded-md bg-white text-sm text-indigo-500"
                                 />
                             </div>
 
                             <div className="mb-4">
-                                <label className="block text-indigo-400 font-medium mb-1">
+                                <label className="block text-indigo-500 font-medium mb-1">
                                     Description
                                 </label>
                                 <textarea
                                     name="description"
                                     value={formData.description}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-indigo-300 rounded-md bg-white text-sm text-indigo-500 resize-none"
+                                    className="w-full px-3 py-2 border border-indigo-400 rounded-md bg-white text-sm text-indigo-500 resize-none"
                                 />
                             </div>
 
@@ -420,7 +477,7 @@ const ChannelManager = ({
                                 onChange={(e) =>
                                     handleCategoryNameChange(category.id, e.target.value)
                                 }
-                                onBlur={(e)=>handleCategoryNameBlur(category.id,e.target.value)}
+                                onBlur={(e) => handleCategoryNameBlur(category.id, e.target.value)}
                                 className="w-full my-1 rounded-md text-indigo-600 bg-transparent text-sm uppercase outline-none border-none font-semibold"
                             />
                             <div

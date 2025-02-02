@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { getServer } from "@/actions/user";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
@@ -8,29 +8,32 @@ import { IoSettingsSharp } from "react-icons/io5";
 import { IoIosArrowForward } from "react-icons/io";
 import { HiSpeakerWave } from "react-icons/hi2";
 import { FaPlus } from "react-icons/fa6";
+import { serverStore } from "@/hooks/zusthook.js";
 
 const ServerSideBar = () => {
-    const router=useRouter()
-    const params = useParams()
-    const [server, setServer] = useState(null)
-    const serverId=useMemo(()=>params.serverId,[params?.serverId])
-    const channelId=useMemo(()=>params.channelId,[params?.channelId])
+    const { onsetServer } = serverStore();
+    const router = useRouter();
+    const params = useParams();
+    const [server, setServer] = useState(null);
+    const serverId = useMemo(() => params.serverId, [params?.serverId]);
+    const channelId = useMemo(() => params.channelId, [params?.channelId]);
 
     useEffect(() => {
         const initiatePage = async () => {
             try {
-                const res = await getServer(serverId)
+                const res = await getServer(serverId);
                 if (res.success) {
-                    setServer(res.server)
+                    onsetServer(res.server);
+                    setServer(res.server);
                 }
             } catch (error) {
-                console.log(error)
+                console.log(error);
             }
-        }
+        };
         if (serverId) {
-            initiatePage()
+            initiatePage();
         }
-    }, [serverId])
+    }, [serverId]);
 
     return (
         <div className="w-[300px] h-screen bg-gray-50 text-indigo-500 flex flex-col">
@@ -38,31 +41,47 @@ const ServerSideBar = () => {
                 <>
                     {/* Server Header */}
                     <div className="p-2 pl-4 h-12 bg-gray-100 flex justify-between space-x-2 border-b border-gray-100 shadow">
-                    {/* <img src="https://via.placeholder.com/40" alt="Server Icon" className="w-10 h-10 rounded-full"/> */}
-                    <div className="flex">
-                        <div className="w-8 h-8 rounded-full bg-white">
-                            {server?.imageUrl? (
-                                <div>
-                                    <Image src={server.imageUrl} alt="Server Icon" className="w-8 h-8" />
-                                </div>
-                            ):(
-                                <div className="text-3xl text-center translate-y-[-4px]">
-                                    {`${(server.name).slice(0,1).toLowerCase()}`}
-                                </div>
-                            )}
-                        </div>
-                        <span className="font-bold text-indigo-500 my-auto ml-2">{server.name}</span>
-                    </div>
+                        {/* <img src="https://via.placeholder.com/40" alt="Server Icon" className="w-10 h-10 rounded-full"/> */}
                         <div className="flex">
-                            <IoSettingsSharp size={22} className="inline text-indigo-500 transition-all duration-500 hover:rotate-90 my-auto cursor-pointer mx-1" onClick={()=>router.push(`/setting/server/${serverId}`)} />
+                            <div className="w-8 h-8 rounded-full bg-white">
+                                {server?.imageUrl ? (
+                                    <div>
+                                        <Image
+                                            src={server.imageUrl}
+                                            alt="Server Icon"
+                                            className="w-8 h-8"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="text-3xl text-center translate-y-[-4px]">
+                                        {`${server.name.slice(0, 1).toLowerCase()}`}
+                                    </div>
+                                )}
+                            </div>
+                            <span className="font-bold text-indigo-500 my-auto ml-2">
+                                {server.name}
+                            </span>
+                        </div>
+                        <div className="flex">
+                            <IoSettingsSharp
+                                size={22}
+                                className="inline text-indigo-500 transition-all duration-500 hover:rotate-90 my-auto cursor-pointer mx-1"
+                                onClick={() => router.push(`/setting/server/${serverId}`)}
+                            />
                         </div>
                     </div>
 
                     <div className="p-2 flex-1 overflow-y-auto scrollbar-none">
-                            {server && server.categories.map((category) => {
+                        {server &&
+                            server.categories.map((category) => {
                                 return (
-                                    <SidebarSection key={category.id} category={category} channelId={channelId} serverId={serverId} />
-                                )
+                                    <SidebarSection
+                                        key={category.id}
+                                        category={category}
+                                        channelId={channelId}
+                                        serverId={serverId}
+                                    />
+                                );
                             })}
                     </div>
 
@@ -73,71 +92,96 @@ const ServerSideBar = () => {
                                 G
                             </div>
                             <div className="flex-1 ml-2">
-                                <h3 className="text-sm font-bold text-indigo-500">gunjanpatel</h3>
+                                <h3 className="text-sm font-bold text-indigo-500">
+                                    gunjanpatel
+                                </h3>
                                 <p className="text-xs text-indigo-400">Idle</p>
                             </div>
                             <div className="flex space-x-2 text-gray-400">
                                 <button>
-                                    <IoSettingsSharp size={22} className="text-indigo-500 transition-all duration-500 hover:rotate-90" />
+                                    <IoSettingsSharp
+                                        size={22}
+                                        className="text-indigo-500 transition-all duration-500 hover:rotate-90"
+                                    />
                                 </button>
                             </div>
                         </div>
                     </div>
                 </>
-                ) : (
-                <div>
-                    Loading
-                </div>
-            )
-            }
+            ) : (
+                <div>Loading</div>
+            )}
         </div>
     );
 };
 
-const SidebarItem = ({channel,channelId,serverId}) => {
-    const router=useRouter()
-    return (
-    <div className={`flex items-center justify-between p-2 py-1 rounded-md cursor-pointer ${channelId==channel.id?"bg-gray-300":"hover:bg-gray-200"}`} onClick={()=>router.push(`/server/${serverId}/channel/${channel.id}`)}>
-        <div className="flex items-center space-x-1">
-            {channel.type=="TEXT" && <FaHashtag />}
-            {channel.type=="VOICE" && <HiSpeakerWave />}
-            <span className="text-sm">{channel.name}</span>
-        </div>
-    </div>
-)}
+const SidebarItem = ({ channel, channelId, serverId,isSelected, isVisible }) => {
+    const router = useRouter();
 
-const SidebarSection = ({ category,channelId,serverId }) => {
-    const [isOpen, setIsOpen] = useState(true)
     return (
-        <div className="mb-[2px]">
+        <div
+            className={`transition-all duration-500 ease-in-out ${!isSelected && isVisible ? "opacity-100 max-h-screen" : "opacity-0 max-h-0"} ${isSelected && "opacity-100 max-h-screen"}`}
+            onClick={() => router.push(`/server/${serverId}/channel/${channel.id}`)}
+        >
+            <div className={`flex items-center rounded-md justify-between cursor-pointer px-2 py-[5px] mb-[2px] ${channelId === channel.id ? "bg-gray-300" : "hover:bg-gray-200"} group`}>
+                <div className="flex items-center space-x-1">
+                    {channel.type === "TEXT" && <FaHashtag />}
+                    {channel.type === "VOICE" && <HiSpeakerWave />}
+                    <span className="text-sm">{channel.name}</span>
+                </div>
+                <div>
+                    <IoSettingsSharp size={15} className={`hover:rotate-90 transition-all duration-500 opacity-0 group-hover:opacity-100 ${isSelected && "opacity-100"}`} />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+
+const SidebarSection = ({ category, channelId, serverId }) => {
+    const [isOpen, setIsOpen] = useState(true);
+
+    return (
+        <div className="mb-[1px]">
+            {/* Section Header */}
             <div
-                className="flex items-center justify-between px-2 py-1 cursor-pointer hover:bg-gray-200 rounded-md mb-[1px]"
+                className="flex items-center justify-between px-2 py-1 cursor-pointer hover:bg-gray-200 rounded-md mb-[1px] group"
+                onClick={() => setIsOpen(!isOpen)}
             >
-                <span onClick={() => setIsOpen(!isOpen)} className="flex-1">
+                <span className="flex-1">
                     <span className="text-sm cursor-pointer pr-1">
-                        <IoIosArrowForward className={`transition-all my-auto ${isOpen ? "rotate-90" : ""} inline`} />
+                        <IoIosArrowForward
+                            className={`transition-transform duration-300 my-auto ${isOpen ? "rotate-90" : ""} inline`}
+                        />
                     </span>
                     <span className="text-sm font-semibold uppercase">{category.name}</span>
                 </span>
-                <span>
-                    <FaPlus className="my-auto" size={15} />
+                <span className="flex">
+                    <FaPlus className="my-auto mr-0 transition-all duration-300 ease-out group-hover:mr-[3px]" size={15} />
+                    <IoSettingsSharp className="my-auto hover:rotate-90 transition-all duration-500 group-hover:opacity-100 max-w-0 group-hover:max-w-8" size={16}  />
                 </span>
             </div>
-            <div className={`${isOpen?"h-full opacity-100":"h-0 overflow-hidden opacity-0"} transition-all duration-500`}>
-            {category?.channels &&
-                (
-                    <div className="flex flex-col space-y-[2px]">
-                        {category.channels.map((channel,id) => {
-                            return (
-                                <SidebarItem key={id} channel={channel} channelId={channelId} serverId={serverId} />
-                            )
-                        })}
-                    </div>
-                )
-            }
+
+            {/* Channel List (Smooth collapse/expand) */}
+            <div
+                className={`transition-all duration-500 ease-in-out overflow-hidden flex flex-col`}
+            >
+                {category?.channels.map((channel) => (
+                    <SidebarItem
+                        key={channel.id}
+                        channel={channel}
+                        channelId={channelId}
+                        serverId={serverId}
+                        isSelected={channel.id === channelId}
+                        isVisible={isOpen} // Keep selected visible
+                    />
+                ))}
             </div>
         </div>
-    )
-}
+    );
+};
+
+
 
 export default ServerSideBar;

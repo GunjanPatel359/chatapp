@@ -5,3 +5,31 @@
   :root {
     --radius: 0.5rem}
 }
+
+@layer base {
+  :root {
+    --light-color-50: #f9fafb;
+    --light-color-100: #f3f4f6;
+    --light-color-200: #e5e7eb;
+    --light-color-300: #d1d5db;
+    --light-color-400: #9ca3af;
+    --light-color-500: #6b7280;
+    --light-color-600: #4b5563;
+    --light-color-700: #374151;
+    --light-color-800: #1f2937;
+    --light-color-900: #111827;
+    --light-color-950: #030712;
+
+    --dark-color-50: #eef2ff;
+    --dark-color-100: #e0e7ff;
+    --dark-color-200: #c7d2fe;
+    --dark-color-300: #a5b4fc;
+    --dark-color-400: #818cf8;
+    --dark-color-500: #6366f1;
+    --dark-color-600: #4f46e5;
+    --dark-color-700: #4338ca;
+    --dark-color-800: #3730a3;
+    --dark-color-900: #312e81;
+    --dark-color-950: #1e1b4b;
+  }
+}
