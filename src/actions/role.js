@@ -185,7 +185,7 @@ export const addMemberToServerRole = async (serverId, roleId, userServerProfileI
         console.log(user, user.id, serverId)
         // Fetch the user's server profile with roles
         const userServerProfile = await prisma.serverProfile.findUnique({
-            where: { userId_serverId: { userId: user.id, serverId } },
+            where: { userId_serverId: { userId: user.id, serverId }, isDeleted: false },
             include: { roles: { include: { role: true } } },
         });
         if (!userServerProfile) throw new Error("User server profile not found.");
@@ -262,6 +262,7 @@ export const getServerRoles = async (serverId) => {
         const userServerProfile = await prisma.serverProfile.findUnique({
             where: {
                 userId_serverId: { userId: user.id, serverId },
+                isDeleted: false
             },
             include: {
                 roles: {
@@ -326,6 +327,7 @@ export const createServerRole = async (serverId, role) => {
                     userId: user.id,
                     serverId: serverId,
                 },
+                isDeleted: false
             },
             include: {
                 roles: {
@@ -391,7 +393,7 @@ export const editServerRole = async (serverId, roleId, role) => {
 
         // Fetch user's server profile
         const userServerProfile = await prisma.serverProfile.findUnique({
-            where: { userId_serverId: { userId: user.id, serverId } },
+            where: { userId_serverId: { userId: user.id, serverId }, isDeleted: false },
             include: { roles: { include: { role: true } } }
         });
         if (!userServerProfile) throw new Error("User server profile not found.");
@@ -457,7 +459,8 @@ export const addCategoryRole = async (serverId, categoryId, roleId) => {
                 userId_serverId: {
                     userId: user.id,
                     serverId: serverId
-                }
+                },
+                isDeleted: false
             },
             include: {
                 roles: {
@@ -582,7 +585,8 @@ export const updateCategoryRole = async (serverId, categoryId, categoryRoleId, u
                 userId_serverId: {
                     userId: user.id,
                     serverId: serverId
-                }
+                },
+                isDeleted: false
             },
             include: {
                 roles: {
@@ -695,7 +699,8 @@ export const removeCategoryRole = async (serverId, categoryId, categoryRoleId) =
                 userId_serverId: {
                     userId: user.id,
                     serverId: serverId
-                }
+                },
+                isDeleted: false
             },
             include: {
                 roles: {
@@ -809,6 +814,7 @@ export const addChannelRole = async (serverId, categoryId, channelId, roleId) =>
                     userId: user.id,
                     serverId: serverId,
                 },
+                isDeleted: false
             },
             include: {
                 roles: {
@@ -823,13 +829,13 @@ export const addChannelRole = async (serverId, categoryId, channelId, roleId) =>
             throw new Error("You are not a member of this server");
         }
 
-        const verifyServerRole=await prisma.serverRole.findFirst({
-            where:{
-                id:roleId
+        const verifyServerRole = await prisma.serverRole.findFirst({
+            where: {
+                id: roleId
             }
         })
 
-        if(!verifyServerRole){
+        if (!verifyServerRole) {
             throw new Error("Role not found")
         }
 
@@ -912,7 +918,7 @@ export const addChannelRole = async (serverId, categoryId, channelId, roleId) =>
         categoryRoles.categoryRoles = categoryRoles.categoryRoles
             .sort((a, b) => a.serverRole.order - b.serverRole.order);
 
-        console.log(channelRoles,categoryRoles)
+        console.log(channelRoles, categoryRoles)
 
         let visitedRoles = [];
         let isVerify = false;
@@ -1005,6 +1011,7 @@ export const updateChannelRole = async (serverId, categoryId, channelId, channel
                     userId: user.id,
                     serverId: serverId,
                 },
+                isDeleted: false
             },
             include: {
                 roles: {
@@ -1019,16 +1026,16 @@ export const updateChannelRole = async (serverId, categoryId, channelId, channel
             throw new Error("You are not a member of this server");
         }
 
-        const verifyServerRole=await prisma.channelRole.findFirst({
-            where:{
-                id:channelRoleId
+        const verifyServerRole = await prisma.channelRole.findFirst({
+            where: {
+                id: channelRoleId
             },
-            include:{
-                serverRole:true
+            include: {
+                serverRole: true
             }
         })
 
-        if(!verifyServerRole){
+        if (!verifyServerRole) {
             throw new Error("Role not found")
         }
 
@@ -1199,7 +1206,8 @@ export const removeChannelRole = async (serverId, categoryId, channelId, channel
                 userId_serverId: {
                     userId: user.id,
                     serverId: serverId
-                }
+                },
+                isDeleted: false
             },
             include: {
                 roles: {
@@ -1300,7 +1308,7 @@ export const removeChannelRole = async (serverId, categoryId, channelId, channel
 
         for (const role of channelRoles.channelRoles) {
             const { serverRoleId, manageRoles } = role;
-            console.log(serverRoleId,channelRole.serverRoleId)
+            console.log(serverRoleId, channelRole.serverRoleId)
             if (serverRoleId == channelRole.serverRoleId) {
                 break;
             }
@@ -1344,7 +1352,7 @@ export const removeChannelRole = async (serverId, categoryId, channelId, channel
 
         for (const role of categoryRoles.categoryRoles) {
             const { serverRoleId, manageRoles } = role;
-            console.log(serverRoleId,channelRole.serverRoleId)
+            console.log(serverRoleId, channelRole.serverRoleId)
             if (serverRoleId == channelRole.serverRoleId) {
                 break;
             }
@@ -1370,5 +1378,93 @@ export const removeChannelRole = async (serverId, categoryId, channelId, channel
 }
 
 export const removeServerRole = async () => {
+    //remaining
+}
 
+//testing needed
+export const reorderServerRole = async (serverId, serverRoleOrder) => {
+    try {
+        if (!serverId || serverRoleOrder == [] || !Array.isArray(serverRoleIds)) {
+            throw new Error("serverId missing")
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            throw new Error("User not authenticated")
+        }
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: {
+                userId: user.id,
+                serverId,
+                isDeleted: false
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            }
+        })
+        if (!userServerProfile) {
+            throw new Error("you are not member of server")
+        }
+        const server = await prisma.server.findFirst({
+            where: {
+                id: serverId,
+            },
+            include: {
+                roles: true
+            }
+        })
+        if (!server) {
+            throw new Error("Server not found")
+        }
+        const serverRoleIds = server.roles.map((role) => role.id)
+        const setA = new Set(serverRoleOrder)
+        const setB = new Set(serverRoleIds)
+        const difference = [...setA].filter(id => !setB.has(id)).concat([...setB].filter(id => !setA.has(id)));
+        if (difference != []) {
+            throw new Error("Invalid role Ids")
+        }
+        if (server.ownerId == user.id || userServerProfile?.roles.some((role) => role.role.adminPermission)) {
+            const reorderServerRole = await prisma.$transaction(
+                serverRoleOrder.map((roleId, index) =>
+                    prisma.serverRole.update({
+                        where: { id: roleId },
+                        data: { order: index }
+                    })
+                )
+            );
+            console.log(reorderServerRole);
+            return { success: true, reorderServerRole: JSON.parse(JSON.stringify(reorderServerRole)) }
+        }
+        if (userServerProfile?.roles == []) {
+            throw new Error("You are not authorized to reorder roles")
+        }
+        if (!userServerProfile.roles.some((role) => role.role.manageRoles)) {
+            throw new Error("You are not authorized to reorder roles")
+        }
+        const rolesWithManageRole = userServerProfile.roles.filter(role => role.role.manageRoles).sort((a, b) => a.order - b.order)[0];
+        const serverRoleOriginalOrder = server.roles.sort((a, b) => a.order - b.order)
+        let i = 0
+        while (i <= rolesWithManageRole.role.order) {
+            if (serverRoleOrder[i] != serverRoleOriginalOrder[i].id) {
+                throw new Error("Invalid role Ids")
+            }
+            i++
+        }
+        const reorderServerRole = await prisma.$transaction(
+            serverRoleOrder.map((roleId, index) =>
+                prisma.serverRole.update({
+                    where: { id: roleId },
+                    data: { order: index }
+                })
+            )
+        );
+        console.log(reorderServerRole);
+        return { success: true, reorderServerRole: JSON.parse(JSON.stringify(reorderServerRole)) }
+    } catch (error) {
+        console.error("Error in reorderServerRole:", error);
+        throw new Error(error.message || "Something went wrong");
+    }
 }

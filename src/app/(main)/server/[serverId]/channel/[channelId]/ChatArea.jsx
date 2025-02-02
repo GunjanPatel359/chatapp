@@ -39,8 +39,10 @@ const ChatArea = () => {
 
 
         {/* chat appear section */}
-
-
+        <MessageDialogOther/>
+        <MessageDialogOther/>
+        <DateSeparator/>
+        <MessageDialogOther/>
 
 
       </div>
@@ -57,5 +59,33 @@ const ChatArea = () => {
     </div>
   );
 };
+
+const DateSeparator=()=>{
+  return (
+    <div className="text-gray-400 text-sm my-2 w-full flex">
+      <div className="h-[2px] flex-1 bg-gray-300 my-auto ml-1"></div>
+      <div className="mx-2">January 29,2025</div>
+      <div className="flex-1 h-[2px] bg-gray-300 my-auto mr-1"></div>
+    </div>
+  )
+}
+
+const MessageDialogOther = () => {
+  return (
+    <div className="flex mb-2">
+      <div className="rounded-full bg-red-300 w-12 h-12"></div>
+      <div className="flex flex-col ml-2 flex-1">
+        <div className="flex">
+          <div className="font-bold">
+            Krushnaraj
+          </div>
+          <div className="text-xs my-auto ml-2"> 11/13/2024 </div>
+          <div className="text-xs my-auto ml-1">11:37 PM</div>
+        </div>
+        <div className="text-justify">Reddit comments are so underatted sjadngjbsdihfsh usahgihasibasiu iasd vhis vihhasihvhiasdhviubasdioy ihas iashviuasd hiuashiuas y</div>
+      </div>
+    </div>
+  )
+}
 
 export default ChatArea;

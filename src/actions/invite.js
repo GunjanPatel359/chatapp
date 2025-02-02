@@ -12,8 +12,9 @@ export const inviteServer = async(serverId,userId)=>{
             where:{
                 userId_serverId:{
                     serverId:serverId,
-                    userId:userId
-                }
+                    userId:userId,
+                },
+                isDeleted:false
             }
         })
         console.log(userServerProfile)

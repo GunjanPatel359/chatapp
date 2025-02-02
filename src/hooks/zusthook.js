@@ -1,14 +1,18 @@
 import { create } from 'zustand'
 
+export const serverStore =create((set)=>({
+    server: null,
+    serverProfile: null,
+
+    onsetServer:(server)=>set({server:server}),
+    onsetServerProfile:(serverProfile)=>set({serverProfile:serverProfile})
+}))
+
 export const useModal = create((set) => ({
     type: null,
-    data:null,
+    data: null,
     isOpen: false,
-    reloadCommand:null,
 
     onOpen:(type,data=null)=>set({ isOpen:true,type,data}),
-    reloadFunction:(data=null,reloadCommand=Date.now())=>set({isOpen:false,type:null,data,reloadCommand}),
-    onlyReloadCom:(reloadCommand=Date.now())=>set({reloadCommand:reloadCommand}),
-    onClose:(data=null)=>set({ isOpen:false,type:null,data})
-    
+    onClose:(data=null)=>set({ isOpen:false,type:null,data}),
 }))
