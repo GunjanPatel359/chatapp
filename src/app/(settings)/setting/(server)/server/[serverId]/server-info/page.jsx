@@ -14,9 +14,9 @@ const Overview = ({ initialServerName }) => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <FaRegEye className="text-2xl mr-2" />
-          <h1 className="text-2xl font-bold">Overview</h1>Y
+          <h1 className="text-2xl font-bold">Overview</h1>
         </div>
-        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+        <div className="flex justify-center items-center w-16 h-16 bg-gray-200 rounded-full mx-auto">
           <span className="text-indigo-500">Logo</span>
         </div>
       </div>
@@ -34,26 +34,12 @@ const Overview = ({ initialServerName }) => {
 
       {/* Inactive Settings */}
       <div className="mb-6">
-        <h2 className="text-sm text-indigo-500">Inactive Channel</h2>
-        <p className="text-sm text-indigo-500 mb-2">This section allows you to manage inactive channels for your server.</p>
-        
-        {/* New Description Title and Textbox */}
         <h3 className="text-sm text-indigo-500 mt-4">Channel Description</h3>
         <textarea
           className="w-full bg-gray-200 text-indigo-500 rounded-md p-3 mt-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           placeholder="Write a description for the inactive channel..."
           rows="3"
         ></textarea>
-        
-        <div className="flex items-center justify-between bg-gray-200 p-3 rounded-md mt-2">
-          <span className="text-indigo-500">{inactiveChannel}</span>
-          <button className="text-indigo-500">Edit</button>
-        </div>
-        <p className="text-sm text-indigo-500 mt-2">
-          Automatically move members to this channel and mute them when they
-          have been idle for longer than the inactive timeout. This does not
-          affect browsers.
-        </p>
       </div>
 
       {/* System Messages Settings */}
