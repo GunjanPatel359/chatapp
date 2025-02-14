@@ -1,134 +1,164 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { FaEdit, FaEllipsisV } from "react-icons/fa";
+import { getCategories } from "@/actions/server";
+import { useParams, useRouter } from "next/navigation";
+import { MdEventNote } from "react-icons/md";
+import { BiSolidEdit } from "react-icons/bi";
+import { PiDotsThreeOutlineFill } from "react-icons/pi";
+import { FaEllipsisVertical } from "react-icons/fa6";
+import { toast } from "@/hooks/use-toast";
+import { reorderCategory } from "@/actions/category";
+import { BsPlus } from "react-icons/bs";
+import { FaPlus } from "react-icons/fa6";
 
-const ItemTypes = {
-  CATEGORY: "CATEGORY",
-  CHANNEL: "CHANNEL",
-};
+import {CreateCategoryModal} from "@/components/modals/createCategoryModal"
 
-// Category component (no drag functionality here)
-const CategoryItem = ({ category, index, moveCategory, moveChannel }) => {
-  return (
-    <div className="p-3 bg-white text-indigo-500 rounded-md shadow-md">
-      <div className="flex justify-between items-center mb-2">
-        <span className="font-bold">{category.title}</span>
-        <div className="flex space-x-2">
-          <button className="text-indigo-400 hover:text-indigo-500">
-            <FaEdit />
-          </button>
-          <button className="text-indigo-300 hover:text-indigo-400">
-            <FaEllipsisV />
-          </button>
-        </div>
-      </div>
+const ItemType = "CATEGORY";
 
-      {/* Droppable area for channels */}
-      <div className="pl-4 space-y-2">
-        {category.channels.map((channel, idx) => (
-          <ChannelItem
-            key={channel.id}
-            channel={channel}
-            index={idx}
-            categoryIndex={index}
-            moveChannel={moveChannel}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Draggable channel component
-const ChannelItem = ({ channel, index, categoryIndex, moveChannel }) => {
-  const [, ref] = useDrag({
-    type: ItemTypes.CHANNEL,
-    item: { index, categoryIndex },
+// Drag-and-Drop Category Item
+const CategoryItem = ({ category, index, moveCategory }) => {
+  const router=useRouter()
+  const [{ isDragging }, ref] = useDrag({
+    type: ItemType,
+    item: { index },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
   });
 
   const [, drop] = useDrop({
-    accept: ItemTypes.CHANNEL,
+    accept: ItemType,
     hover: (draggedItem) => {
-      if (draggedItem.categoryIndex === categoryIndex && draggedItem.index !== index) {
-        moveChannel(draggedItem.categoryIndex, draggedItem.index, index);
+      if (draggedItem.index !== index) {
+        moveCategory(draggedItem.index, index);
         draggedItem.index = index;
       }
     },
   });
 
   return (
-    <div
-      ref={(node) => ref(drop(node))}
-      className="flex items-center justify-between p-2 bg-white text-indigo-500 rounded-md cursor-pointer hover:bg-indigo-100"
-    >
-      <span># {channel.name}</span>
-    </div>
+    <>
+      <div
+        ref={(node) => ref(drop(node))}
+        className={`p-3 py-2 pl-2 bg-white text-indigo-500 rounded cursor-pointer transition-all border border-indigo-500 shadow-lg`}
+      >
+        <div className="flex justify-between items-center">
+          <span className="font-semibold text-sm flex">
+            <FaEllipsisVertical className="my-auto mr-[3px]" size={17} />
+            <span>{category.name}</span>
+          </span>
+          <div className="flex space-x-2">
+            <button className="p-1 hover:bg-indigo-600 border border-indigo-500 bg-white text-indigo-500 hover:text-white transition rounded-full">
+              <BiSolidEdit size={19} onClick={()=>router.push(`/setting/category/${category.id}`)} />
+            </button>
+            <button className="p-1 hover:bg-indigo-600 border border-indigo-500 bg-white text-indigo-500 hover:text-white transition rounded-full">
+              <PiDotsThreeOutlineFill size={19} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 
 const ServerCategories = () => {
-  const [categories, setCategories] = useState([
-    { id: "text", title: "TEXT CHANNELS", channels: [{ id: "general", name: "general" }, { id: "clips", name: "clips-and-highlights" }] },
-    { id: "voice", title: "VOICE CHANNELS", channels: [{ id: "example", name: "example1" }, { id: "example2", name: "example2" }, { id: "example3", name: "example3" }] },
-  ]);
-  const [search, setSearch] = useState("");
+  const [categories, setCategories] = useState([]);
+  const params = useParams();
 
-  // Function to move categories
-  const moveCategory = (from, to) => {
-    const updatedCategories = [...categories];
-    const [movedCategory] = updatedCategories.splice(from, 1);
-    updatedCategories.splice(to, 0, movedCategory);
-    setCategories(updatedCategories);
-  };
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await getCategories(params?.serverId);
+        if (res?.success) {
+          setCategories(res.categories);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
 
-  // Function to move channels within a category
-  const moveChannel = (categoryIndex, from, to) => {
-    const updatedCategories = [...categories];
-    const channels = updatedCategories[categoryIndex].channels;
-    const [movedChannel] = channels.splice(from, 1);
-    channels.splice(to, 0, movedChannel);
-    setCategories(updatedCategories);
-  };
+    fetchCategories();
+  }, [params?.serverId]);
 
-  // Filter categories by search
-  const filteredCategories = categories.filter((category) =>
-    category.title.toLowerCase().includes(search.toLowerCase())
-  );
+  // Optimized function to move categories
+  const moveCategory = useCallback((fromIndex, toIndex) => {
+    setCategories((prev) => {
+      const updatedCategories = [...prev];
+      const [movedCategory] = updatedCategories.splice(fromIndex, 1);
+      updatedCategories.splice(toIndex, 0, movedCategory);
+      return updatedCategories;
+    });
+  }, []);
+  console.log(categories)
+  const handleReOrder=async()=>{
+    try {
+      const category=categories.map((cat)=>cat.id)
+      console.log(category)
+      const res=await reorderCategory(params?.serverId,category)
+      console.log(res?.reorderCategory)
+      if(res){
+        console.log("updated successfully")
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:error,
+        variant:"destructive"
+      })
+    }
+  }
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen bg-white text-indigo-500 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <input
-            type="text"
-            placeholder="Search Categories"
-            className="p-2 bg-gray-100 text-indigo-500 rounded-md w-full"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button className="ml-2 bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md text-white">
-            Create Category
-          </button>
-        </div>
+    <div className="p-6 text-indigo-500 bg-gray-200">
+      <h2 className="text-xl font-bold flex items-center">
+        <MdEventNote className="mr-2" size={25} />
+        Categories
+      </h2>
+      <p className="text-sm text-indigo-500">
+        Change category settings and reorder how they appear on home page.
+      </p>
 
-        <h2 className="text-lg font-bold mb-2">Categories - {categories.length}</h2>
+      <DndProvider backend={HTML5Backend}>
+        <div className="mt-5">
+          <div className="flex items-center justify-between mb-4">
+            <CreateCategoryModal serverId={params.serverId}>
+            <button className="bg-indigo-500 hover:bg-indigo-600 px-3 py-2 rounded-md text-white flex">
+              <FaPlus size={20} className="inline my-auto mr-1"/> Create Category
+            </button>
+            </CreateCategoryModal>
+          </div>
+          <h2 className="mb-2 flex justify-between">
+            <span className="font-bold">
+              Total Categories: {categories.length}
+            </span>
+            <span 
+            onClick={handleReOrder}
+            className="bg-indigo-500 text-white px-3 py-[3px] rounded my-auto cursor-pointer hover:bg-indigo-600"
+            >
+              save
+            </span>
+          </h2>
 
-        <div className="space-y-2">
-          {filteredCategories.map((category, index) => (
-            <CategoryItem
-              key={category.id}
-              category={category}
-              index={index}
-              moveCategory={moveCategory}
-              moveChannel={moveChannel}
-            />
-          ))}
+          <div className="space-y-2">
+            {categories.length > 0 ? (
+              categories.map((category, index) => (
+                <CategoryItem
+                  key={category.id}
+                  category={category}
+                  index={index}
+                  moveCategory={moveCategory}
+                />
+              ))
+            ) : (
+              <p className="text-gray-500">No categories available.</p>
+            )}
+          </div>
         </div>
-      </div>
-    </DndProvider>
+      </DndProvider>
+    </div>
   );
 };
 

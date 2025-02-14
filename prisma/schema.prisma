@@ -13,11 +13,12 @@ model User {
   username       String          @unique
   avatarUrl      String?
   serverProfiles ServerProfile[] // Servers the user has joined
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
   ownedServers   Server[] // Servers the user owns
 
   Dms String[]
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model Server {
@@ -31,11 +32,12 @@ model Server {
   roles          ServerRole[] // Global roles for the server
   categories     Category[]      @relation("serverCategory")
   serverProfiles ServerProfile[] // Profiles for users in this server
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
 
   defaultServerRoleId String?
   defaultServerRole   DefaultServerRole?
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model ServerProfile {
@@ -56,14 +58,17 @@ model ServerProfile {
 
   // Ensure one profile per user per server
   @@unique([userId, serverId])
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model DefaultServerRole {
   id   String @id @default(cuid()) @map("_id")
   name String @default("everyone")
 
-  serverId String @unique
-  server   Server @relation(fields: [serverId], references: [id])
+  serverId String? @unique
+  server   Server? @relation(fields: [serverId], references: [id])
 
   // general permission
   viewChannel Boolean @default(true)
@@ -177,6 +182,7 @@ model ServerRole {
 }
 
 model Category {
+  order         Int
   id            String         @id @default(cuid()) @map("_id")
   name          String
   serverId      String
@@ -186,6 +192,9 @@ model Category {
 
   defaultCategoryRoleId String?
   defaultCategoryRole   DefaultCategoryRole?
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 enum PermissionType {
@@ -229,6 +238,7 @@ enum ChannelType {
 }
 
 model Channel {
+  order        Int
   id           String        @id @default(cuid()) @map("_id")
   name         String
   description  String
@@ -240,6 +250,9 @@ model Channel {
 
   defaultChannelRoleId String?
   defaultChannelRole   DefaultChannelRole?
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model ChannelRole {
@@ -284,8 +297,8 @@ model ChannelMessage {
   serverProfileId String
 
   content String
-  imgUrl  String
-  fileUrl String
+  imgUrl  String?
+  fileUrl String?
 
   timestamp DateTime  @default(now())
   updated   DateTime?

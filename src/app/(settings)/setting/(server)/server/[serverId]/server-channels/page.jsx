@@ -1,8 +1,14 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { FaEdit, FaEllipsisV } from "react-icons/fa";
+import { BiPlus, BiSolidEdit } from "react-icons/bi"
+import { MdEventNote } from "react-icons/md";
+import {channelReorder, getChannel} from "@/actions/channel"
+import { useParams } from "next/navigation";
+import { toast } from "@/hooks/use-toast";
+
+import {CreateChannelModal} from "@/components/modals/createChannelModal"
 
 const ItemTypes = {
   CATEGORY: "CATEGORY",
@@ -10,22 +16,20 @@ const ItemTypes = {
 };
 
 // Category component (no drag functionality here)
-const CategoryItem = ({ category, index, moveCategory, moveChannel }) => {
+const CategoryItem = ({ category, index, moveChannel }) => {
+  const params=useParams()
   return (
-    <div className="p-3 bg-white text-indigo-500 rounded-md shadow-md">
-      <div className="flex justify-between items-center mb-2">
-        <span className="font-bold">{category.title}</span>
-        <div className="flex space-x-2">
-          <button className="text-indigo-400 hover:text-indigo-500">
-            <FaEdit />
-          </button>
-          <button className="text-indigo-300 hover:text-indigo-400">
-            <FaEllipsisV />
-          </button>
-        </div>
+    <div className="p-3 bg-white text-indigo-500 rounded shadow-md">
+      <div className="flex justify-between items-center pl-2">
+        <span className="font-bold text-sm">{category.name}</span>
+        <span className="pr-1">
+          <CreateChannelModal categoryName={category.name} categoryId={category.id} serverId={params.serverId}>
+          <BiPlus size={26} className="hover:scale-105 cursor-pointer" />
+          </CreateChannelModal>
+        </span>
       </div>
       {/* Droppable area for channels */}
-      <div className="pl-4 space-y-2">
+      <div>
         {category.channels.map((channel, idx) => (
           <ChannelItem
             key={channel.id}
@@ -73,45 +77,41 @@ const ChannelItem = ({ channel, index, categoryIndex, moveChannel }) => {
   return (
     <div
       ref={(node) => drag(drop(node))}
-      className={`flex items-center justify-between p-2 bg-white text-indigo-500 rounded-md cursor-pointer hover:bg-indigo-100 ${
-        isDragging ? "opacity-50" : ""
-      }`}
+      className={`flex items-center justify-between p-2 bg-white text-indigo-500 rounded cursor-pointer hover:bg-indigo-100 ${isDragging ? "opacity-50" : ""
+        }`}
     >
-      <span># {channel.name}</span>
+      <span className=""># {channel.name}</span>
+      <span>
+          <BiSolidEdit size={19} className="hover:text-indigo-600 transition-all hover:scale-110" />
+      </span>
     </div>
   );
 };
 
 const ServerChannels = () => {
-  const [categories, setCategories] = useState([
-    {
-      id: "text",
-      title: "TEXT CHANNELS",
-      channels: [
-        { id: "general", name: "general" },
-        { id: "clips", name: "clips-and-highlights" },
-      ],
-    },
-    {
-      id: "voice",
-      title: "VOICE CHANNELS",
-      channels: [
-        { id: "example", name: "example1" },
-        { id: "example2", name: "example2" },
-        { id: "example3", name: "example3" },
-      ],
-    },
-  ]);
+  const params=useParams()
+  const [categories, setCategories] = useState([]);
 
-  const [search, setSearch] = useState("");
-
-  // Function to move categories
-  const moveCategory = (from, to) => {
-    const updatedCategories = [...categories];
-    const [movedCategory] = updatedCategories.splice(from, 1);
-    updatedCategories.splice(to, 0, movedCategory);
-    setCategories(updatedCategories);
-  };
+  useEffect(()=>{
+    const initiatePage=async()=>{
+      try {
+        const res=await getChannel(params.serverId)
+        if(res.success){
+          setCategories(res.categories)
+        }
+        if(!res.success){
+          toast({
+            title: "Error",
+            description:res.message,
+            variant:"destructive"
+          })
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    initiatePage()
+  },[params.serverId])
 
   // Function to move channels between categories
   const moveChannel = (
@@ -134,40 +134,59 @@ const ServerChannels = () => {
     setCategories(updatedCategories);
   };
 
-  // Filter categories by search
-  const filteredCategories = categories.filter((category) =>
-    category.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleChannelReorder=async()=>{
+    try {
+      const temp=categories.map((cate)=>{return {id:cate.id,channels:cate.channels.map((chan)=>chan.id)}})
+      console.log(temp)
+      const res=await channelReorder(params.serverId,temp)
+      if(res.success){
+        toast({
+          title: "Success",
+          description: "Channels reordered successfully",
+          variant:"success"
+        })
+      }
+    } catch (error) {
+      console.log(error)
+      toast({
+        title: "Error",
+        description:error.message,
+        variant:"destructive"
+      })
+    }
+  }
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen bg-white text-indigo-500 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <input
-            type="text"
-            placeholder="Search Categories"
-            className="p-2 bg-gray-100 text-indigo-500 rounded-md w-full"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button className="ml-2 bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md text-white">
-            Create Category
-          </button>
+    <div className="bg-gray-200 p-6 text-indigo-500">
+      <h2 className="text-xl font-bold flex items-center">
+        <MdEventNote className="mr-2" size={25} />
+        Channels
+      </h2>
+      <p className="text-sm text-indigo-500">
+        Change channel settings and reorder how they appear on home page.
+      </p>
+      <DndProvider backend={HTML5Backend}>
+        <div className="text-indigo-500">
+          <div className="flex items-center justify-between mb-4">
+            
+          </div>
+          <div className="flex justify-between mb-1">
+          <h2 className="font-bold mb-2">Channels - {categories.reduce((sum, cate) => sum + cate.channels.length, 0)}</h2>
+          <span className="bg-indigo-500 text-white py-1 px-3 rounded cursor-pointer hover:bg-indigo-600" onClick={handleChannelReorder}>Save</span>
+            </div>
+          <div className="space-y-2">
+            {categories.map((category, index) => (
+              <CategoryItem
+                key={category.id}
+                category={category}
+                index={index}
+                moveChannel={moveChannel}
+              />
+            ))}
+          </div>
         </div>
-        <h2 className="text-lg font-bold mb-2">Categories - {categories.length}</h2>
-        <div className="space-y-2">
-          {filteredCategories.map((category, index) => (
-            <CategoryItem
-              key={category.id}
-              category={category}
-              index={index}
-              moveCategory={moveCategory}
-              moveChannel={moveChannel}
-            />
-          ))}
-        </div>
-      </div>
-    </DndProvider>
+      </DndProvider>
+    </div>
   );
 };
 

@@ -1,6 +1,7 @@
 "use client"
 import { BsPlus, BsGearFill } from "react-icons/bs";
 import { FaFire } from "react-icons/fa";
+import { FaPlus } from "react-icons/fa6";
 
 import {
     Tooltip,
@@ -9,7 +10,6 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getAllUserJoinedServer } from "@/actions/user";
-import Image from "next/image";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -43,11 +43,10 @@ const SideBar = () => {
 
     return (
         <div
-            className="h-screen w-20 flex flex-col
-      bg-white shadow-lg justify-between"
+            className="h-screen w-20 flex flex-col bg-white shadow-lg justify-between"
         >
             <div>
-                <SideBarIcon icon={<FaFire size="28" />} text="Home" active={active=="home"} />
+                <SideBarIcon icon={<FaFire size="30" />} text="Home" active={active=="home"} redirect={`/home`} />
                 <Divider />
             </div>
             <div className="flex-1 overflow-y-scroll scrollbar-none my-1">
@@ -66,8 +65,8 @@ const SideBar = () => {
             </div>
             <div>
                 <Divider />
-                <SideBarIcon icon={<BsPlus size="32" />} text="Create server" active={false} />
-                <SideBarIcon icon={<BsGearFill size="22" />} text="Settings" active={active=="setting"} />
+                <SideBarIcon icon={<FaPlus size="30" />} text="Create server" active={false} redirect={`/user/create-server`} />
+                <SideBarIcon icon={<BsGearFill size="26" />} text="Settings" active={active=="setting"} redirect={`/setting/user`} />
             </div>
         </div>
     );
@@ -81,15 +80,19 @@ const SideBarServerIcon = ({ icon, text = "tooltip 💡",active,itemId }) => {
             <Tooltip>
                 <TooltipTrigger asChild>
                     <div 
-                    className={`relative flex items-center justify-center h-12 w-12 mt-2 mb-2 mx-auto transition-all duration-300 ease-linear cursor-pointer shadow-lg group hover:rounded-2xl ${active?"bg-indigo-600 text-white rounded-xl":"border border-dashed border-indigo-500 hover:bg-indigo-600 text-indigo-500 hover:text-white hover:rounded-2xl rounded-3xl bg-white"}`}
+                    className={`relative flex items-center justify-center h-14 w-14 mt-2 mb-2 mx-auto transition-all ease-out duration-500 cursor-pointer shadow-lg group hover:rounded-[16px] ${active?"bg-indigo-600 text-white rounded-[12px]":"border border-dashed border-indigo-500 hover:bg-indigo-600 text-indigo-500 hover:text-white rounded-[50px] bg-white"}`}
                     onClick={()=>router.push(`/server/${itemId}`)}
                     >
                         <div className={`absolute -translate-x-10 w-2 rounded bg-indigo-500 transition-all ${active?"h-10":"h-4 group-hover:h-8"}`} />
                         {icon ? (
-                            <Image />
+                            <img
+                            src={icon}
+                            alt="Server Icon"
+                            className={`transition-all duration-500 ease-out my-auto w-full h-full group-hover:rounded-2xl scale-105 ${active?"rounded-xl shadow-indigo-600 shadow-2xl":"rounded-3xl"} object-cover`}
+                        />
                         ) : (
                             <div className="flex items-center">
-                                <p className="text-center text-4xl -translate-y-1 py-auto">{`${(text.slice(0, 1)).toLowerCase()}`}</p>
+                                <p className="text-center text-4xl -translate-y-[2px] py-auto">{`${(text.slice(0, 1)).toLowerCase()}`}</p>
                             </div>
                         )}
                     </div>
@@ -103,7 +106,7 @@ const SideBarServerIcon = ({ icon, text = "tooltip 💡",active,itemId }) => {
     )
 };
 
-const SideBarIcon = ({ icon, text = "tooltip 💡",active }) => {
+const SideBarIcon = ({ icon, text = "tooltip 💡", active, redirect }) => {
     const router=useRouter()
     return (
     <div>
@@ -111,9 +114,9 @@ const SideBarIcon = ({ icon, text = "tooltip 💡",active }) => {
             <Tooltip>
                 <TooltipTrigger asChild>
                     <div
-                        className={`relative flex items-center justify-center h-12 w-12 mt-2 mb-2 mx-auto transition-all duration-300 ease-linear cursor-pointer shadow-lg group hover:rounded-2xl
-                     ${active?"bg-indigo-600 text-white rounded-xl":"border border-dashed border-indigo-500 hover:bg-indigo-600 text-indigo-500 hover:text-white hover:rounded-2xl rounded-3xl bg-white"} `}
-                    onClick={()=>router.push("/home")}
+                        className={`relative flex items-center justify-center h-14 w-14 mt-2 mb-2 mx-auto transition-all duration-500 ease-out cursor-pointer shadow-lg group hover:rounded-[16px]
+                     ${active?"bg-indigo-600 text-white rounded-[12px]":"border border-dashed border-indigo-500 hover:bg-indigo-600 text-indigo-500 hover:text-white hover:rounded-[16px] rounded-[50px] bg-white"} `}
+                    onClick={()=>router.push(`${redirect}`)}
                     >
                         <div className={`absolute -translate-x-10 w-2 rounded bg-indigo-500 transition-all ${active?"h-10":"h-4 group-hover:h-8"}`} />
                         {icon}

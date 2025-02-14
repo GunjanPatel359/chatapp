@@ -9,20 +9,25 @@ import { IoIosArrowForward } from "react-icons/io";
 import { HiSpeakerWave } from "react-icons/hi2";
 import { FaPlus } from "react-icons/fa6";
 import { serverStore } from "@/hooks/zusthook.js";
+import Image from "next/image";
 
 const ServerSideBar = () => {
-    const { onsetServer } = serverStore();
+    const { onsetServer,serverProfile } = serverStore();
     const router = useRouter();
     const params = useParams();
     const [server, setServer] = useState(null);
+    // const [serverProfile,setServerProfile]=useState(null)
     const serverId = useMemo(() => params.serverId, [params?.serverId]);
     const channelId = useMemo(() => params.channelId, [params?.channelId]);
+
+    console.log(serverProfile)
 
     useEffect(() => {
         const initiatePage = async () => {
             try {
                 const res = await getServer(serverId);
                 if (res.success) {
+                    console.log(res.server)
                     onsetServer(res.server);
                     setServer(res.server);
                 }
@@ -40,18 +45,16 @@ const ServerSideBar = () => {
             {server ? (
                 <>
                     {/* Server Header */}
-                    <div className="p-2 pl-4 h-12 bg-gray-100 flex justify-between space-x-2 border-b border-gray-100 shadow">
+                    <div className="px-2 pl-4 h-16 bg-gray-100 flex justify-between space-x-2 border-b border-gray-100 shadow">
                         {/* <img src="https://via.placeholder.com/40" alt="Server Icon" className="w-10 h-10 rounded-full"/> */}
                         <div className="flex">
-                            <div className="w-8 h-8 rounded-full bg-white">
+                            <div className="w-14 h-14 rounded-full bg-white flex my-auto">
                                 {server?.imageUrl ? (
-                                    <div>
-                                        <Image
+                                        <img
                                             src={server.imageUrl}
                                             alt="Server Icon"
-                                            className="w-8 h-8"
+                                            className="my-auto w-14 h-14 rounded-full object-cover"
                                         />
-                                    </div>
                                 ) : (
                                     <div className="text-3xl text-center translate-y-[-4px]">
                                         {`${server.name.slice(0, 1).toLowerCase()}`}

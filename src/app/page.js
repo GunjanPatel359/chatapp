@@ -11,12 +11,13 @@ export default function Home() {
   useEffect(()=>{
     const initiatePage=async()=>{
       try {
-        const serverId="cm6ccn9qu000wv30g49e63gbk"
-        const categoryId="cm6cdmog9000dv3u4oqjhkdob"
-        const channelId="cm6da2m4a0007v37gwiea406z"
+        const serverId="cm6osb11r0001v3wwy2gln52q"
+        const categoryId="cm6osb11s0008v3ww1ltqclks"
+        const channelId="cm6osb11s0003v3ww2arswwkl"
+        const serverRoleId="cm6ovgmap0001v3fksmzhs8kb"
         // const res=await createCategory("cm6ccn9qu000wv30g49e63gbk",{name:"testing category"})
         // console.log(res)
-        // const res=await createChannel(serverId,categoryId,{name:"test channel",description:"test data"})
+        // const res=await createChannel(serverId,categoryId,{name:"channel 1",description:"test data"})
         // console.log(res)
         // const res=await addMemberToServerRole(serverId,"cm6cd67d40009v3u46ky19dwb", "cm6f8symz0001v3xwmvd6kwj2")
         // console.log(res)
@@ -24,7 +25,7 @@ export default function Home() {
         // console.log(res)
 
 
-        // const res=await createServerRole("cm6ccn9qu000wv30g49e63gbk",{name:"test two"})
+        // const res=await createServerRole(serverId,{name:"teniis"})
         // console.log(res)
         // const res=await editServerRole("cm5utrqbg000av3h4rsr970ey","cm6c81zd4000dv30gglzsw7ze",{name:"Admin",adminPermission:true})
         // console.log(res)

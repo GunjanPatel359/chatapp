@@ -2,7 +2,7 @@ import SideBar from "./SideBar"
 
 const LayoutPage=({children})=>{
     return (
-        <div className="flex h-full w-full">
+        <div className="flex max-h-screen w-full">
             <SideBar />
             <div className="flex-1">
             {children}

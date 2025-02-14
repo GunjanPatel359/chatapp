@@ -10,319 +10,331 @@ function haveSameElements(arr1, arr2) {
 //test needed
 export const createCategory = async (serverId, categoryData) => {
     try {
-        if (!serverId) {
-            throw new Error("please provide server ID")
-        }
-        if (!categoryData && !categoryData?.name) {
-            throw new Error("please provide category data")
-        }
-        const user = await isAuthUser()
+        if (!serverId) return { success: false, message: "Please provide a server ID." };
+        if (!categoryData?.name) return { success: false, message: "Please provide category data with a name." };
+
+        const user = await isAuthUser();
+        if (!user) return { success: false, message: "User authentication failed." };
+
         const userServerProfile = await prisma.serverProfile.findUnique({
             where: {
                 userId_serverId: {
                     userId: user.id,
-                    serverId: serverId,
+                    serverId: serverId
                 },
-                isDeleted:false
+                isDeleted: false
             },
             include: {
-                roles: {
-                    include: {
-                        role: true
-                    }
-                }
+                roles: { include: { role: true } }
             }
-        })
-        if (!userServerProfile) throw new Error("you don't have permission to create a category")
+        });
+
+        if (!userServerProfile) return { success: false, message: "You do not have permission to create a category." };
+
         const server = await prisma.server.findUnique({
             where: {
                 id: serverId,
-                serverProfiles: {
-                    some: {
-                        id: userServerProfile.id
-                    }
-                }
-            }
-        })
-        if (server.ownerId == user.id) {
-            const category = await prisma.category.create({
-                data: {
-                    name: categoryData.name,
-                    serverId,
-                    defaultCategoryRole:{
-                        create:{}
-                    }
-                },
-            })
-            console.log(category)
-            return { success: true, message: "category created successfully" }
-        }
-        if (userServerProfile.roles?.length == 0) {
-            throw new Error("you don't have permission to create a category")
-        }
-        const firstMatchingRole = userServerProfile.roles.find(role => role.role.adminPermission || role.role.manageChannels);
-        if (firstMatchingRole == undefined) {
-            throw new Error("you don't have permission to create a category")
-        }
-        const category = await prisma.category.create({
-            data: {
-                name: categoryData.name,
-                serverId,
-                defaultCategoryRole:{
-                    create:{}
-                }
-            }
-        })
-        console.log(category)
-        return { success: true, message: "category created successfully" }
-    } catch (error) {
-        console.log(error)
-        throw new Error("createCategory", error)
-    }
-}
-
-// in test
-export const updateCategory = async (serverId,categoryId,update)=>{
-    try {
-        if(!serverId || !categoryId || !update.name){
-            throw new Error("serverId and categoryId are required")
-        }
-        const user=await isAuthUser()
-        if(!user){
-            throw new Error("you are not logged in")
-        }
-        const userServerProfile=await prisma.serverProfile.findUnique({
-            where:{
-                userId_serverId:{
-                    userId:user.id,
-                    serverId
-                },
-                isDeleted:false
+                serverProfiles: { some: { id: userServerProfile.id } }
             },
             include:{
-                server:true,
-                roles:{
-                    include:{
-                        role:true
-                    }
-                }
+                categories:true
             }
-        })
-        if(!userServerProfile){
-            throw new Error("you are not a member of this server")
+        });
+
+        if (!server) return { success: false, message: "Server not found." };
+
+        if (server.ownerId !== user.id && !userServerProfile.roles.some(role => role.role.adminPermission || role.role.manageChannels)) {
+            return { success: false, message: "You do not have permission to create a category." };
         }
-        const verifyCategory=await prisma.category.findUnique({
-            where:{
-                id:categoryId,
+
+        const category = await prisma.category.create({
+            data: {
+                name: categoryData.name.toLocaleUpperCase(),
+                serverId,
+                order:server.categories.length,
+                defaultCategoryRole: { create: {} }
+            }
+        });
+
+        return { success: true, message: "Category created successfully." };
+
+    } catch (error) {
+        console.error("Error creating category:", error?.message || error);
+        return { success: false, message: error?.message || "An unexpected error occurred while creating the category." };
+    }
+};
+
+
+// in test
+export const updateCategory = async (serverId, categoryId, update) => {
+    try {
+        if (!serverId || !categoryId || !update?.name) {
+            return { success: false, message: "serverId and categoryId are required." };
+        }
+
+        const user = await isAuthUser();
+        if (!user) {
+            return { success: false, message: "You are not logged in." };
+        }
+
+        const userServerProfile = await prisma.serverProfile.findUnique({
+            where: {
+                userId_serverId: {
+                    userId: user.id,
+                    serverId
+                },
+                isDeleted: false
+            },
+            include: {
+                server: true,
+                roles: { include: { role: true } }
+            }
+        });
+
+        if (!userServerProfile) {
+            return { success: false, message: "You are not a member of this server." };
+        }
+
+        const verifyCategory = await prisma.category.findUnique({
+            where: {
+                id: categoryId,
                 serverId
             }
-        })
-        if(!verifyCategory){
-            throw new Error("category not found")
+        });
+
+        if (!verifyCategory) {
+            return { success: false, message: "Category not found." };
         }
-        if(userServerProfile.server.ownerId==user.id){
-            const updateCategory=await prisma.category.update({
-                where:{
-                    id:categoryId
-                },
-                data:{
-                    name:update.name
-                }
-            })
-            console.log(updateCategory)
-            return {success:true,message:"category updated successfully"}
+
+        if (userServerProfile.server.ownerId === user.id || userServerProfile.roles.some(item => item.role.adminPermission)) {
+            const updatedCategory = await prisma.category.update({
+                where: { id: categoryId },
+                data: { name: update.name }
+            });
+
+            console.log(updatedCategory);
+            return { success: true, message: "Category updated successfully." };
         }
-        const isUserVerify=userServerProfile.roles.some((item)=>item.role.adminPermission)
-        if(!isUserVerify){
-            throw new Error("you dont have permission to delete this category")
-        }
-        const updateCategory=await prisma.category.delete({
-            where:{
-                id:categoryId
-            }
-        })
-        console.log(updateCategory)
-        return {success:true,message:"category updated successfully"}
+
+        return { success: false, message: "You do not have permission to update this category." };
+
     } catch (error) {
-        console.log(error)
-        throw new Error(error)
+        console.error("Error updating category:", error?.message || error);
+        return { success: false, message: error?.message || "An unexpected error occurred while updating the category." };
     }
-}
+};
+
 
 export const deleteCategory = async (serverId, categoryId) => {
     try {
-        if(!serverId || !categoryId){
-            throw new Error("serverId and categoryId are required")
+        if (!serverId || !categoryId) {
+            return { success: false, message: "serverId and categoryId are required." };
         }
-        const user=await isAuthUser()
-        if(!user){
-            throw new Error("you are not logged in")
+
+        const user = await isAuthUser();
+        if (!user) {
+            return { success: false, message: "You are not logged in." };
         }
-        const userServerProfile=await prisma.serverProfile.findUnique({
-            where:{
-                userId_serverId:{
-                    userId:user.id,
+
+        const userServerProfile = await prisma.serverProfile.findUnique({
+            where: {
+                userId_serverId: {
+                    userId: user.id,
                     serverId
                 },
-                isDeleted:false
+                isDeleted: false
             },
-            include:{
-                server:true,
-                roles:{
-                    include:{
-                        role:true
-                    }
-                }
+            include: {
+                server: true,
+                roles: { include: { role: true } }
             }
-        })
-        if(!userServerProfile){
-            throw new Error("you are not a member of this server")
-        }
-        const verifyCategory=await prisma.category.findUnique({
-            where:{
-                id:categoryId,
-                serverId
-            }
-        })
-        if(!verifyCategory){
-            throw new Error("category not found")
-        }
-        if(userServerProfile.server.ownerId==user.id){
-            const deleteCategory=await prisma.category.delete({
-                where:{
-                    id:categoryId
-                }
-            })
-            console.log(deleteCategory)
-            return {success:true,message:"category deleted successfully"}
-        }
-        const isUserVerify=userServerProfile.roles.some((item)=>item.role.adminPermission)
-        if(!isUserVerify){
-            throw new Error("you dont have permission to delete this category")
-        }
-        const deleteCategory=await prisma.category.delete({
-            where:{
-                id:categoryId
-            }
-        })
-        console.log(deleteCategory)
-        return {success:true,message:"category deleted successfully"}
-    } catch (error) {
-        console.log(error)
-        throw new Error(error)
-    }
-}
+        });
 
-export const getCategory=async(serverId)=>{
-    try {
-        if(!serverId){
-            throw new Error("server id is required")
+        if (!userServerProfile) {
+            return { success: false, message: "You are not a member of this server." };
         }
-        const user=await isAuthUser()
-        if(!user){
-            throw new Error("you are not authenticated")
-        }
-        const userServerProfile=await prisma.serverProfile.findFirst({
-            where:{
-                userId:user.id,
-                serverId,
-                isDeleted:false
-            },
-            include:{
-                roles:{
-                    include:{
-                        role:true
-                    }
-                }
-            }
-        })
-        if(!userServerProfile){
-            throw new Error("you dont have permission to access this server")
-        }
-        const server=await prisma.server.findFirst({
-            where:{
-                id:serverId
-            },
-            include:{
-                categories:true
-            }
-        })
-        if(!server){
-            throw new Error("server not found")
-        }
-        if(server.ownerId==user.id){
-           return {success:true,categories:JSON.parse(JSON.stringify(server))} 
-        }
-        const isAdmin=userServerProfile.roles.some((role)=>role.role.adminPermission)
-        if(isAdmin){
-            return {success:true,categories:JSON.parse(JSON.stringify(server))}
-        }
-        throw new Error("you do not have permission")
-    } catch (error) {
-        console.log(error)
-        throw new Error(error)
-    }
-}
 
-export const reorderCategory=async(serverId,categoryOrder)=>{
-    try {
-        if(!serverId || categoryOrder==[] || !Array.isArray(categoryOrder)){
-            throw new Error("server id is required")
+        const verifyCategory = await prisma.category.findUnique({
+            where: { id: categoryId, serverId }
+        });
+
+        if (!verifyCategory) {
+            return { success: false, message: "Category not found." };
         }
-        const user=await isAuthUser()
-        if(!user){
-            throw new Error("user not found")
-        }
-        const userServerProfile=await prisma.serverProfile.findFirst({
-            where:{
-                userId:user.id,
-                serverId,
-                isDeleted:false
-            },
-            include:{
-                roles:{
-                    include:{
-                        role:true
+
+        if (userServerProfile.server.ownerId === user.id || userServerProfile.roles.some(item => item.role.adminPermission)) {
+            const deletedCategory = await prisma.$transaction(async (prisma) => {
+                // Step 1: Delete the category
+                const deletedCategory = await prisma.category.delete({
+                    where: { id: categoryId }
+                });
+
+                // Step 2: Fetch all remaining categories ordered by their current 'order' field
+                const server = await prisma.server.findFirst({
+                    where: { id: serverId },
+                    select: {
+                        categories: {
+                            where: { serverId },
+                            orderBy: { order: 'asc' }, // Sort categories by the 'order' field
+                            select: {
+                                id: true,
+                                order: true
+                            }
+                        }
                     }
+                });
+
+                // Ensure categories are available
+                const remainingCategories = server?.categories || [];
+
+                // Step 3: Reorder the categories based on their new positions
+                for (let i = 0; i < remainingCategories.length; i++) {
+                    await prisma.category.update({
+                        where: { id: remainingCategories[i].id },
+                        data: { order: i } // Update the 'order' field for each category
+                    });
                 }
-            }
-        })
-        if(!userServerProfile){
-            throw new Error("you dont have permission to access this server")
+
+                // Return the result after the transaction
+                console.log("Category deleted and order updated successfully.");
+                return { success: true, message: "Category deleted and order updated successfully." };
+            });
         }
-        const server=await prisma.server.findFirst({
-            where:{
-                id:serverId
-            },
-            include:{
-                categories:true
-            }
-        })
-        if(!server){
-            throw new Error("server not found")
+
+        return { success: false, message: "You do not have permission to delete this category." };
+
+    } catch (error) {
+        console.error("Error deleting category:", error?.message || error);
+        return { success: false, message: error?.message || "An unexpected error occurred while deleting the category." };
+    }
+};
+
+
+export const getCategory = async (serverId) => {
+    try {
+        if (!serverId) {
+            return { success: false, message: "Server ID is required." };
         }
-        const categoryIds=server.categories.map((item)=>item.id)
-        const valid=haveSameElements(categoryIds,categoryOrder)
-        if(!valid){
-            throw new Error("invalid categories")
+
+        const user = await isAuthUser();
+        if (!user) {
+            return { success: false, message: "You are not authenticated." };
         }
-        if(server.ownerId!=user.id && !userServerProfile.roles.some((role)=>role.role.adminPermission)){
-            throw new Error("you dont have permission to reorder categories")
-        }
-        const serverCategoryReorder = await prisma.server.update({
+
+        const userServerProfile = await prisma.serverProfile.findFirst({
             where: {
-                id: serverId
+                userId: user.id,
+                serverId,
+                isDeleted: false
             },
-            data: {
+            include: {
+                roles: { include: { role: true } }
+            }
+        });
+
+        if (!userServerProfile) {
+            return { success: false, message: "You don't have permission to access this server." };
+        }
+
+        const server = await prisma.server.findFirst({
+            where: { id: serverId },
+            include: {
                 categories: {
-                    set: categoryOrder.map(id => ({ id })) // Reorder categories by setting them in the given order
+                    orderBy: { order: "asc" }
                 }
             }
         });
-        console.log(serverCategoryReorder)
-        return {success:true, reorderCategory:JSON.parse(JSON.stringify(serverCategoryReorder))}        
+
+        if (!server) {
+            return { success: false, message: "Server not found." };
+        }
+
+        if (server.ownerId === user.id || userServerProfile.roles.some(role => role.role.adminPermission)) {
+            return { success: true, categories: JSON.parse(JSON.stringify(server.categories)) };
+        }
+
+        return { success: false, message: "You do not have permission to access categories." };
+
     } catch (error) {
-        console.log(error)
-        throw new Error(error)
+        console.error("Error fetching categories:", error?.message || error);
+        return { success: false, message: error?.message || "An unexpected error occurred while fetching categories." };
     }
-}
+};
+
+
+export const reorderCategory = async (serverId, categoryOrder) => {
+    try {
+        if (!serverId || !Array.isArray(categoryOrder) || categoryOrder.length === 0) {
+            return { success: false, message: "Server ID and a valid category order array are required." };
+        }
+
+        const user = await isAuthUser();
+        if (!user) {
+            return { success: false, message: "User not found." };
+        }
+
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: {
+                userId: user.id,
+                serverId,
+                isDeleted: false
+            },
+            include: {
+                roles: { include: { role: true } }
+            }
+        });
+
+        if (!userServerProfile) {
+            return { success: false, message: "You don't have permission to access this server." };
+        }
+
+        const server = await prisma.server.findFirst({
+            where: { id: serverId },
+            include: { categories: true }
+        });
+
+        if (!server) {
+            return { success: false, message: "Server not found." };
+        }
+
+        const categoryIds = server.categories.map((item) => item.id);
+        const valid = haveSameElements(categoryIds, categoryOrder);
+        if (!valid) {
+            return { success: false, message: "Invalid categories provided for reordering." };
+        }
+
+        if (server.ownerId !== user.id && !userServerProfile.roles.some((role) => role.role.adminPermission)) {
+            return { success: false, message: "You don't have permission to reorder categories." };
+        }
+
+        const serverCategoryReorder = await prisma.$transaction(async (prisma) => {
+        
+            // Step 2: Create a map of categoryId to order index based on the provided categoryOrder
+            const newOrderMap = categoryOrder.map((categoryId, index) => ({
+                categoryId,
+                order: index,
+            }));
+        
+            // Step 3: Update each category’s order based on the new order map
+            const updateCategoryPromises = newOrderMap.map(({ categoryId, order }) => {
+                return prisma.category.update({
+                    where: { id: categoryId },
+                    data: { order },
+                });
+            });
+        
+            // Step 4: Execute all the update operations in a single transaction
+            await Promise.all(updateCategoryPromises);
+        
+            // Step 5: Optionally, you can return the result if needed
+            return { success: true, message: "Categories reordered successfully" };
+        });
+        
+
+        return { success: true, message: "Categories reordered successfully.", reorderCategory: JSON.parse(JSON.stringify(serverCategoryReorder)) };
+
+    } catch (error) {
+        console.error("Error reordering categories:", error?.message || error);
+        return { success: false, message: error?.message || "An unexpected error occurred while reordering categories." };
+    }
+};

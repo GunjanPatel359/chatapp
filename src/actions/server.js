@@ -20,21 +20,21 @@ export const createServer = async (name, description, categories, formData) => {
             if (file) {
                 const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
                 if (!allowedTypes.includes(file.type)) {
-                    throw new Error("Invalid file type. Only PNG, JPG, and JPEG are allowed.");
+                    return { success: false, message: "Invalid file type. Only PNG, JPG, and JPEG are allowed." }
                 }
 
                 const maxSizeInBytes = 1 * 1024 * 1024; // 1MB
                 if (file.size > maxSizeInBytes) {
-                    throw new Error("File size exceeds the 1MB limit.");
+                    return { success: false, message: "File size exceeds the 1MB limit." }
                 }
 
                 const utapi = new UTApi();
                 const response = await utapi.uploadFiles(file);
-                if(!response){
-                    throw new Error("failed to upload the file")
+                if (!response) {
+                    return { success: false, message: "failed to upload the file" }
                 }
-                if(response.error){
-                    throw new Error(response.error)
+                if (response.error) {
+                    return { success: false, message: response.error }
                 }
                 console.log(response)
                 img_url = response.data.url;
@@ -58,12 +58,14 @@ export const createServer = async (name, description, categories, formData) => {
                     ownerId: user.id,
                     categories: categories.length > 0
                         ? {
-                            create: categories.map(category => ({
+                            create: categories.map((category, index) => ({
                                 name: category.name.toUpperCase(),
+                                order: index,
                                 channels: category.channels?.length > 0
                                     ? {
-                                        create: category.channels.map(channel => ({
+                                        create: category.channels.map((channel, i) => ({
                                             name: channel.name.toLowerCase(),
+                                            order: i,
                                             description: `${channel.name}`,
                                             type: "TEXT", // Ensure the correct type
                                             defaultChannelRole: {
@@ -99,6 +101,54 @@ export const createServer = async (name, description, categories, formData) => {
 
     } catch (error) {
         console.error(error);
-        return { success: false, message: error.message || "Error occurred during server creation" };
+        throw new Error(error.message || "Error occurred during server creation")
     }
 };
+
+export const getCategories = async (serverId) => {
+    try {
+        if (!serverId) {
+            return { success: false, message: "serverId is not provided" }
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            return { success: false, message: "User is not authenticated" }
+        }
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: {
+                userId: user.id,
+                serverId: serverId
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            }
+        })
+        if (!userServerProfile) {
+            return { success: false, message: "User is not a member of the server" }
+        }
+        const server = await prisma.server.findFirst({
+            where: {
+                id: serverId
+            },
+            include: {
+                categories: {
+                    orderBy: { order: "asc" }
+                },
+            }
+        })
+        if (!server) {
+            return {success:false,message:"Server not found"}
+        }
+        if (server.ownerId == user.id || userServerProfile.roles.some((role) => role.role.adminPermission)) {
+            return { success: true, categories: JSON.parse(JSON.stringify(server.categories)) }
+        }
+        return {success:false,message:"you do not have permission"}
+    } catch (error) {
+        console.log(error)
+        throw new Error(error)
+    }
+}
