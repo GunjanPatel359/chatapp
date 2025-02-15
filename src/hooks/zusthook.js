@@ -8,6 +8,13 @@ export const serverStore =create((set)=>({
     onsetServerProfile:(serverProfile)=>set({serverProfile:serverProfile})
 }))
 
+export const serverSetting =create((set)=>({
+    userServerProfile: null,
+    user: null,
+    server: null,
+    onsetServerSettingData:(userServerProfile=null,user=null,server=null)=>set({userServerProfile,user,server})
+}))
+
 export const useModal = create((set) => ({
     type: null,
     data: null,

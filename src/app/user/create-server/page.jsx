@@ -8,10 +8,10 @@ import {
     MinusIcon,
     GripVertical,
 } from "lucide-react";
+import { FaHashtag } from "react-icons/fa6";
 import { HiSpeakerWave } from "react-icons/hi2";
 import { GoPlus } from "react-icons/go";
 import { IoImageOutline } from "react-icons/io5";
-import { FaHashtag } from "react-icons/fa6";
 import { DndContext, closestCenter, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import {
     SortableContext,
@@ -492,7 +492,7 @@ const ChannelManager = ({
                         <SortableContext
                             items={category.channels.map(
                                 (channel) => `${category.id}:${channel.id}`
-                            )}
+                            )||[]}
                             strategy={verticalListSortingStrategy}
                         >
                             <div className="pl-2">

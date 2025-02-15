@@ -17,13 +17,13 @@ const ChannelHeader = ({ channel }) => {
                 </div>
                 {/* Action Icons */}
                 <div className="flex items-center gap-4">
-                    <FaUsers className="my-auto text-indigo-500 cursor-pointer hover:text-indigo-400" size={25} />
-                    <input
+                    {/* <FaUsers className="my-auto text-indigo-500 cursor-pointer hover:text-indigo-400" size={25} /> */}
+                    {/* <input
                         type="text"
                         placeholder="Search"
                         className="px-2 py-1 rounded bg-white text-indigo-500 border border-indigo-300 outline-none placeholder:text-indigo-300"
                     />
-                    <FaQuestionCircle className="w-5 h-5 text-indigo-500 cursor-pointer hover:text-indigo-400" />
+                    <FaQuestionCircle className="w-5 h-5 text-indigo-500 cursor-pointer hover:text-indigo-400" /> */}
                 </div>
 
             </div>

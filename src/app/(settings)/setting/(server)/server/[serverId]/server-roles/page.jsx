@@ -26,11 +26,13 @@ import {
 } from "@dnd-kit/sortable";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
 const serverRoles = () => {
   const params = useParams();
   const serverId = useMemo(() => params.serverId, [params?.serverId]);
   const [roles, setRoles] = useState([]);
+  const [dragging, setDragging] = useState(false); // State to manage overlay
 
   useEffect(() => {
     const fetchPage = async () => {
@@ -63,7 +65,12 @@ const serverRoles = () => {
     })
   );
 
+  const handleDragStart = () => {
+    setDragging(true); // Enable overlay when dragging starts
+  };
+
   const handleDragEnd = (event) => {
+    setDragging(false); // Disable overlay when dragging ends
     const { active, over } = event;
     if (active.id !== over.id) {
       setRoles((items) => {
@@ -94,7 +101,7 @@ const serverRoles = () => {
             />
             <div className="mx-1">|</div>
             <div className="flex items-center">
-              <IoSearchOutline className="" size={25} />
+              <IoSearchOutline size={25} />
             </div>
           </div>
           <button className="bg-indigo-500 hover:bg-indigo-600 text-white font-medium text-sm py-2 px-4 ml-2 rounded whitespace-nowrap">
@@ -110,36 +117,32 @@ const serverRoles = () => {
           </a>
         </p>
       </div>
+
       <div>
         <div className="w-full">
           {roles.length > 0 ? (
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
+              modifiers={[restrictToVerticalAxis]}
             >
               <SortableContext
                 items={roles.map((role) => role.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <table
-                  className="w-full table-auto border-collapse"
-                  style={{ tableLayout: "auto" }}
-                >
+                <table className="w-full table-auto border-collapse">
                   <thead className="bg-gray-200">
                     <tr>
-                      <th className="w-[2px] px-2 pr-0 py-2 text-left text-sm font-medium text-indigo-500">
-                        
-                      </th>
-                      <th className="px-4 pl-2 py-2 text-left text-sm font-medium text-indigo-500">
+                      <th className="w-[2px] px-2 pr-0 py-2 text-left text-sm font-medium text-indigo-500"></th>
+                      <th className="px-4 pl-2 py-2 text-left font-medium text-indigo-500">
                         Roles - {roles.length}
                       </th>
-                      <th className="px-4 py-2 text-left text-sm font-medium text-indigo-500">
+                      <th className="px-4 py-2 text-left font-medium text-indigo-500">
                         Members
                       </th>
-                      <th className="w-24 px-4 py-2 text-right text-sm font-medium text-indigo-500">
-                        
-                      </th>
+                      <th className="w-24 px-4 py-2 text-right font-medium text-indigo-500"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -165,47 +168,40 @@ const serverRoles = () => {
 };
 
 const SortableRow = ({ id, roleName, roleCount }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } =
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    opacity: 1,
   };
 
   return (
     <tr
       ref={setNodeRef}
       style={style}
-      {...attributes} 
+      {...attributes}
       {...listeners}
-      className="border-b hover:bg-gray-300 rounded"
+      className="border-b bg-gray-200 rounded cursor-pointer"
     >
-      <td className="w-[2px] px-2 pr-0 py-2" >
+      <td className="w-[2px] px-2 pr-0 py-2">
         <BsThreeDotsVertical className="cursor-grab" />
       </td>
       <td className="px-4 pl-2 py-2 capitalize">{roleName}</td>
-      <td className="px-4 py-2">{roleCount}
-      <button
-            className="p-1 text-indigo-500 hover:text-indigo-600 transition rounded-full ml-1"
-            onClick={() => console.log("Edit role:", roleName)}
-          >
-            <FaUser size={17} />
-          </button>
+      <td className="px-4 py-2 flex">
+        <span className="my-auto text-center">{roleCount}</span>
+        <button className="p-1 text-indigo-500 hover:text-indigo-600 transition rounded-full ml-1">
+          <FaUser size={19} />
+        </button>
       </td>
       <td className="w-auto px-4 py-2">
         <div className="flex space-x-2">
-          <button
-            className="p-1 hover:bg-indigo-600 bg-indigo-500 text-white transition rounded-full"
-            onClick={() => console.log("Edit role:", roleName)}
-          >
-            <BiSolidEdit size={17} />
+          <button className="p-1 hover:bg-indigo-600 bg-indigo-500 text-white transition rounded-full">
+            <BiSolidEdit size={19} />
           </button>
-          <button
-            className="p-1 hover:bg-indigo-600 bg-indigo-500 text-white transition rounded-full"
-            onClick={() => console.log("Options for:", roleName)}
-          >
-            <PiDotsThreeOutlineFill size={17} />
+          <button className="p-1 hover:bg-indigo-600 bg-indigo-500 text-white transition rounded-full">
+            <PiDotsThreeOutlineFill size={19} />
           </button>
         </div>
       </td>

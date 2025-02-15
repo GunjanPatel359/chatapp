@@ -3,138 +3,192 @@
 import { isAuthUser } from "@/lib/authMiddleware";
 import prisma from "@/lib/db";
 
+const handleDeleteChannel = async (channelId, categoryId) => {
+    // Start a transaction to delete the channel and reorder the remaining channels
+    const result = await prisma.$transaction(async (prisma) => {
+        // Step 1: Delete the channel
+        await prisma.channel.delete({
+            where: { id: channelId },
+        });
+
+        // Step 2: Fetch category and its associated channels (only channel IDs)
+        const category = await prisma.category.findFirst({
+            where: { id: categoryId },
+            select: {
+                channels: {
+                    where: { id: { not: channelId } }, // Exclude the deleted channel
+                    orderBy: { order: 'asc' }, // Sort channels by order
+                    select: { id: true }, // Only get the channel IDs
+                },
+            },
+        });
+
+        if (!category || !category.channels || category.channels.length === 0) {
+            // No remaining channels found
+            return { success: false, message: "No remaining channels found in this category." };
+        }
+
+        // Step 3: Reorder the remaining channels by updating their order field
+        const updateChannelPromises = category.channels.map((channel, index) => {
+            return prisma.channel.update({
+                where: { id: channel.id },
+                data: {
+                    order: index, // Adjust the order of the remaining channels
+                },
+            });
+        });
+
+        // Step 4: Execute all update operations in parallel
+        await Promise.all(updateChannelPromises);
+
+        return { success: true, message: "Channel deleted and remaining channels reordered successfully" };
+    });
+};
+
 export const createChannel = async (serverId, categoryId, data) => {
     try {
+        // Validate input parameters
         if (!serverId || !categoryId || !data.name || !data.description) {
-            throw new Error('Server ID and Category ID are required')
+            return { success: false, message: 'Server ID, Category ID, name, and description are required' };
         }
-        const user = await isAuthUser()
+
+        // Check if user is authenticated
+        const user = await isAuthUser();
         if (!user) {
-            throw new Error('You must be logged in to create a channel')
+            return { success: false, message: 'You must be logged in to create a channel' };
         }
+
+        // Fetch user's server profile and roles
         const userServerProfile = await prisma.serverProfile.findUnique({
             where: {
                 userId_serverId: {
                     userId: user.id,
                     serverId,
-                    isDeleted: false
                 },
-                isDeleted: false
+                isDeleted: false,
             },
             include: {
-                roles: {
-                    include: {
-                        role: true
-                    }
-                }
-            }
-        })
-        if (!userServerProfile) {
-            throw new Error('You must be a member of the server to create a channel')
-        }
-        const isVerifyCategory = await prisma.category.findFirst({
-            where: {
-                id: categoryId,
-                serverId
-            }
-        })
-        if (!isVerifyCategory) {
-            throw new Error('Category does not exist')
-        }
-        const server = await prisma.server.findFirst({
-            where: {
-                id: serverId
-            }
-        })
-        if (!server) {
-            throw new Error('Server does not exist')
-        }
-        if (server.ownerId == user.id) {
-            const createChannel = await prisma.channel.create({
-                data: {
-                    name: data.name,
-                    description: data.description,
-                    categoryId: categoryId,
-                    type: data?.type || "TEXT",
-                    defaultChannelRole: {
-                        create: {}
-                    }
-                }
-            })
-            console.log(createChannel)
-            return { success: true, message: "channel created successfully" }
-        }
-        const isAdmin = userServerProfile.roles.some((role) => role.role.adminPermission)
-        if (isAdmin) {
-            const createChannel = await prisma.channel.create({
-                data: {
-                    name: data.name,
-                    description: data.description,
-                    categoryId: categoryId,
-                    type: data?.type || "TEXT",
-                    defaultChannelRole: {
-                        create: {}
-                    }
-                }
-            })
-            console.log(createChannel)
-            return { success: true, message: "channel created successfully" }
-        }
-        const userServerProfileRoles = userServerProfile.roles.map((item) => item.roleId)
-        console.log(userServerProfileRoles)
-        const category = await prisma.category.findFirst({
-            where: {
-                id: categoryId
+                roles: { include: { role: true } },
             },
+        });
+
+        if (!userServerProfile) {
+            return { success: false, message: 'You must be a member of the server to create a channel' };
+        }
+
+        // Verify if the category exists
+        const isVerifyCategory = await prisma.category.findFirst({
+            where: { id: categoryId, serverId },
+            include:{
+                channels:true
+            }
+        });
+
+        if (!isVerifyCategory) {
+            return { success: false, message: 'Category does not exist' };
+        }
+
+        // Fetch server and check if it exists
+        const server = await prisma.server.findFirst({
+            where: { id: serverId },
+            select: { ownerId: true, categories: true },
+        });
+
+        if (!server) {
+            return { success: false, message: 'Server does not exist' };
+        }
+
+        // If the user is the server owner, allow channel creation
+        if (server.ownerId == user.id) {
+            const newChannel = await prisma.channel.create({
+                data: {
+                    name: data.name,
+                    order: isVerifyCategory.channels.length,
+                    description: data.description,
+                    categoryId: categoryId,
+                    type: data?.type || "TEXT",
+                    defaultChannelRole: { create: {} },
+                },
+            });
+            return { success: true, message: 'Channel created successfully' };
+        }
+
+        // If user is an admin, allow channel creation
+        const isAdmin = userServerProfile.roles.some((role) => role.role.adminPermission);
+        if (isAdmin) {
+            const newChannel = await prisma.channel.create({
+                data: {
+                    name: data.name,
+                    order: isVerifyCategory.channels.length,
+                    description: data.description,
+                    categoryId: categoryId,
+                    type: data?.type || "TEXT",
+                    defaultChannelRole: { create: {} },
+                },
+            });
+            return { success: true, message: 'Channel created successfully' };
+        }
+
+        // Check if user has permission to manage channels
+        const userServerProfileRoles = userServerProfile.roles.map((item) => item.roleId);
+        const category = await prisma.category.findFirst({
+            where: { id: categoryId },
             include: {
                 categoryRoles: {
                     where: {
-                        serverRoleId: { in: userServerProfileRoles }, // Must be in user roles
-                        manageChannels: { in: ["ALLOW", "NEUTRAL"] } // AND condition for permissions
+                        serverRoleId: { in: userServerProfileRoles },
+                        manageChannels: { in: ["ALLOW", "NEUTRAL"] },
                     },
-                    include: {
-                        serverRole: true
-                    }
-                }
-            }
+                    include: { serverRole: true },
+                },
+            },
         });
-        console.log(category.categoryRoles)
+
+        // If no category roles or no permission to manage channels
         if (!category || category.categoryRoles.length === 0) {
-            throw new Error("You do not have permission to add roles");
+            return { success: false, message: 'You do not have permission to add roles' };
         }
-        const categoryRoles = category.categoryRoles.some((a) => a.manageChannels == "ALLOW" || (a.manageChannels == "NEUTRAL" && a.serverRole.manageChannels))
-        console.log(categoryRoles)
-        if (categoryRoles) {
-            const createChannel = await prisma.channel.create({
+
+        // If user has the "ALLOW" or "NEUTRAL" permission, create the channel
+        const hasPermission = category.categoryRoles.some(
+            (role) => role.manageChannels === "ALLOW" || (role.manageChannels === "NEUTRAL" && role.serverRole.manageChannels)
+        );
+
+        if (hasPermission) {
+            const newChannel = await prisma.channel.create({
                 data: {
                     name: data.name,
+                    order: isVerifyCategory.channels.length,
                     description: data.description,
                     categoryId: categoryId,
                     type: data.type || "TEXT",
-                    defaultChannelRole: {
-                        create: {}
-                    }
-                }
-            })
-            console.log(createChannel)
-            return { success: true, message: "channel created successfully" }
+                    defaultChannelRole: { create: {} },
+                },
+            });
+            return { success: true, message: 'Channel created successfully' };
         }
-        throw new Error("you do not have permission to create channel")
+
+        return { success: false, message: 'You do not have permission to create a channel' };
     } catch (error) {
-        console.error("Error in create channel:", error);
-        throw new Error(error.message || "Something went wrong");
+        console.error('Error in createChannel:', error);
+        return { success: false, message: `Something went wrong: ${error.message || error}` };
     }
-}
+};
 
 export const updateChannel = async (serverId, categoryId, channelId, data) => {
     try {
+        // Validate input parameters
         if (!serverId || !categoryId || !channelId || !data.name || !data.description) {
-            throw new Error("Please provide all the required fields");
+            return { success: false, message: 'Please provide all the required fields' };
         }
-        const user = await isAuthUser()
-        if (user) {
-            throw new Error("you are not logged in")
+
+        // Check if user is authenticated
+        const user = await isAuthUser();
+        if (!user) {
+            return { success: false, message: 'You are not logged in' };
         }
+
+        // Fetch user's server profile and roles
         const userServerProfile = await prisma.serverProfile.findFirst({
             where: {
                 userId: user.id,
@@ -142,124 +196,119 @@ export const updateChannel = async (serverId, categoryId, channelId, data) => {
                 isDeleted: false
             },
             include: {
-                roles: {
-                    include: {
-                        role: true
-                    }
-                }
+                roles: { include: { role: true } }
             }
-        })
+        });
+
         if (!userServerProfile) {
-            throw new Error("You are not a member of this server")
+            return { success: false, message: 'You are not a member of this server' };
         }
+
+        // Verify if the channel exists in the specified category
         const verifyChannel = await prisma.channel.findFirst({
             where: {
                 id: channelId,
-                categoryId: categoryId,
+                categoryId: categoryId
             }
-        })
+        });
+
         if (!verifyChannel) {
-            throw new Error("Channel not found")
+            return { success: false, message: 'Channel not found' };
         }
+
+        // Verify if the server exists and belongs to the correct category
         const server = await prisma.server.findFirst({
             where: {
                 id: serverId,
-                categories: {
-                    some: {
-                        id: categoryId
-                    }
-                }
+                categories: { some: { id: categoryId } }
             }
-        })
-        if (!server) {
-            throw new Error("Server with this category not found")
-        }
-        if (server.ownerId == user.id) {
-            const updateChannel = await prisma.channel.update({
-                where: {
-                    id: channelId,
-                },
-                data: {
-                    name: data.name,
-                    description: data.description
-                }
-            })
-            console.log(updateChannel)
-            return { success: true, message: "channel updated successfully" }
-        }
-        if (userServerProfile.roles.length == 0) {
-            throw new Error("you do not have any role")
-        }
-        const isAdmin = userServerProfile.roles.some((role) => role.role.adminPermission)
-        if (isAdmin) {
-            const updateChannel = await prisma.channel.update({
-                where: {
-                    id: channelId
-                },
-                data: {
-                    name: data.name,
-                    description: data.description
+        });
 
-                }
-            })
-            console.log(updateChannel)
-            return { success: true, message: "channel updated successfully" }
+        if (!server) {
+            return { success: false, message: 'Server with this category not found' };
         }
-        const userServerProfileRoles = userServerProfile.roles.map((item) => item.roleId)
+
+        // If user is the server owner, allow updating the channel
+        if (server.ownerId == user.id) {
+            const updatedChannel = await prisma.channel.update({
+                where: { id: channelId },
+                data: {
+                    name: data.name,
+                    description: data.description
+                }
+            });
+            return { success: true, message: 'Channel updated successfully' };
+        }
+
+        // If the user is an admin, allow updating the channel
+        const isAdmin = userServerProfile.roles.some((role) => role.role.adminPermission);
+        if (isAdmin) {
+            const updatedChannel = await prisma.channel.update({
+                where: { id: channelId },
+                data: {
+                    name: data.name,
+                    description: data.description
+                }
+            });
+            return { success: true, message: 'Channel updated successfully' };
+        }
+
+        // Check if user has permission to manage channels in this category
+        const userServerProfileRoles = userServerProfile.roles.map((item) => item.roleId);
         const category = await prisma.category.findFirst({
-            where: {
-                id: categoryId
-            },
+            where: { id: categoryId },
             include: {
                 categoryRoles: {
                     where: {
-                        serverRoleId: {
-                            in: userServerProfileRoles
-                        },
-                        manageChannels: {
-                            in: ["ALLOW", "NEUTRAL"],
-                        }
+                        serverRoleId: { in: userServerProfileRoles },
+                        manageChannels: { in: ["ALLOW", "NEUTRAL"] }
                     },
-                    include: {
-                        serverRole: true
-                    }
+                    include: { serverRole: true }
                 }
             }
-        })
+        });
+
         if (!category || category.categoryRoles.length === 0) {
-            throw new Error("You do not have permission to add roles");
+            return { success: false, message: 'You do not have permission to update the channel' };
         }
-        const categoryRoles = category.categoryRoles.some((a) => a.manageChannels == "ALLOW" || (a.manageChannels == "NEUTRAL" && a.serverRole.manageChannels))
-        if (categoryRoles) {
-            const updateChannel = await prisma.channel.update({
-                where: {
-                    id: channelId
-                },
+
+        // If user has the "ALLOW" or "NEUTRAL" permission, allow updating the channel
+        const hasPermission = category.categoryRoles.some(
+            (role) => role.manageChannels === "ALLOW" || (role.manageChannels === "NEUTRAL" && role.serverRole.manageChannels)
+        );
+
+        if (hasPermission) {
+            const updatedChannel = await prisma.channel.update({
+                where: { id: channelId },
                 data: {
                     name: data.name,
                     description: data.description
-
                 }
-            })
-            console.log(updateChannel)
-            return { success: true, message: "channel updated successfully" }
+            });
+            return { success: true, message: 'Channel updated successfully' };
         }
-        throw new Error("you do not have permission to update the channel")
+
+        return { success: false, message: 'You do not have permission to update the channel' };
     } catch (error) {
-        console.error("Error in update channel:", error);
-        throw new Error(error.message || "Something went wrong");
+        console.error('Error in updateChannel:', error);
+        return { success: false, message: `Something went wrong: ${error.message || error}` };
     }
-}
+};
 
 export const deleteChannel = async (serverId, categoryId, channelId) => {
     try {
+        // Validate input parameters
         if (!serverId || !categoryId || !channelId) {
-            throw new Error("Please provide all the required fields");
+            return { success: false, message: "Please provide all the required fields" };
         }
-        const user = await isAuthUser()
-        if (user) {
-            throw new Error("you are not logged in")
+
+        // Check if user is authenticated
+        const user = await isAuthUser();
+        if (!user) {
+            return { success: false, message: "You are not logged in" };
         }
+
+        // Fetch user's server profile and roles
         const userServerProfile = await prisma.serverProfile.findFirst({
             where: {
                 userId: user.id,
@@ -267,169 +316,154 @@ export const deleteChannel = async (serverId, categoryId, channelId) => {
                 isDeleted: false
             },
             include: {
-                roles: {
-                    include: {
-                        role: true
-                    }
-                }
+                roles: { include: { role: true } }
             }
-        })
+        });
+
         if (!userServerProfile) {
-            throw new Error("You are not a member of this server")
+            return { success: false, message: "You are not a member of this server" };
         }
+
+        // Verify if the channel exists in the specified category
         const verifyChannel = await prisma.channel.findFirst({
             where: {
                 id: channelId,
-                categoryId: categoryId,
+                categoryId: categoryId
             }
-        })
+        });
+
         if (!verifyChannel) {
-            throw new Error("Channel not found")
+            return { success: false, message: "Channel not found" };
         }
+
+        // Verify if the server exists and belongs to the correct category
         const server = await prisma.server.findFirst({
             where: {
                 id: serverId,
-                categories: {
-                    some: {
-                        id: categoryId
-                    }
-                }
+                categories: { some: { id: categoryId } }
             }
-        })
+        });
+
         if (!server) {
-            throw new Error("Server with this category not found")
+            return { success: false, message: "Server with this category not found" };
         }
-        if (server.ownerId == user.id) {
-            const deleteChannel = await prisma.channel.delete({
-                where: {
-                    id: channelId
-                }
-            })
-            console.log(deleteChannel)
-            return { success: true, message: "channel deleted successfully" }
+
+        // If user is the server owner, allow deleting the channel
+        if (server.ownerId === user.id) {
+            return await handleDeleteChannel(channelId,categoryId)
         }
-        if (userServerProfile.roles.length == 0) {
-            throw new Error("you do not have any role")
-        }
-        const isAdmin = userServerProfile.roles.some((role) => role.role.adminPermission)
+
+        // If user is an admin, allow deleting the channel
+        const isAdmin = userServerProfile.roles.some((role) => role.role.adminPermission);
         if (isAdmin) {
-            const deleteChannel = await prisma.channel.delete({
-                where: {
-                    id: channelId
-                }
-            })
-            console.log(deleteChannel)
-            return { success: true, message: "channel deleted successfully" }
+            return await handleDeleteChannel(channelId,categoryId)
         }
-        const userServerProfileRoles = userServerProfile.roles.map((item) => item.roleId)
+
+        // Check if user has permission to manage channels in this category
+        const userServerProfileRoles = userServerProfile.roles.map((item) => item.roleId);
         const category = await prisma.category.findFirst({
-            where: {
-                id: categoryId
-            },
+            where: { id: categoryId },
             include: {
                 categoryRoles: {
                     where: {
-                        serverRoleId: {
-                            in: userServerProfileRoles
-                        },
-                        manageChannels: {
-                            in: ["ALLOW", "NEUTRAL"],
-                        }
+                        serverRoleId: { in: userServerProfileRoles },
+                        manageChannels: { in: ["ALLOW", "NEUTRAL"] }
                     },
-                    include: {
-                        serverRole: true
-                    }
+                    include: { serverRole: true }
                 }
             }
-        })
+        });
+
         if (!category || category.categoryRoles.length === 0) {
-            throw new Error("You do not have permission to add roles");
+            return { success: false, message: "You do not have permission to delete the channel" };
         }
-        const categoryRoles = category.categoryRoles.some((a) => a.manageChannels == "ALLOW" || (a.manageChannels == "NEUTRAL" && a.serverRole.manageChannels))
-        if (categoryRoles) {
-            const deleteChannel = await prisma.channel.delete({
-                where: {
-                    id: channelId
-                }
-            })
-            console.log(deleteChannel)
-            return { success: true, message: "channel deleted successfully" }
+
+        const hasPermission = category.categoryRoles.some(
+            (role) => role.manageChannels === "ALLOW" || (role.manageChannels === "NEUTRAL" && role.serverRole.manageChannels)
+        );
+
+        if (hasPermission) {
+            return await handleDeleteChannel(channelId,categoryId)
         }
-        throw new Error("you do not have permission to update the channel")
+
+        return { success: false, message: "You do not have permission to delete the channel" };
     } catch (error) {
-        console.error("Error in delete channel:", error);
-        throw new Error(error.message || "Something went wrong");
+        console.error("Error in deleteChannel:", error);
+        return { success: false, message: `Something went wrong: ${error.message || error}` };
     }
-}
+};
 
 export const channelReorder = async (serverId, channelReorder) => {
     try {
-        if (!serverId || channelReorder == [] || !Array.isArray(channelReorder)) {
-            throw new Error("please provide all the fields")
+        // Check for required parameters
+        if (!serverId || !Array.isArray(channelReorder) || channelReorder.length === 0) {
+            throw new Error("Please provide all the required fields.");
         }
-        const user = await isAuthUser()
+
+        // Check if user is authenticated
+        const user = await isAuthUser();
         if (!user) {
-            throw new Error("user is not authenticated")
+            throw new Error("User is not authenticated.");
         }
+
+        // Fetch user's server profile
         const userServerProfile = await prisma.serverProfile.findFirst({
             where: {
-                serverId: serverId,
+                serverId,
                 userId: user.id,
                 isDeleted: false
             },
             include: {
-                roles: {
-                    include: {
-                        role: true
-                    }
-                }
+                roles: { include: { role: true } }
             }
-        })
+        });
+
         if (!userServerProfile) {
-            throw new Error("You are not member of this server")
+            throw new Error("You are not a member of this server.");
         }
+
+        // Fetch the server details
         const server = await prisma.server.findFirst({
-            where: {
-                id: serverId
-            },
+            where: { id: serverId },
             include: {
-                categories: {
-                    include: {
-                        channels: true
-                    }
-                }
+                categories: { include: { channels: true } }
             }
-        })
+        });
+
         if (!server) {
-            throw new Error("server not found")
+            throw new Error("Server not found.");
         }
-        if (!server.ownerId == user.id && !userServerProfile.roles.some((role) => role.role.adminPermission)) {
-            throw new Error("you do not have permission to update the server")
+
+        // Check if the user has the required permissions (owner or admin)
+        const isOwnerOrAdmin = server.ownerId === user.id || userServerProfile.roles.some(role => role.role.adminPermission);
+        if (!isOwnerOrAdmin) {
+            throw new Error("You do not have permission to update the server.");
         }
-        //working
-        // Extract the existing channel IDs from the server
+
+        // Extract the existing and provided channel IDs
         const existingChannelIds = new Set(
             server.categories.flatMap(category => category.channels.map(channel => channel.id))
         );
-
-        // Extract the channel IDs from the reorder request
+        
         const providedChannelIds = new Set(
             channelReorder.flatMap(category => category.channels)
         );
 
-        // Check if every existing channel ID is present in the reorder request
+        // Check if the reorder list contains exactly the same channels as the server
         const isValidReorder = [...existingChannelIds].every(id => providedChannelIds.has(id));
 
         if (!isValidReorder) {
             throw new Error("Invalid reorder: Some channels are missing or extra channels were provided.");
         }
+
+        // Perform the transaction to update the channels and categories
         const updateChannels = await prisma.$transaction([
             // 1️⃣ Move channels to the correct category
             ...channelReorder.flatMap(({ id: categoryId, channels }) =>
                 channels.map(channelId =>
                     prisma.channel.update({
                         where: { id: channelId },
-                        data: { categoryId } // Moves channel to the correct category
+                        data: { categoryId } // Move channel to the correct category
                     })
                 )
             ),
@@ -440,16 +474,74 @@ export const channelReorder = async (serverId, channelReorder) => {
                     where: { id: categoryId },
                     data: {
                         channels: {
-                            set: channels.map(channelId => ({ id: channelId })) // Reordering channels in the category
+                            set: channels.map(channelId => ({ id: channelId })) // Reorder channels within the category
                         }
                     }
                 })
             )
         ]);
-        console.log(updateChannels)
-        return {success:true,message:"reordered successfully"}        
+
+        console.log("Channels reordered successfully:", updateChannels);
+        return { success: true, message: "Channels reordered successfully." };
+        
     } catch (error) {
-        console.log(error)
-        throw new Error(error)
+        console.error("Error in channelReorder:", error);
+        throw new Error(error.message || "Something went wrong while reordering channels.");
     }
-}
+};
+
+export const getChannel = async (serverId) => {
+    try {
+        if (!serverId) {
+            return { success: false, message: "Server ID is required." };
+        }
+
+        const user = await isAuthUser();
+        if (!user) {
+            return { success: false, message: "You are not authenticated." };
+        }
+
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: {
+                userId: user.id,
+                serverId,
+                isDeleted: false
+            },
+            include: {
+                roles: { include: { role: true } }
+            }
+        });
+
+        if (!userServerProfile) {
+            return { success: false, message: "You don't have permission to access this server." };
+        }
+
+        const server = await prisma.server.findFirst({
+            where: { id: serverId },
+            include: {
+                categories: {
+                    include:{
+                        channels:{
+                            orderBy:{order:"asc"}
+                        }
+                    },
+                    orderBy: { order: "asc" }
+                }
+            }
+        });
+
+        if (!server) {
+            return { success: false, message: "Server not found." };
+        }
+
+        if (server.ownerId === user.id || userServerProfile.roles.some(role => role.role.adminPermission)) {
+            return { success: true, categories: JSON.parse(JSON.stringify(server.categories)) };
+        }
+
+        return { success: false, message: "You do not have permission to access channels." };
+
+    } catch (error) {
+        console.error("Error fetching channels:", error?.message || error);
+        return { success: false, message: error?.message || "An unexpected error occurred while fetching channels." };
+    }
+};

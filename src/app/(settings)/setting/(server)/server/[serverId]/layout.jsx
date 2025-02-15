@@ -3,14 +3,16 @@ import { useEffect, useMemo, useState } from "react";
 import ServerSettingSideBar from "./ServerSettingSidebar";
 import { useParams, useRouter } from "next/navigation";
 import { serverSettingFetch } from "@/actions/user";
+import { serverSetting } from "@/hooks/zusthook";
 
 const ServerSettingLayout = ({ children }) => {
+  const {onsetServerSettingData}=serverSetting()
   const router = useRouter();
   const params = useParams();
   const serverId = useMemo(() => params.serverId, [params?.serverId]);
-  const [user, setUser] = useState();
-  const [server, setServer] = useState();
-  const [userServerProfile, setUserServerProfile] = useState();
+  // const [user, setUser] = useState();
+  // const [server, setServer] = useState();
+  // const [userServerProfile, setUserServerProfile] = useState();
 
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -20,9 +22,10 @@ const ServerSettingLayout = ({ children }) => {
         const res = await serverSettingFetch(serverId);
         console.log(res)
         if (res.success) {
-          setUser(res.user);
-          setServer(res.serverSetting.server);
-          setUserServerProfile(res.serverSetting);
+          // setUser(res.user);
+          onsetServerSettingData(res.serverSetting,res.user,res.serverSetting.server)
+          // setServer(res.serverSetting.server);
+          // setUserServerProfile(res.serverSetting);
           setLoading(false)
         }
         if (!res.success) {
@@ -44,8 +47,8 @@ const ServerSettingLayout = ({ children }) => {
                 <>
                 <div className="w-[250px] bg-gray-100 rounded-s-lg">
                   <ServerSettingSideBar
-                    userServerProfile={userServerProfile}
-                    user={user}
+                    // userServerProfile={userServerProfile}
+                    // user={user}
                   />
                 </div>
                 <div className="flex-1 bg-gray-200 rounded-e-lg">{children}</div>
