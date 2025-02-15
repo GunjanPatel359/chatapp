@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken"
 
 const globalForSocket = globalThis; // ✅ Allows persistence in Next.js
 
@@ -21,7 +22,15 @@ export async function setupSocket(server) {
 
   globalForSocket.io.of("/channel").on("connection", (socket) => {
     const { channelId,token } = socket.handshake.query;
-    console.log(token)
+    if(!token){
+      return socket.disconnect(true);
+    }
+
+    const tokenData=jwt.verify(token, process.env.JWT_SECRET)
+    if(!tokenData && tokenData.id==channelId && tokenData.permissions.viewChannel && tokenData.timestamp){
+      return socket.disconnect(true);
+    }
+
     if (!channelId) {
       console.log("❌ [Socket.IO] Missing channelId. Disconnecting...");
       socket.disconnect();
