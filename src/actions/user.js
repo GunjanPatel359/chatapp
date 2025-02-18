@@ -3,7 +3,7 @@
 import { UTApi } from "uploadthing/server";
 import prisma from "@/lib/db";
 import { isAuthUser } from "@/lib/authMiddleware";
-import { generateToken } from "@/lib/tokenConfig";
+import { decodeToken, generateOneTimeToken, generateToken } from "@/lib/tokenConfig";
 
 const handleGetServerCategoryAndChannels = async (serverId) => {
     const server = await prisma.server.findFirst({
@@ -321,8 +321,10 @@ export const checkChannelViewPermission = async (channelId, token = null) => {
             return { success: false, message: "Channel not found" }
         }
         let tokenData = null
-        if (token) {
-            tokenData = decodeToken(token, channelId)
+        // console.log("token Chanek",tokenData,token)
+        // if (token) {
+        //     tokenData = decodeToken(token, channelId)
+        //     console.log(tokenData)
             // if (tokenData.valid && tokenData.data.userId == user.id) {
             //     if (tokenData.data.timestamp > channel.updatedAt) {
             //         const checkPermission = tokenData.data.permissions.admin || tokenData.data.permissions.viewChannel
@@ -332,7 +334,7 @@ export const checkChannelViewPermission = async (channelId, token = null) => {
             //         }
             //     }
             // }
-        }
+        // }
         const serverId = channel.category.serverId
         const userServerProfile = await prisma.serverProfile.findFirst({
             where: {
@@ -356,7 +358,7 @@ export const checkChannelViewPermission = async (channelId, token = null) => {
             }
         })
         if (server.ownerId == user.id || userServerProfile.roles.some((role) => role.role.adminPermission)) {
-            const newToken = await generateToken(channelId, user.id, { permission: { viewChannel: true } }, tokenData?.data)
+            const newToken = await generateOneTimeToken(channelId, user.id, { permission: { viewChannel: true } })
             return { success: true, message: "You have permission to view this channel",token: { [channelId]: newToken } }
         }
         const userServerRoleIds = userServerProfile.roles.map((role) => role.roleId)
@@ -382,7 +384,7 @@ export const checkChannelViewPermission = async (channelId, token = null) => {
 
         const checkPermission = checkViewChannelPermission(channelWithRoles)
         if (checkPermission) {
-            const newToken = await generateToken(channelId, user.id, { permission: { viewChannel: true } }, tokenData?.data)
+            const newToken = await generateOneTimeToken(channelId, user.id, { permission: { viewChannel: true } })
             return { success: true, message: "You have permission to view this channel",token: { [channelId]: newToken } }
         }
 

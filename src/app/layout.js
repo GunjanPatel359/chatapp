@@ -17,6 +17,9 @@ import {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      {/* <head>
+        <script src="https://unpkg.com/react-scan/dist/auto.global.js"></script>
+      </head> */}
       <body className={inter.className}>
         <ClerkProvider>
           {children}

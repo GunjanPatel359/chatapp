@@ -38,11 +38,11 @@ const ChatArea = () => {
   useEffect(() => {
     const initiateToken = async () => {
       try {
-        const res = await checkChannelViewPermission(channelId, localStorage.getItem(channelId));
-  
+        const res = await checkChannelViewPermission(channelId, sessionStorage.getItem(channelId));
+        console.log(res)
         if (res.success && res.token) {
-          localStorage.setItem(channelId, res.token); // Update token every time
-          connectSocket(res.token); // Connect WebSocket with new token
+          sessionStorage.setItem(channelId, res.token[channelId]); // Update token every time
+          connectSocket(res.token[channelId]); // Connect WebSocket with new token
         } else {
           throw new Error("Invalid token");
         }

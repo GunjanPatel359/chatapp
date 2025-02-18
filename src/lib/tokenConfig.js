@@ -10,15 +10,29 @@ export const decodeToken = (token,channelId) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     if(decoded.id!=channelId){
-      return { valid: false, error: "invalid token"  };
+      return { valid: false, error: "invalid token" };
     }
 
     return { valid: true, data: decoded };
   } catch (error) {
+    console.log(error.message)
     console.error("Token verification failed:", error.message);
     return { valid: false, error: error.message };
   }
 };
+
+export const generateOneTimeToken = async(channelId, userId, newPermissions)=>{
+  try {
+    let payload = { userId, permissions: newPermissions, timestamp: Date.now(),id:channelId };
+
+    const updatedToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+    console.log(updatedToken)
+    return updatedToken;
+  } catch (error) {
+    console.error("Error generating token:", error);
+    throw new Error("Failed to generate token.");
+  }
+}
 
 export const generateToken = async (channelId, userId, newPermissions,tokenData=null) => {
   try {
