@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { parse } from "url";
 import next from "next";
 import { setupSocket, getIo } from "./socket.js";
 
@@ -10,7 +11,11 @@ const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 
 app.prepare().then(async () => {
-  const httpServer = createServer(handler);
+  const httpServer = createServer((req, res) => {
+    // ✅ Make sure Next.js handles all requests correctly
+    const parsedUrl = parse(req.url, true);
+    handler(req, res, parsedUrl);
+  });
 
   // ✅ Ensure socket is fully initialized before using `getIo()`
   await setupSocket(httpServer);
