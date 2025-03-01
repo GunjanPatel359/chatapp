@@ -10,7 +10,7 @@ import { useParams } from "next/navigation";
 import { io } from "socket.io-client";
 import { checkChannelViewPermission } from "@/actions/user";
 
-import webSocketServer from "@/server"
+import {webSocketServer} from "@/server"
 
 const ChatArea = () => {
   const params = useParams();
