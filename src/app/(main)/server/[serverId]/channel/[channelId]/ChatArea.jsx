@@ -57,7 +57,7 @@ const ChatArea = () => {
     const connectSocket = (token) => {
       if (!channelId || socketRef.current) return;
   
-      socketRef.current = io("http://localhost:3000/channel", {
+      socketRef.current = io(`${webSocketServer}/channel`, {
         query: { channelId, token }, // Always send the latest token
       });
   

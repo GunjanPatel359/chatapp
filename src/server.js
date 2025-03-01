@@ -4,3 +4,5 @@
 
 
 // export const socket = io();
+
+const webSocketServer="http://localhost:4000"
