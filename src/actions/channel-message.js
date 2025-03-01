@@ -160,7 +160,7 @@ const dbHelperCreateMessage = async (channelId, content, serverProfileId) => {
         console.log("Message created:", sendMessage);
         await axios.post(`${webSocketServer}/send-message`, {
             channelId,
-            message: sendMessage,
+            message: JSON.parse(JSON.stringify(sendMessage)),
           });
         // const io = getIo();
         // io.of("/channel").to(channelId).emit("message", sendMessage);
@@ -194,7 +194,7 @@ const dbHelperTokenCreateMessage = async (channelId, content, user, serverId) =>
         console.log("Message created with help of token:", sendMessage);
         await axios.post(`${webSocketServer}/send-message`, {
             channelId,
-            message: sendMessage,
+            message: JSON.parse(JSON.stringify(sendMessage)),
           });
         // const io = getIo();
         // io.of("/channel").to(channelId).emit("message", sendMessage);
