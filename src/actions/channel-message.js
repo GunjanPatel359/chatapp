@@ -163,7 +163,7 @@ const dbHelperCreateMessage = async (channelId, content, serverProfileId) => {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ channelId, message }),
+            body: JSON.stringify({ channelId, message:sendMessage }),
           });
           console.log(response)
         // const io = getIo();
@@ -201,7 +201,7 @@ const dbHelperTokenCreateMessage = async (channelId, content, user, serverId) =>
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ channelId, message }),
+            body: JSON.stringify({ channelId, message:sendMessage }),
           });
           console.log(response)
         // const io = getIo();
