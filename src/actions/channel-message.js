@@ -158,10 +158,14 @@ const dbHelperCreateMessage = async (channelId, content, serverProfileId) => {
             }
         });
         console.log("Message created:", sendMessage);
-        await axios.post(`${webSocketServer}/send-message`, {
-            channelId,
-            message: JSON.parse(JSON.stringify(sendMessage)),
+        const response = await fetch(`${webSocketServer}/send-message`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ channelId, message }),
           });
+          console.log(response)
         // const io = getIo();
         // io.of("/channel").to(channelId).emit("message", sendMessage);
     } catch (error) {
@@ -192,10 +196,14 @@ const dbHelperTokenCreateMessage = async (channelId, content, user, serverId) =>
             }
         });
         console.log("Message created with help of token:", sendMessage);
-        await axios.post(`${webSocketServer}/send-message`, {
-            channelId,
-            message: JSON.parse(JSON.stringify(sendMessage)),
+        const response = await fetch(`${webSocketServer}/send-message`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ channelId, message }),
           });
+          console.log(response)
         // const io = getIo();
         // io.of("/channel").to(channelId).emit("message", sendMessage);
     } catch (error) {
