@@ -4,12 +4,14 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FaCog, FaWrench, FaChevronDown } from "react-icons/fa";
 import { X, Minus, Check } from "lucide-react";
+import { motion } from "framer-motion";
+
 import { Dialog } from "@headlessui/react";
 
 const options = [
-  { value: "DENY", icon: <X className="text-red-500" />, bg: "bg-red-100", border: "border-red-300" },
-  { value: "NEUTRAL", icon: <Minus className="text-gray-500" />, bg: "bg-gray-100", border: "border-gray-300" },
-  { value: "ALLOW", icon: <Check className="text-green-500" />, bg: "bg-green-100", border: "border-green-300" },
+  { value: "DENY", icon: <X className="text-red-500" />, bg: "bg-red-300", border: "border-red-300", color: "red" },
+  { value: "NEUTRAL", icon: <Minus className="text-gray-500" />, bg: "bg-gray-100", border: "border-gray-300", color: "gray" },
+  { value: "ALLOW", icon: <Check className="text-green-500" />, bg: "bg-green-300", border: "border-green-300", color: "green" },
 ];
 
 const page = () => {
@@ -18,12 +20,36 @@ const page = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDropdownRole, setSelectedDropdownRole] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedPermission, setSelectedPermission] = useState("NEUTRAL");
+
+  // Initialize permissions state for each permission item
+  const [permissionsState, setPermissionsState] = useState({
+    "View Channel": "NEUTRAL",
+    "Manage Channels": "NEUTRAL",
+    "Manage Roles": "NEUTRAL",
+    "Create Invite": "NEUTRAL",
+    "Send Message": "NEUTRAL",
+    "Attach Files": "NEUTRAL",
+    "Manage Message": "NEUTRAL",
+    "See Message History": "NEUTRAL",
+    "Connect": "NEUTRAL",
+    "Speak": "NEUTRAL",
+    "Video": "NEUTRAL",
+    "muteMembers": "NEUTRAL",
+    "deafenMembers": "NEUTRAL",
+  });
 
   const roles = ["Role 1", "Role 2", "Role 3", "Everyone Role"];
 
   const handleRoleSelect = (role) => {
     setSelectedDropdownRole(role);
+  };
+
+  // Update the permission state for a specific permission item
+  const handlePermissionClick = (permission, value) => {
+    setPermissionsState((prevState) => ({
+      ...prevState,
+      [permission]: value,
+    }));
   };
 
   return (
@@ -95,18 +121,22 @@ const page = () => {
               <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
                 <h4 className="text-md font-bold mb-3 text-indigo-500">General Permissions</h4>
                 <div className="space-y-2">
-                  {['View Channel', 'Manage Channels','Manage Roles'].map((permission) => (
+                  {['View Channel', 'Manage Channels', 'Manage Roles'].map((permission) => (
                     <div key={permission} className="flex items-center justify-between">
                       <span className="font-bold text-indigo-500">{permission}</span>
                       <div className="flex space-x-2">
                         {options.map((option) => (
-                          <button
+                          <motion.button
                             key={option.value}
-                            className={`p-1 rounded border ${option.bg} ${option.border}`}
-                            onClick={() => setSelectedPermission(option.value)}
+                            className={`p-1 rounded border ${
+                              permissionsState[permission] === option.value ? option.bg : "bg-gray-100"
+                            } ${option.border}`}
+                            onClick={() => handlePermissionClick(permission, option.value)}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
                           >
                             {option.icon}
-                          </button>
+                          </motion.button>
                         ))}
                       </div>
                     </div>
@@ -122,13 +152,17 @@ const page = () => {
                       <span className="font-bold text-indigo-500">{permission}</span>
                       <div className="flex space-x-2">
                         {options.map((option) => (
-                          <button
+                          <motion.button
                             key={option.value}
-                            className={`p-1 rounded border ${option.bg} ${option.border}`}
-                            onClick={() => setSelectedPermission(option.value)}
+                            className={`p-1 rounded border ${
+                              permissionsState[permission] === option.value ? option.bg : "bg-gray-100"
+                            } ${option.border}`}
+                            onClick={() => handlePermissionClick(permission, option.value)}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
                           >
                             {option.icon}
-                          </button>
+                          </motion.button>
                         ))}
                       </div>
                     </div>
@@ -139,18 +173,22 @@ const page = () => {
               <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
                 <h4 className="text-md font-bold mb-3 text-indigo-500">Text Channel Permissions</h4>
                 <div className="space-y-2">
-                  {['Send Message', 'Attach Files','Manage Message','See Message History'].map((permission) => (
+                  {['Send Message', 'Attach Files', 'Manage Message', 'See Message History'].map((permission) => (
                     <div key={permission} className="flex items-center justify-between">
                       <span className="font-bold text-indigo-500">{permission}</span>
                       <div className="flex space-x-2">
                         {options.map((option) => (
-                          <button
+                          <motion.button
                             key={option.value}
-                            className={`p-1 rounded border ${option.bg} ${option.border}`}
-                            onClick={() => setSelectedPermission(option.value)}
+                            className={`p-1 rounded border ${
+                              permissionsState[permission] === option.value ? option.bg : "bg-gray-100"
+                            } ${option.border}`}
+                            onClick={() => handlePermissionClick(permission, option.value)}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
                           >
                             {option.icon}
-                          </button>
+                          </motion.button>
                         ))}
                       </div>
                     </div>
@@ -161,18 +199,22 @@ const page = () => {
               <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
                 <h4 className="text-md font-bold mb-3 text-indigo-500">Voice Channel Permissions</h4>
                 <div className="space-y-2">
-                  {['Connect', 'Speak','Video','muteMembers','deafenMembers'].map((permission) => (
+                  {['Connect', 'Speak', 'Video', 'muteMembers', 'deafenMembers'].map((permission) => (
                     <div key={permission} className="flex items-center justify-between">
                       <span className="font-bold text-indigo-500">{permission}</span>
                       <div className="flex space-x-2">
                         {options.map((option) => (
-                          <button
+                          <motion.button
                             key={option.value}
-                            className={`p-1 rounded border ${option.bg} ${option.border}`}
-                            onClick={() => setSelectedPermission(option.value)}
+                            className={`p-1 rounded border ${
+                              permissionsState[permission] === option.value ? option.bg : "bg-gray-100"
+                            } ${option.border}`}
+                            onClick={() => handlePermissionClick(permission, option.value)}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
                           >
                             {option.icon}
-                          </button>
+                          </motion.button>
                         ))}
                       </div>
                     </div>
