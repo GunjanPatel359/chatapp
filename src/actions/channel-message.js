@@ -4,7 +4,6 @@ import { isAuthUser } from "@/lib/authMiddleware"
 import prisma from "@/lib/db"
 import axios from "axios"
 import { decodeToken, generateToken } from "@/lib/tokenConfig"
-import { webSocketServer } from "@/server"
 
 //trial 
 export const fetchMessagesTrial = async (channelId, cursor = null) => {
@@ -158,7 +157,7 @@ const dbHelperCreateMessage = async (channelId, content, serverProfileId) => {
             }
         });
         console.log("Message created:", sendMessage);
-        const response = await fetch(`${webSocketServer}/send-message`, {
+        const response = await fetch(`${process.env.WEB_SOCKET_SERVER}/send-message`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -196,7 +195,7 @@ const dbHelperTokenCreateMessage = async (channelId, content, user, serverId) =>
             }
         });
         console.log("Message created with help of token:", sendMessage);
-        const response = await fetch(`${webSocketServer}/send-message`, {
+        const response = await fetch(`${process.env.WEB_SOCKET_SERVER}/send-message`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
