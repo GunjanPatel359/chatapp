@@ -10,6 +10,8 @@ import { useParams } from "next/navigation";
 import { io } from "socket.io-client";
 import { checkChannelViewPermission } from "@/actions/user";
 
+import { webSocketServer } from "@/server";
+
 const ChatArea = () => {
   const params = useParams();
   const channelId = useMemo(() => params.channelId || "", [params]);
@@ -57,7 +59,7 @@ const ChatArea = () => {
     const connectSocket = (token) => {
       if (!channelId || socketRef.current) return;
   
-      socketRef.current = io(`${process.env.WEB_SOCKET_SERVER}/channel`, {
+      socketRef.current = io(`${webSocketServer}/channel`, {
         query: { channelId, token }, // Always send the latest token
       });
   
