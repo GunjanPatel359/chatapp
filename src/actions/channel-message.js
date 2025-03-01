@@ -4,6 +4,7 @@ import { isAuthUser } from "@/lib/authMiddleware"
 import prisma from "@/lib/db"
 import axios from "axios"
 import { decodeToken, generateToken } from "@/lib/tokenConfig"
+import { webSocketServer } from "@/server"
 
 //trial 
 export const fetchMessagesTrial = async (channelId, cursor = null) => {
