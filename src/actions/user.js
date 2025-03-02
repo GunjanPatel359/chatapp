@@ -3,7 +3,7 @@
 import { UTApi } from "uploadthing/server";
 import prisma from "@/lib/db";
 import { isAuthUser } from "@/lib/authMiddleware";
-import { generateToken } from "@/lib/tokenConfig";
+import { decodeToken, generateToken } from "@/lib/tokenConfig";
 
 const handleGetServerCategoryAndChannels = async (serverId) => {
     const server = await prisma.server.findFirst({
