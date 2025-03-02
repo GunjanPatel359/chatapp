@@ -31,7 +31,8 @@ const ChatArea = () => {
     setLoading(true);
     const res = await fetchMessagesTrial(channelId);
     if (res.success) {
-      setMessages(res.messages);
+      const sortedMessages = res.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      setMessages(sortedMessages);
       setCursor(res.cursor);
     }
     setLoading(false);
