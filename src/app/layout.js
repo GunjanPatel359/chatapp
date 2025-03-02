@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Chat app",
-  description: "organize your mettings easily with chatter yes",
+  description: "organize your mettings easily with chatter yes i am here",
 };
 
 import {
