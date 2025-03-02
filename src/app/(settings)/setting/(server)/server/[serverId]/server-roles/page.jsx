@@ -179,6 +179,12 @@ const SortableRow = ({ id, roleName, roleCount }) => {
     useSortable({ id });
 
   const [selectedRole, setSelectedRole] = useState(""); // State to manage the selected role
+  const [activeSection, setActiveSection] = useState("display"); // State to manage active section
+  const [permissions, setPermissions] = useState({
+    viewChannels: false,
+    manageChannels: false,
+    manageRoles: false,
+  }); // Initialize permissions state
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -226,60 +232,183 @@ const SortableRow = ({ id, roleName, roleCount }) => {
           <div className="bg-white p-6 rounded-lg w-full max-w-md">
             <h3 className="text-lg font-bold mb-4">Edit Role: {selectedRole}</h3>
 
-            {/* Display Section */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Display</label>
-              <input
-                type="text"
-                placeholder="Enter display name"
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-              />
-            </div>
-
-            {/* Permissions Section */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Permissions</label>
-              <div className="mt-2 space-y-2">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="manageMessages"
-                    className="h-4 w-4 text-indigo-500 focus:ring-indigo-500 border-indigo-500 rounded"
-                  />
-                  <label htmlFor="manageMessages" className="ml-2 text-sm text-gray-700">
-                    Manage Messages
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="kickMembers"
-                    className="h-4 w-4 text-indigo-500 focus:ring-indigo-500 border-indigo-500 rounded"
-                  />
-                  <label htmlFor="kickMembers" className="ml-2 text-sm text-gray-700">
-                    Kick Members
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="banMembers"
-                    className="h-4 w-4 text-indigo-500 focus:ring-indigo-500 border-indigo-500 rounded"
-                  />
-                  <label htmlFor="banMembers" className="ml-2 text-sm text-gray-700">
-                    Ban Members
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Manage Access Section */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Manage Access</label>
-              <button className="mt-2 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 w-full">
-                Add Members
+            {/* Tabs for Navigation */}
+            <div className="flex space-x-4 mb-4 border-b border-gray-200">
+              <button
+                onClick={() => setActiveSection("display")}
+                className={`pb-2 text-sm font-medium ${
+                  activeSection === "display"
+                    ? "text-indigo-500 border-b-2 border-indigo-500"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Display
+              </button>
+              <button
+                onClick={() => setActiveSection("permissions")}
+                className={`pb-2 text-sm font-medium ${
+                  activeSection === "permissions"
+                    ? "text-indigo-500 border-b-2 border-indigo-500"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Permissions
+              </button>
+              <button
+                onClick={() => setActiveSection("manage")}
+                className={`pb-2 text-sm font-medium ${
+                  activeSection === "manage"
+                    ? "text-indigo-500 border-b-2 border-indigo-500"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Manage Access
               </button>
             </div>
+
+            {/* Display Section */}
+            {activeSection === "display" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Display</label>
+                <input
+                  type="text"
+                  placeholder="Enter display name"
+                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+                />
+              </div>
+            )}
+
+            {/* Permissions Section */}
+            {activeSection === "permissions" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Permissions</label>
+                <div className="mt-2 space-y-4">
+                  {/* View Channels Permission */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">View Channels</p>
+                      <p className="text-xs text-gray-500">
+                        Allows members to view channels by default (excluding private channels).
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.viewChannels ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          viewChannels: !prev.viewChannels,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.viewChannels ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Manage Channels Permission */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Manage Channels</p>
+                      <p className="text-xs text-gray-500">
+                        Allows members to create, edit, or delete channels.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.manageChannels ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          manageChannels: !prev.manageChannels,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.manageChannels ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Manage Roles Permission */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Manage Roles</p>
+                      <p className="text-xs text-gray-500">
+                        Allows members to create new roles and edit or delete roles lower than their highest role.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.manageRoles ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          manageRoles: !prev.manageRoles,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.manageRoles ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Manage Access Section */}
+            {activeSection === "manage" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Manage Access</label>
+                
+                {/* Search Members Input */}
+                <div className="mt-2 flex items-center bg-gray-50 border border-indigo-500 rounded-md p-2">
+                  <input
+                    type="text"
+                    placeholder="Search Members"
+                    className="bg-transparent text-sm w-full focus:outline-none placeholder:text-indigo-400 text-indigo-500"
+                  />
+                  <IoSearchOutline className="text-indigo-500" size={20} />
+                </div>
+
+                {/* Add Members Button */}
+                <button className="mt-2 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 w-full">
+                  Add Members
+                </button>
+
+                {/* Members List */}
+                <div className="mt-4 space-y-2">
+                  {/* Example Member 1 */}
+                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                    <div className="flex items-center space-x-2">
+                      <img
+                        src="https://via.placeholder.com/40" // Placeholder avatar
+                        alt="Member Avatar"
+                        className="w-8 h-8 rounded-full"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">AniGame</p>
+                        <p className="text-xs text-gray-500">AniGame#0359</p>
+                      </div>
+                    </div>
+                    <button className="text-red-500 hover:text-red-600 text-sm">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Footer Buttons */}
             <div className="mt-6 flex justify-end space-x-2">
@@ -305,5 +434,8 @@ const SortableRow = ({ id, roleName, roleCount }) => {
     </>
   );
 };
+
+
+
 
 export default serverRoles;
