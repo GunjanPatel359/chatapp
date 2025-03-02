@@ -10,6 +10,8 @@ import { BiSolidEdit } from "react-icons/bi";
 import { PiDotsThreeOutlineFill } from "react-icons/pi";
 import { FaUser } from "react-icons/fa";
 
+import {CreateServerRoleModal} from "@/components/modals/createServerRoleModal"
+
 import {
   DndContext,
   closestCenter,
@@ -29,6 +31,9 @@ import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
 const serverRoles = () => {
+  const [selectedRole,setSelectedRole]=useState("")
+  const [selectedAction,setSelectedAction]=useState("")
+
   const params = useParams();
   const serverId = useMemo(() => params.serverId, [params?.serverId]);
   const [roles, setRoles] = useState([]);
@@ -104,9 +109,11 @@ const serverRoles = () => {
               <IoSearchOutline size={25} />
             </div>
           </div>
+          <CreateServerRoleModal serverId={serverId}>
           <button className="bg-indigo-500 hover:bg-indigo-600 text-white font-medium text-sm py-2 px-4 ml-2 rounded whitespace-nowrap">
             Create Role
           </button>
+          </CreateServerRoleModal>
         </div>
 
         <p className="text-sm text-gray-400 mt-4">
