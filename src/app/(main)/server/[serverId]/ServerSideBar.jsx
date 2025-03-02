@@ -124,7 +124,7 @@ const SidebarItem = ({ channel, channelId, serverId,isSelected, isVisible }) => 
     return (
         <div
             className={`transition-all duration-500 ease-in-out ${!isSelected && isVisible ? "opacity-100 max-h-screen" : "opacity-0 max-h-0"} ${isSelected && "opacity-100 max-h-screen"}`}
-            onClick={() => router.push(`/server/${serverId}/channel/${channel.id}`)}
+            onClick={() => router.push(`setting/channel/${channel.id}`)}
         >
             <div className={`flex items-center rounded-md justify-between cursor-pointer px-2 py-[5px] mb-[2px] ${channelId === channel.id ? "bg-gray-300" : "hover:bg-gray-200"} group`}>
                 <div className="flex items-center space-x-1">
@@ -143,6 +143,7 @@ const SidebarItem = ({ channel, channelId, serverId,isSelected, isVisible }) => 
 
 
 const SidebarSection = ({ category, channelId, serverId }) => {
+    const router = useRouter();
     const [isOpen, setIsOpen] = useState(true);
 
     return (
@@ -162,7 +163,7 @@ const SidebarSection = ({ category, channelId, serverId }) => {
                 </span>
                 <span className="flex">
                     <FaPlus className="my-auto mr-0 transition-all duration-300 ease-out group-hover:mr-[3px]" size={15} />
-                    <IoSettingsSharp className="my-auto hover:rotate-90 transition-all duration-500 group-hover:opacity-100 max-w-0 group-hover:max-w-8" size={16}  />
+                    <IoSettingsSharp className="my-auto hover:rotate-90 transition-all duration-500 group-hover:opacity-100 max-w-0 group-hover:max-w-8" size={16} onClick={() => router.push(`/setting/category/${category.id}`)}  />
                 </span>
             </div>
 
