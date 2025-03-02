@@ -2,8 +2,7 @@
 
 import { isAuthUser } from "@/lib/authMiddleware"
 import prisma from "@/lib/db"
-import { getIo } from "../../socket"
-
+import axios from "axios"
 import { decodeToken, generateToken } from "@/lib/tokenConfig"
 
 //trial 
@@ -158,8 +157,16 @@ const dbHelperCreateMessage = async (channelId, content, serverProfileId) => {
             }
         });
         console.log("Message created:", sendMessage);
-        const io = getIo();
-        io.of("/channel").to(channelId).emit("message", sendMessage);
+        const response = await fetch(`${process.env.WEB_SOCKET_SERVER}/send-message`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ channelId, message:sendMessage }),
+          });
+          console.log(response)
+        // const io = getIo();
+        // io.of("/channel").to(channelId).emit("message", sendMessage);
     } catch (error) {
         console.error("Error creating message:", error);
         throw new Error("Error creating message.");
@@ -188,8 +195,16 @@ const dbHelperTokenCreateMessage = async (channelId, content, user, serverId) =>
             }
         });
         console.log("Message created with help of token:", sendMessage);
-        const io = getIo();
-        io.of("/channel").to(channelId).emit("message", sendMessage);
+        const response = await fetch(`${process.env.WEB_SOCKET_SERVER}/send-message`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ channelId, message:sendMessage }),
+          });
+          console.log(response)
+        // const io = getIo();
+        // io.of("/channel").to(channelId).emit("message", sendMessage);
     } catch (error) {
         console.error("Error creating message:", error);
         throw new Error("Error creating message.");

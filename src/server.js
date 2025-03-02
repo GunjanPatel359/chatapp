@@ -4,3 +4,5 @@
 
 
 // export const socket = io();
+
+export const webSocketServer="https://socket-for-chatapp.onrender.com"

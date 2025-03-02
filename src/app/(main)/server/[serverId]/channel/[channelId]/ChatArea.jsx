@@ -10,6 +10,8 @@ import { useParams } from "next/navigation";
 import { io } from "socket.io-client";
 import { checkChannelViewPermission } from "@/actions/user";
 
+import { webSocketServer } from "@/server";
+
 const ChatArea = () => {
   const params = useParams();
   const channelId = useMemo(() => params.channelId || "", [params]);
@@ -29,7 +31,8 @@ const ChatArea = () => {
     setLoading(true);
     const res = await fetchMessagesTrial(channelId);
     if (res.success) {
-      setMessages(res.messages);
+      const sortedMessages = res.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      setMessages(sortedMessages);
       setCursor(res.cursor);
     }
     setLoading(false);
@@ -57,7 +60,7 @@ const ChatArea = () => {
     const connectSocket = (token) => {
       if (!channelId || socketRef.current) return;
   
-      socketRef.current = io("http://localhost:3000/channel", {
+      socketRef.current = io(`${webSocketServer}/channel`, {
         query: { channelId, token }, // Always send the latest token
       });
   
