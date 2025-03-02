@@ -321,8 +321,8 @@ export const checkChannelViewPermission = async (channelId, token = null) => {
             return { success: false, message: "Channel not found" }
         }
         let tokenData = null
-        if (token) {
-            tokenData = decodeToken(token, channelId)
+        // if (token) {
+        //     tokenData = decodeToken(token, channelId)
             // if (tokenData.valid && tokenData.data.userId == user.id) {
             //     if (tokenData.data.timestamp > channel.updatedAt) {
             //         const checkPermission = tokenData.data.permissions.admin || tokenData.data.permissions.viewChannel
@@ -332,7 +332,7 @@ export const checkChannelViewPermission = async (channelId, token = null) => {
             //         }
             //     }
             // }
-        }
+        // }
         const serverId = channel.category.serverId
         const userServerProfile = await prisma.serverProfile.findFirst({
             where: {
