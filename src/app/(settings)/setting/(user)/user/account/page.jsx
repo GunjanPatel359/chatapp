@@ -34,7 +34,7 @@ const UserProfile=()=>{
         {/* Profile Header */}
         <div className='w-full h-28 bg-gray-300 rounded-t-lg'></div>
         <div className="flex items-center gap-4 pb-0 p-6 pt-0 translate-y-[-15px]">
-          <img src={avatar} alt="avatar" className="w-28 h-28 rounded-full border-8 border-white bg-white translate-y-[-15px]" />
+          <img src="/demoProfileImg.jpg" alt="avatar" className="w-28 h-28 rounded-full border-[8px] border-white bg-white translate-y-[-22px]" />
           <div className="flex-1">
             <h2 className="text-xl font-semibold text-gray-800">{username}</h2>
           </div>

@@ -66,7 +66,7 @@ const SideBar = () => {
             <div>
                 <Divider />
                 <SideBarIcon icon={<FaPlus size="30" />} text="Create server" active={false} redirect={`/user/create-server`} />
-                <SideBarIcon icon={<BsGearFill size="26" />} text="Settings" active={active=="setting"} redirect={`/setting/user`} />
+                <SideBarIcon icon={<BsGearFill size="26" />} text="Settings" active={active=="setting"} redirect={`/setting/user/account`} />
             </div>
         </div>
     );
