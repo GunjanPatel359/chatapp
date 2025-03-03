@@ -36,16 +36,16 @@ export const generateToken = async (channelId, userId, newPermissions,tokenData=
 
         // ✅ Preserve old timestamp & merge permissions
         payload.timestamp = decoded.timestamp || Date.now();
-        payload.permissions = { ...decoded.permissions, ...newPermissions };
+        payload.permissions = { ...decoded.permissions, ...newPermissions.permission };
       } catch (error) {
         console.error("Invalid or expired token, generating a new one.");
       }
     } else {
       // If no token exists, set the current timestamp
       payload.timestamp = Date.now();
-      payload.permissions = newPermissions;
+      payload.permissions = newPermissions.permission;
     }
-
+    console.log(payload,newPermissions)
     // 🔹 Generate a new JWT with updated permissions
     const updatedToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "15d" });
     console.log(updatedToken)

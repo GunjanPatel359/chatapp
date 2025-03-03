@@ -44,8 +44,8 @@ const ChatArea = () => {
         const res = await checkChannelViewPermission(channelId, localStorage.getItem(channelId));
   
         if (res.success && res.token) {
-          localStorage.setItem(channelId, res.token); // Update token every time
-          connectSocket(res.token); // Connect WebSocket with new token
+          localStorage.setItem(channelId, res.token[channelId]); // Update token every time
+          connectSocket(res.token[channelId]); // Connect WebSocket with new token
         } else {
           throw new Error("Invalid token");
         }
