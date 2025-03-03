@@ -21,8 +21,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { createServer } from "@/actions/server";
+import { useRouter } from "next/navigation";
 
 const CreateServerPage = () => {
+    const router=useRouter()
     const { toast } = useToast()
     const fileInputRef = useRef(null);
     const [imageAvatar, setImageAvatar] = useState("")
@@ -196,6 +198,7 @@ const CreateServerPage = () => {
                     description: "Server created successfully",
                     variant: "success"
                 })
+                router.push("/home")
             }
             if (!res.success) {
                 toast({
