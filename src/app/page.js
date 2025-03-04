@@ -21,7 +21,7 @@ export default function Home() {
 
       gsap.to(backgroundRef.current, {
         backgroundPosition: `${randomX}% ${randomY}%`,
-        duration: gsap.utils.random(5, 10, 1), // Random duration between 5 and 10 seconds
+        duration: gsap.utils.random(5, 8, 1), // Random duration between 5 and 10 seconds
         ease: "power2.inOut",
         onComplete: animateBackground, // Loop the animation
       });
