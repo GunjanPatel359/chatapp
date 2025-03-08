@@ -54,7 +54,7 @@ const ServerSideBar = () => {
                                         className="my-auto w-14 h-14 rounded-full object-cover"
                                     />
                                 ) : (
-                                    <div className="text-3xl text-center w-full h-full flex items-center justify-center">
+                                    <div className="text-3xl w-full h-full flex items-center justify-center">
                                         {`${server.name.slice(0, 1).toUpperCase()}`}
                                     </div>
                                 )}
