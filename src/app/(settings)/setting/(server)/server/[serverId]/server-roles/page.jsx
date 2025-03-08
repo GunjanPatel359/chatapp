@@ -160,7 +160,7 @@ const serverRoles = () => {
       </div>
 
       <div>
-        <div className="w-full flex flex-row">
+        <div className="w-full flex flex-col">
           {roles.length > 0 ? (
             <>
             <div className="py-2 px-3 bg-indigo-500 text-white hover:bg-indigo-400 cursor-pointer"
@@ -227,11 +227,11 @@ const SortableRow = ({ id, roleName, roleCount, reorderable }) => {
 
   return (
     <>
-      <tr ref={setNodeRef} style={style} className="border-b bg-gray-200 rounded cursor-pointer">
+      <tr ref={setNodeRef} style={style} className="border-b bg-gray-200 rounded cursor-pointer" {...attributes} {...listeners}>
         <td className="w-[2px] px-2 pr-0 py-2">
           {/* Disable drag handle if reorderable is false */}
           {reorderable ? (
-            <BsThreeDotsVertical className="cursor-grab" {...attributes} {...listeners} />
+            <BsThreeDotsVertical className="cursor-grab" />
           ) : (
             <BsThreeDotsVertical className="text-gray-400" />
           )}

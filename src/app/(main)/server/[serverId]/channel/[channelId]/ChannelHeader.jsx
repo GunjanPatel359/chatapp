@@ -13,7 +13,7 @@ const ChannelHeader = ({ channel }) => {
                     <div className="text-2xl pl-1 my-auto translate-y-[-3px] text-indigo-300">|</div>
                 </div>
                 <div className="flex-1 flex pl-2 max-h-12 my-auto overflow-hidden text-ellipsis whitespace-nowrap text-indigo-300">
-                    A space for open discussions about Neon and Postgres...
+                    {channel.description}
                 </div>
                 {/* Action Icons */}
                 <div className="flex items-center gap-4">

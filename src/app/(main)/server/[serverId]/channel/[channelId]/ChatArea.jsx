@@ -29,11 +29,14 @@ const ChatArea = () => {
 
   const fetchInitialMessages = async () => {
     setLoading(true);
-    const res = await fetchMessagesTrial(channelId);
+    const res = await fetchMessagesTrial(params.serverId,channelId, localStorage.getItem(channelId));
     if (res.success) {
       const sortedMessages = res.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
       setMessages(sortedMessages);
       setCursor(res.cursor);
+      if(res.token){
+        localStorage.setItem(channelId,res.token[channelId])
+      }
     }
     setLoading(false);
   };
@@ -89,10 +92,13 @@ const ChatArea = () => {
     if (!messagesRef.current || !cursor) return;
 
     if (messagesRef.current.scrollTop === 0) {
-      const res = await fetchMessagesTrial(channelId, cursor);
+      const res = await fetchMessagesTrial(params.serverId,channelId, cursor, localStorage.getItem(channelId));
       if (res.success) {
         setMessages((prev) => [...res.messages, ...prev]);
         setCursor(res.cursor);
+        if(res.token){
+          localStorage.setItem(channelId,res.token[channelId])
+        }
       }
     }
   };
@@ -158,6 +164,7 @@ const ChatArea = () => {
 };
 
 const MessageDialogOther = ({ item }) => {
+  console.log(item)
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
     const formattedDate = date.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
@@ -173,7 +180,7 @@ const MessageDialogOther = ({ item }) => {
       <div className="rounded-full bg-red-300 w-12 h-12"></div>
       <div className="flex flex-col ml-2 flex-1">
         <div className="flex">
-          <div className="font-bold">Krushnaraj</div>
+          <div className="font-bold">{item.serverProfile.name}</div>
           <div className="text-xs my-auto ml-2">{formattedDate}</div>
           <div className="text-xs my-auto ml-1">{formattedTime}</div>
         </div>

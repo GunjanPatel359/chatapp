@@ -10,6 +10,16 @@ export const inviteServer = async (serverId, userId) => {
             return { success: false, message: "Please provide serverId and userId" };
         }
 
+        const user=await prisma.user.findUnique({
+            where: {
+                id:userId
+            }
+        })
+
+        if(!user){
+            return { success: false, message: "User not found" };
+        }
+
         // Check if user is already part of the server
         const userServerProfile = await prisma.serverProfile.findUnique({
             where: {
@@ -29,7 +39,9 @@ export const inviteServer = async (serverId, userId) => {
         const newProfile = await prisma.serverProfile.create({
             data: {
                 serverId: serverId,
-                userId: userId
+                userId: userId,
+                name:user.username,
+                imageUrl:user?.avatarUrl || null 
             }
         });
 
