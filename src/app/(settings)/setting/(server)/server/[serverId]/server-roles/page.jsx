@@ -1,5 +1,5 @@
 "use client";
-import { getServerRoles, reorderServerRole } from "@/actions/role";
+import { getServerRoles } from "@/actions/role";
 import { toast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -29,24 +29,10 @@ import {
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { serverSetting } from "@/hooks/zusthook";
 
 const serverRoles = () => {
-  const { userServerProfile, user } = serverSetting()
-  // console.log(userServerProfile, user)
-
-  const userHighestRole = useMemo(() => {
-    if (userServerProfile.server.ownerId === user.id) {
-      return -1; // Return 0 if the user is the server owner
-    }
-
-    const highestRole = userServerProfile.server.roles
-      .filter(role => role.adminPermission) // Filter roles with admin permission
-      .reduce((prev, current) => prev.priority > current.priority ? prev : current, null);
-
-    return highestRole ? highestRole.priority : 0; // Return priority or 0 if no role found
-
-  }, [userServerProfile, user.id]); // Depend on both userServerProfile and user.id
+  const [selectedRole, setSelectedRole] = useState("");
+  const [selectedAction, setSelectedAction] = useState("");
 
   const params = useParams();
   const serverId = useMemo(() => params.serverId, [params?.serverId]);
@@ -100,26 +86,6 @@ const serverRoles = () => {
     }
   };
 
-  const reorderRoleSubmit=async()=>{
-    try {
-      const temp=roles.map((role)=>role.id)
-      const res=await reorderServerRole(serverId,temp)
-      if(res.success){
-        return toast({
-          title: "successfully updated the role order",
-          variant:"success"
-        })
-      }
-      toast({
-        title: "Error",
-        description: res.message,
-        variant:"destructive"
-      })
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
   return (
     <div className="text-indigo-500 h-full">
       <div className="p-6">
@@ -160,12 +126,8 @@ const serverRoles = () => {
       </div>
 
       <div>
-        <div className="w-full flex flex-col">
+        <div className="w-full">
           {roles.length > 0 ? (
-            <>
-            <div className="py-2 px-3 bg-indigo-500 text-white hover:bg-indigo-400 cursor-pointer"
-            onClick={reorderRoleSubmit}
-            >Save</div>
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -197,14 +159,12 @@ const serverRoles = () => {
                         id={role.id}
                         roleName={role.name}
                         roleCount={role?.UserRoleAssignment?.length || 0}
-                        reorderable={role.order<=userHighestRole?false:true}
                       />
                     ))}
                   </tbody>
                 </table>
               </SortableContext>
             </DndContext>
-            </>
           ) : (
             <div>No roles available</div>
           )}
@@ -214,27 +174,35 @@ const serverRoles = () => {
   );
 };
 
-const SortableRow = ({ id, roleName, roleCount, reorderable }) => {
+const SortableRow = ({ id, roleName, roleCount }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id, disabled: !reorderable }); // Disable sorting if reorderable is false
+    useSortable({ id });
+
+  const [selectedRole, setSelectedRole] = useState(""); // State to manage the selected role
+  const [activeSection, setActiveSection] = useState("display"); // State to manage active section
+  const [permissions, setPermissions] = useState({
+    viewChannels: false,
+    manageChannels: false,
+    manageRoles: false,
+  }); // Initialize permissions state
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1, // Reduce opacity while dragging
-    cursor: reorderable ? "grab" : "default", // Change cursor style based on reorderable state
+    opacity: 1,
   };
 
   return (
     <>
-      <tr ref={setNodeRef} style={style} className="border-b bg-gray-200 rounded cursor-pointer" {...attributes} {...listeners}>
+      <tr
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
+        className="border-b bg-gray-200 rounded cursor-pointer"
+      >
         <td className="w-[2px] px-2 pr-0 py-2">
-          {/* Disable drag handle if reorderable is false */}
-          {reorderable ? (
-            <BsThreeDotsVertical className="cursor-grab" />
-          ) : (
-            <BsThreeDotsVertical className="text-gray-400" />
-          )}
+          <BsThreeDotsVertical className="cursor-grab" />
         </td>
         <td className="px-4 pl-2 py-2 capitalize">{roleName}</td>
         <td className="px-4 py-2 flex">
@@ -247,6 +215,7 @@ const SortableRow = ({ id, roleName, roleCount, reorderable }) => {
           <div className="flex space-x-2">
             <button
               className="p-1 hover:bg-indigo-600 bg-indigo-500 text-white transition rounded-full"
+              onClick={() => setSelectedRole(roleName)} // Open the modal
             >
               <BiSolidEdit size={19} />
             </button>
@@ -256,10 +225,215 @@ const SortableRow = ({ id, roleName, roleCount, reorderable }) => {
           </div>
         </td>
       </tr>
+
+      {/* Modal for editing role */}
+      {selectedRole && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">Edit Role: {selectedRole}</h3>
+
+            {/* Tabs for Navigation */}
+            <div className="flex space-x-4 mb-4 border-b border-gray-200">
+              <button
+                onClick={() => setActiveSection("display")}
+                className={`pb-2 text-sm font-medium ${
+                  activeSection === "display"
+                    ? "text-indigo-500 border-b-2 border-indigo-500"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Display
+              </button>
+              <button
+                onClick={() => setActiveSection("permissions")}
+                className={`pb-2 text-sm font-medium ${
+                  activeSection === "permissions"
+                    ? "text-indigo-500 border-b-2 border-indigo-500"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Permissions
+              </button>
+              <button
+                onClick={() => setActiveSection("manage")}
+                className={`pb-2 text-sm font-medium ${
+                  activeSection === "manage"
+                    ? "text-indigo-500 border-b-2 border-indigo-500"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Manage Access
+              </button>
+            </div>
+
+            {/* Display Section */}
+            {activeSection === "display" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Display</label>
+                <input
+                  type="text"
+                  placeholder="Enter display name"
+                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+                />
+              </div>
+            )}
+
+            {/* Permissions Section */}
+            {activeSection === "permissions" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Permissions</label>
+                <div className="mt-2 space-y-4">
+                  {/* View Channels Permission */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">View Channels</p>
+                      <p className="text-xs text-gray-500">
+                        Allows members to view channels by default (excluding private channels).
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.viewChannels ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          viewChannels: !prev.viewChannels,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.viewChannels ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Manage Channels Permission */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Manage Channels</p>
+                      <p className="text-xs text-gray-500">
+                        Allows members to create, edit, or delete channels.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.manageChannels ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          manageChannels: !prev.manageChannels,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.manageChannels ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Manage Roles Permission */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Manage Roles</p>
+                      <p className="text-xs text-gray-500">
+                        Allows members to create new roles and edit or delete roles lower than their highest role.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.manageRoles ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          manageRoles: !prev.manageRoles,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.manageRoles ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Manage Access Section */}
+            {activeSection === "manage" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Manage Access</label>
+                
+                {/* Search Members Input */}
+                <div className="mt-2 flex items-center bg-gray-50 border border-indigo-500 rounded-md p-2">
+                  <input
+                    type="text"
+                    placeholder="Search Members"
+                    className="bg-transparent text-sm w-full focus:outline-none placeholder:text-indigo-400 text-indigo-500"
+                  />
+                  <IoSearchOutline className="text-indigo-500" size={20} />
+                </div>
+
+                {/* Add Members Button */}
+                <button className="mt-2 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 w-full">
+                  Add Members
+                </button>
+
+                {/* Members List */}
+                <div className="mt-4 space-y-2">
+                  {/* Example Member 1 */}
+                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                    <div className="flex items-center space-x-2">
+                      <img
+                        src="https://via.placeholder.com/40" // Placeholder avatar
+                        alt="Member Avatar"
+                        className="w-8 h-8 rounded-full"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">AniGame</p>
+                        <p className="text-xs text-gray-500">AniGame#0359</p>
+                      </div>
+                    </div>
+                    <button className="text-red-500 hover:text-red-600 text-sm">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Footer Buttons */}
+            <div className="mt-6 flex justify-end space-x-2">
+              <button
+                onClick={() => setSelectedRole("")} // Close the modal
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Handle form submission here
+                  setSelectedRole(""); // Close the modal after submission
+                }}
+                className="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
-
 
 
 
