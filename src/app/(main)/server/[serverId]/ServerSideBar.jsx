@@ -182,6 +182,4 @@ const SidebarSection = ({ category, channelId, serverId }) => {
     );
 };
 
-
-
 export default ServerSideBar;
