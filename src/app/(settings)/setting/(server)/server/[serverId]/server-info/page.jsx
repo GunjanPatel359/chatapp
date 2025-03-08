@@ -1,17 +1,56 @@
-"use client"
+"use client";
 
 import { serverSetting } from "@/hooks/zusthook";
 import React, { useState } from "react";
 import { IoInformationCircle } from "react-icons/io5";
 
 const Overview = () => {
-  const {server}=serverSetting()
-  if(!server){
-    return <div>Loading</div>
-  }
-  const [serverName, setServerName] = useState(server.name);
+  const { server, updateServerLogo } = serverSetting(); // Add updateServerLogo to your Zustand store
+  const [serverName, setServerName] = useState(server?.name || "");
   const [welcomeMessage, setWelcomeMessage] = useState(true);
   const [stickerPrompt, setStickerPrompt] = useState(true);
+  const [logo, setLogo] = useState(server?.logo || null); // State to store the uploaded logo
+  const [showPopup, setShowPopup] = useState(false); // State to control the popup
+
+  if (!server) {
+    return <div>Loading</div>;
+  }
+
+  // Handle logo upload
+  const handleLogoUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogo(e.target.result); // Set the logo as a base64 string
+        setShowPopup(true); // Show the popup
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle popup confirmation
+  const handleConfirmUpdate = async () => {
+    try {
+      // Call an API to update the server logo in the database
+      const response = await fetch("/api/updateServerLogo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serverId: server.id, logo }),
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        // Update the logo in the Zustand store
+        updateServerLogo(logo);
+        setShowPopup(false); // Close the popup
+      } else {
+        console.error("Failed to update logo:", data.message);
+      }
+    } catch (error) {
+      console.error("Error updating logo:", error);
+    }
+  };
 
   return (
     <div className="bg-gray-200 text-indigo-500 p-6">
@@ -20,12 +59,57 @@ const Overview = () => {
         Overview
       </h2>
       <p className="text-sm text-indigo-500">
-        {/*  */}
+        {/* Add a description if needed */}
       </p>
 
-      <div className="flex justify-center items-center w-28 h-28 py-8 bg-gray-50 rounded-full mx-auto">
-        <span className="text-indigo-500">Logo</span>
+      {/* Logo Upload Section */}
+      <div className="flex justify-center items-center w-28 h-28 py-8 bg-gray-50 rounded-full mx-auto cursor-pointer">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleLogoUpload}
+          className="hidden"
+          id="logo-upload"
+        />
+        <label htmlFor="logo-upload" className="cursor-pointer">
+          {logo ? (
+            <img
+              src={logo}
+              alt="Server Logo"
+              className="w-full h-full rounded-full object-cover"
+            />
+          ) : (
+            <span className="text-indigo-500">Logo</span>
+          )}
+        </label>
       </div>
+
+      {/* Popup for Confirmation */}
+      {showPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-lg font-bold text-indigo-500">Update Logo</h3>
+            <p className="text-sm text-indigo-500 mb-4">
+              Are you sure you want to update the server logo?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowPopup(false)}
+                className="px-4 py-2 text-sm text-indigo-500 hover:bg-gray-100 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmUpdate}
+                className="px-4 py-2 text-sm bg-indigo-500 text-white rounded hover:bg-indigo-600"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Server Name */}
       <div className="mb-2">
         <h2 className="text-indigo-500 font-semibold">Server Name</h2>
@@ -37,7 +121,7 @@ const Overview = () => {
         />
       </div>
 
-      {/* Inactive Settings */}
+      {/* Server Description */}
       <div className="mb-4">
         <h3 className="text-indigo-500 mt-4 font-semibold">Server Description</h3>
         <textarea
