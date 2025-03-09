@@ -1,22 +1,54 @@
-"use client"
+"use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const ProfileSettingPage = () => {
     const [activeProfile, setActiveProfile] = useState('user');
     const [displayName, setDisplayName] = useState('ZAKOP');
     const [pronouns, setPronouns] = useState('AKA OLLA(•U•)');
-    const [avatar, setAvatar] = useState('/default-avatar.png');
-    const [aboutMe, setAboutMe] = useState('');
-    const [serverNickname, setServerNickname] = useState('ZAKOP'); // Added for server profile
-    const [serverPronouns, setServerPronouns] = useState(''); // Added for server profile
-    const [selectedServer, setSelectedServer] = useState("ZAKOP'S server"); // Added for server selection
+    const [avatar, setAvatar] = useState('/default-avatar.png'); // Default avatar
+    const [aboutMe, setAboutMe] = useState('hello');
+    const [serverNickname, setServerNickname] = useState('ZAKOP');
+    const [serverPronouns, setServerPronouns] = useState('');
+    const [selectedServer, setSelectedServer] = useState("ZAKOP'S server");
+    const [banner, setBanner] = useState('/default-banner.png'); // Default banner
+    const [serverBanner, setServerBanner] = useState('/default-banner.png'); // Default server banner
+
+    // Load saved data from localStorage after component mounts
+    useEffect(() => {
+        const savedAvatar = localStorage.getItem('avatar');
+        const savedBanner = localStorage.getItem('banner');
+        const savedServerBanner = localStorage.getItem('serverBanner');
+
+        if (savedAvatar) setAvatar(savedAvatar);
+        if (savedBanner) setBanner(savedBanner);
+        if (savedServerBanner) setServerBanner(savedServerBanner);
+    }, []);
 
     const handleAvatarChange = (event) => {
         const file = event.target.files[0];
         if (file) {
             const imageUrl = URL.createObjectURL(file);
             setAvatar(imageUrl);
+            localStorage.setItem('avatar', imageUrl); // Save to localStorage
+        }
+    };
+
+    const handleBannerChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const imageUrl = URL.createObjectURL(file);
+            setBanner(imageUrl);
+            localStorage.setItem('banner', imageUrl); // Save to localStorage
+        }
+    };
+
+    const handleServerBannerChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const imageUrl = URL.createObjectURL(file);
+            setServerBanner(imageUrl);
+            localStorage.setItem('serverBanner', imageUrl); // Save to localStorage
         }
     };
 
@@ -83,35 +115,59 @@ const ProfileSettingPage = () => {
                         <div className="w-1/2">
                             <div className="text-sm font-medium mb-2">Preview</div>
                             <div className="border p-4 rounded">
-                                <div className="relative w-24 h-24 mb-4">
+                                <div className="relative w-full h-32 mb-4">
                                     <img 
-                                        src={avatar} 
-                                        alt="Avatar" 
-                                        className="w-full h-full rounded-full object-cover"
+                                        src={banner} 
+                                        alt="Banner" 
+                                        className="w-full h-full object-cover rounded"
                                     />
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity rounded-full">
-                                        <label 
-                                            htmlFor="avatar-upload" 
-                                            className="text-white text-sm cursor-pointer flex items-center justify-center w-full h-full"
-                                        >
-                                            Edit
-                                        </label>
-                                        <input 
-                                            id="avatar-upload" 
-                                            type="file" 
-                                            className="hidden" 
-                                            accept="image/*" 
-                                            onChange={handleAvatarChange}
-                                        />
+                                    <label 
+                                        htmlFor="banner-upload" 
+                                        className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-sm px-2 py-1 rounded cursor-pointer"
+                                    >
+                                        Change Banner
+                                    </label>
+                                    <input 
+                                        id="banner-upload" 
+                                        type="file" 
+                                        className="hidden" 
+                                        accept="image/*" 
+                                        onChange={handleBannerChange}
+                                    />
+                                </div>
+                                <div className="flex">
+                                    <div className="w-3/5 p-4">
+                                        <div className="relative w-24 h-24 mb-4 flex items-center justify-center">
+                                            <img 
+                                                src={avatar} 
+                                                alt="Avatar" 
+                                                className="w-full h-full rounded-full object-cover"
+                                            />
+                                            <div className="absolute flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity rounded-full">
+                                                <label 
+                                                    htmlFor="avatar-upload" 
+                                                    className="text-white text-sm cursor-pointer flex items-center justify-center w-full h-full"
+                                                >
+                                                    Edit
+                                                </label>
+                                                <input 
+                                                    id="avatar-upload" 
+                                                    type="file" 
+                                                    className="hidden" 
+                                                    accept="image/*" 
+                                                    onChange={handleAvatarChange}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="text-lg font-bold">{displayName}</div>
+                                        <div className="text-sm">aka_{displayName} • {pronouns}</div>
+                                        {aboutMe && (
+                                            <div className="mt-2 text-sm text-gray-700">
+                                                <span className="font-medium">About Me:</span> {aboutMe}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="text-lg font-bold">{displayName}</div>
-                                <div className="text-sm">aka_{displayName} • {pronouns}</div>
-                                {aboutMe && (
-                                    <div className="mt-2 text-sm text-gray-700">
-                                        <span className="font-medium">About Me:</span> {aboutMe}
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </div>
@@ -160,26 +216,62 @@ const ProfileSettingPage = () => {
                             <div className="text-sm font-medium mb-2 uppercase">
                                 Preview for {selectedServer}
                             </div>
-                            <div className="border p-4 rounded bg-white shadow-lg">
-                                <div className="relative w-16 h-16 mb-4">
+                            <div className="border p-4 rounded">
+                                <div className="relative w-full h-32 mb-4">
                                     <img 
-                                        src={avatar} 
-                                        alt="Avatar" 
-                                        className="w-full h-full rounded-full object-cover"
+                                        src={banner} 
+                                        alt="Banner" 
+                                        className="w-full h-full object-cover rounded"
                                     />
-                                    <div className="absolute -top-1 -right-1 w-6 h-6  rounded-full flex items-center justify-center border-2 border-white">
-                                        <span className="text-white text-xs">✖</span>
-                                    </div>
-                                    <div className="absolute top-0 right-0 w-6 h-6  rounded-full flex items-center justify-center border-2 border-white">
-                                    </div>
-                                    <div className="absolute bottom-0 right-0 w-6 h-6  rounded-full flex items-center justify-center border-2 border-white">
+                                    <label 
+                                        htmlFor="server-banner-upload" 
+                                        className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-sm px-2 py-1 rounded cursor-pointer"
+                                    >
+                                        Change Banner
+                                    </label>
+                                    <input 
+                                        id="server-banner-upload" 
+                                        type="file" 
+                                        className="hidden" 
+                                        accept="image/*" 
+                                        onChange={handleServerBannerChange}
+                                    />
+                                </div>
+                                <div className="flex">
+                                    <div className="w-3/5 p-4">
+                                        <div className="relative w-24 h-24 mb-4 flex items-center justify-center">
+                                            <img 
+                                                src={avatar} 
+                                                alt="Avatar" 
+                                                className="w-full h-full rounded-full object-cover"
+                                            />
+                                            <div className="absolute flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity rounded-full">
+                                                <label 
+                                                    htmlFor="avatar-upload" 
+                                                    className="text-white text-sm cursor-pointer flex items-center justify-center w-full h-full"
+                                                >
+                                                    Edit
+                                                </label>
+                                                <input 
+                                                    id="avatar-upload" 
+                                                    type="file" 
+                                                    className="hidden" 
+                                                    accept="image/*" 
+                                                    onChange={handleAvatarChange}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="text-lg font-bold">{serverNickname}</div>
+                                        <div className="text-sm text-gray-600">
+                                            {serverNickname} • {pronouns}
+                                        </div>
+                                        {aboutMe && (
+                                            <div className="mt-2 text-sm text-gray-700">
+                                                <span className="font-medium">About Me:</span> {aboutMe}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="text-lg font-bold">{serverNickname}</div>
-                                <div className="text-sm text-gray-600">
-                                    aka_{serverNickname} • {serverPronouns}
-                                </div>
-                                <div className="mt-2 text-sm text-gray-700">{aboutMe}</div>
                             </div>
                         </div>
                     </div>
