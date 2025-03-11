@@ -225,7 +225,7 @@ export const sendMessage = async (serverId, channelId, content, token = null) =>
 // Helper function to see message history
 const dbHelperFetchMessage=async(channelId,cursor=null)=>{
     try {
-        const limit = 20;
+        // const limit = 20;
         let whereClause = { channelId };
 
         if (cursor) {

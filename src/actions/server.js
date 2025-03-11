@@ -11,6 +11,12 @@ export const createServer = async (name, description, categories, formData) => {
             return { success: false, message: "name and description are required" };
         }
 
+        // Check if the user is authenticated
+        const user = await isAuthUser();
+        if (!user) {
+            return { success: false, message: "Please login to continue" };
+        }
+
         let img_url;
 
         // Check if formData exists and process the file upload
@@ -42,11 +48,6 @@ export const createServer = async (name, description, categories, formData) => {
             }
         }
 
-        // Check if the user is authenticated
-        const user = await isAuthUser();
-        if (!user) {
-            return { success: false, message: "Please login to continue" };
-        }
 
         // Create the server in the database
         const server = await prisma.$transaction(async (prisma) => {
@@ -105,6 +106,86 @@ export const createServer = async (name, description, categories, formData) => {
     }
 };
 
+export const updateServerAvatar = async (serverId, formData) => {
+    try {
+        if (!formData || !serverId) {
+            return { success: false, message: "provide image file" }
+        }
+        const file = formData.get("file");
+        if (!file) {
+            return { success: false, message: "provide image file" }
+        }
+        const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
+        if (!allowedTypes.includes(file.type)) {
+            return { success: false, message: "Invalid file type. Only PNG, JPG, and JPEG are allowed." }
+        }
+        const maxSizeInBytes = 1 * 1024 * 1024; // 1MB
+        if (file.size > maxSizeInBytes) {
+            return { success: false, message: "File size exceeds the 1MB limit." }
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            return { success: false, message: "Please login to continue" };
+        }
+        const server = await prisma.server.findFirst({
+            where: {
+                id: serverId
+            }
+        })
+        if (!server) {
+            return { success: false, message: "Server not found" };
+        }
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: {
+                userId: user.id,
+                serverId: serverId,
+                isDeleted: false
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            }
+        })
+        if (!userServerProfile) {
+            return { success: false, message: "You are not a member of this server" };
+        }
+        const hasPermission = userServerProfile.roles.some((a) => a.role.adminPermission);
+        if (server.ownerId !== user.id && !hasPermission) { // Fix: Corrected permission check
+            return { success: false, message: "You do not have permission to update the server avatar." };
+        }
+
+        const utapi = new UTApi();
+        const response = await utapi.uploadFiles(file);
+        if (!response) {
+            return { success: false, message: "failed to upload the file" }
+        }
+        if (response.error) {
+            return { success: false, message: response.error }
+        }
+        console.log(response)
+        img_url = response.data.url;
+        console.log("Image URL:", img_url);
+        if (server.imageUrl) {
+            await utapi.deleteFiles(server.imageUrl)
+        }
+        const updatedServer = await prisma.server.update({
+            where: {
+                id: serverId
+            },
+            data: {
+                imageUrl: img_url
+            }
+        })
+        return { success: true, message: "Server avatar updated successfully", img_url };
+    } catch (error) {
+        console.error(error);
+        throw new Error(error.message || "Error occurred updateServerAvatar")
+    }
+}
+
 export const getCategories = async (serverId) => {
     try {
         if (!serverId) {
@@ -117,7 +198,8 @@ export const getCategories = async (serverId) => {
         const userServerProfile = await prisma.serverProfile.findFirst({
             where: {
                 userId: user.id,
-                serverId: serverId
+                serverId: serverId,
+                isDeleted: false
             },
             include: {
                 roles: {
@@ -141,14 +223,68 @@ export const getCategories = async (serverId) => {
             }
         })
         if (!server) {
-            return {success:false,message:"Server not found"}
+            return { success: false, message: "Server not found" }
         }
         if (server.ownerId == user.id || userServerProfile.roles.some((role) => role.role.adminPermission)) {
             return { success: true, categories: JSON.parse(JSON.stringify(server.categories)) }
         }
-        return {success:false,message:"you do not have permission"}
+        return { success: false, message: "you do not have permission" }
     } catch (error) {
         console.log(error)
         throw new Error(error)
+    }
+}
+
+export const updateServerInfo = async (serverId, name, description) => {
+    try {
+        if (!name || !description) {
+            return { success: false, message: "name and description are required" }
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            return { success: false, message: "User is not authenticated" }
+        }
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: {
+                userId: user.id,
+                serverId: serverId,
+                isDeleted: false
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            }
+        })
+        if (!userServerProfile) {
+            return { success: false, message: "User is not a member of the server" }
+        }
+        const server = await prisma.server.findFirst({
+            where: {
+                id: serverId
+            }
+        })
+        if (!server) {
+            return { success: false, message: "Server not found" }
+        }
+        const hasPermission = userServerProfile.roles.some((a) => a.role.adminPermission)
+        if (!server.ownerId == user.id && !hasPermission) {
+            return { success: false, message: "you do not have permission" }
+        }
+        const updatedServer = await prisma.server.update({
+            where: {
+                id: serverId
+            },
+            data: {
+                name: name,
+                description: description
+            }
+        })
+        return { success: true, message: "Server updated successfully" }
+    } catch (error) {
+        console.error(error);
+        throw new Error(error.message || "Error occurred updateServerInfo")
     }
 }
