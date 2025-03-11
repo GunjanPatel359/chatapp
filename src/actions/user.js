@@ -193,6 +193,30 @@ export const getServer = async (serverId) => {
     }
 };
 
+export const getChannel = async(channelId)=>{
+    try {
+        if(!channelId){
+            return { success: false, message: "Channel ID is required" }
+        }
+        const user = await isAuthUser();
+        if (!user) {
+            return { success: false, message: "Please login to continue" }
+        }
+        const channel = await prisma.channel.findUnique({
+            where:{
+                id:channelId
+            }
+        })
+        if(!channel){
+            return { success: false, message: "Channel not found" }
+        }
+        return { success: true, channel: JSON.parse(JSON.stringify(channel)) };
+    } catch (error) {
+        console.log(error);
+        throw new Error(`getChannel: ${error}`);
+    }
+}
+
 export const serverSettingFetch = async (serverId) => {
     try {
         if (!serverId) {

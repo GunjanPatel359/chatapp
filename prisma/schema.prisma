@@ -61,6 +61,8 @@ model ServerProfile {
 
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+
+  messages ChannelMessage[] @ignore
 }
 
 model DefaultServerRole {
@@ -295,6 +297,7 @@ model ChannelMessage {
   id              String @id @default(cuid()) @map("_id")
   channelId       String
   serverProfileId String
+  serverProfile   ServerProfile @relation(fields: [serverProfileId], references: [id])
 
   content String
   imgUrl  String?
@@ -308,6 +311,7 @@ model ChannelMessage {
 
   @@index([channelId])
 }
+
 
 model DirectMessage {
   id         String @id @default(cuid()) @map("_id")
