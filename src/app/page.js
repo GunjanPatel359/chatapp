@@ -12,23 +12,29 @@ import { createChannel } from "@/actions/channel";
 export default function Home() {
   const router = useRouter();
   const backgroundRef = useRef(null);
+  const videoRef = useRef(null); // Ref for the video element
 
   useEffect(() => {
-    // GSAP animation for random gradient movement
-    const animateBackground = () => {
-      const randomX = gsap.utils.random(-100, 100, 1); // Random X position (-100% to 100%)
-      const randomY = gsap.utils.random(-100, 100, 1); // Random Y position (-100% to 100%)
+    // Set the initial background gradient
+    gsap.set(backgroundRef.current, {
+      backgroundImage: "linear-gradient(135deg, black, #4e2bb7)",
+      backgroundPosition: "0% 0%",
+      backgroundSize: "200% 200%",
+    });
 
+    // GSAP animation for circular gradient movement
+    const animateCircularGradient = () => {
       gsap.to(backgroundRef.current, {
-        backgroundPosition: `${randomX}% ${randomY}%`,
-        duration: gsap.utils.random(5, 10, 1), // Random duration between 5 and 10 seconds
+        backgroundPosition: "100% 100%", // Move to the bottom-right corner
+        duration: 5, // Animation duration
         ease: "power2.inOut",
-        onComplete: animateBackground, // Loop the animation
+        repeat: -1, // Loop indefinitely
+        yoyo: true, // Reverse the animation
       });
     };
 
-    // Start the animation
-    animateBackground();
+    // Start the circular gradient animation
+    animateCircularGradient();
 
     // Your existing logic
     const initiatePage = async () => {
@@ -107,19 +113,50 @@ export default function Home() {
       {/* Animated gradient background */}
       <div
         ref={backgroundRef}
-        className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-white bg-[size:400%_400%] z-0"
+        className="absolute inset-0 bg-gradient-to-r from-black to-[#4e2bb7] bg-[size:200%_200%] z-0"
       ></div>
 
-      {/* Welcome message */}
-      <h1 className="text-6xl font-bold text-black z-10">Welcome To ChatVerse</h1>
+      {/* Welcome to ChatVerse Section */}
+      <div className="text-center z-10 mb-12">
+        <h1 className="text-6xl font-bold text-white">Welcome To ChatVerse</h1>
+        <button
+            onClick={handleNavigateHome}
+            className="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-lg hover:bg-indigo-700 transition duration-300"
+          >
+            Get Started
+          </button>
+      </div>
 
-      {/* Button to navigate to home */}
-      <button
-        onClick={handleNavigateHome}
-        className="mt-8 px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-lg hover:bg-indigo-700 transition duration-300 z-10"
-      >
-        Go to Home
-      </button>
+      {/* Main content container */}
+      <div className="flex flex-col md:flex-row items-center justify-center z-10 p-8">
+        {/* Video Preview */}
+        <div className="bg-white bg-opacity-10 rounded-2xl p-6 shadow-lg max-w-sm mr-0 md:mr-8 mb-8 md:mb-0">
+          <video
+            ref={videoRef}
+            className="w-full h-auto rounded-lg"
+            autoPlay
+            muted
+            loop
+            onError={(e) => console.error("Video loading error:", e)}
+          >
+            <source src="/chatverse-1.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+        {/* Promotional Text */}
+        <div className="text-center md:text-left max-w-md">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            MAKE YOUR GROUP CHATS MORE FUN
+          </h1>
+          <p className="text-gray-200 text-lg">
+            Use custom emoji, stickers, soundboard effects and more to add your
+            personality to your voice, video, or text chat. Set your avatar and
+            a custom status, and write your own profile to show up in chat your
+            way.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
