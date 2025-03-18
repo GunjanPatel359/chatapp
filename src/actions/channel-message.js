@@ -3,6 +3,7 @@
 import { isAuthUser } from "@/lib/authMiddleware"
 import prisma from "@/lib/db"
 import { decodeToken, generateToken } from "@/lib/tokenConfig"
+import {webSocketServer} from "@/server"
 
 //trial 
 export const fetchMessagesTrial = async (serverId,channelId, cursor = null,token=null) => {
@@ -233,7 +234,7 @@ const dbHelperFetchMessage=async(channelId,cursor=null)=>{
         }
 
         const messages = await prisma.channelMessage.findMany({
-            where: { channelId },
+            where: whereClause,
             orderBy: { timestamp: "desc" },
             take: 20,
         });
@@ -252,7 +253,7 @@ const dbHelperFetchMessage=async(channelId,cursor=null)=>{
         }));
 
         const newCursor = messages.length > 0 ? messages[messages.length - 1].id : null;
-        return { success: true, messages:messagesWithProfiles, cursor: newCursor };
+        return { success: true, messages:messagesWithProfiles, newCursor };
     } catch (error) {
         console.error("Error seeing message history:", error);
         throw new Error("Error seeing message history.");
@@ -269,8 +270,12 @@ const dbHelperCreateMessage = async (channelId, content, serverProfileId) => {
                 serverProfileId
             }
         });
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: { id: sendMessage.serverProfileId }
+        });
+        sendMessage.serverProfile=userServerProfile
         console.log("Message created:", sendMessage);
-        const response = await fetch(`${process.env.WEB_SOCKET_SERVER}/send-message`, {
+        const response = await fetch(`${webSocketServer}/send-message`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

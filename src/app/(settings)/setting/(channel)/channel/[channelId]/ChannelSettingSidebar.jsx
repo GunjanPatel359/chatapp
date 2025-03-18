@@ -1,19 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { RiDeleteBin6Fill } from "react-icons/ri";
 import { IoInformationCircle } from "react-icons/io5";
 import { HiMiniUsers } from "react-icons/hi2";
-import { MdEventNote, MdOutlineNotes } from "react-icons/md";
-import { FaUserPlus, FaUsersCog } from "react-icons/fa";
 import { useRouter, usePathname, useParams } from "next/navigation";
 
-const CategorySettingSidebar = ({categoryId}) => {
+const CategorySettingSidebar = () => {
 
     const router = useRouter();
     const params = useParams();
     const pathname = usePathname();
-    const categoryId = params.categoryId;
+    const channelId = params.channelId;
     const active = pathname.split("/").filter(Boolean).pop();
 
     const menuItems = [
@@ -23,7 +20,7 @@ const CategorySettingSidebar = ({categoryId}) => {
 
     return (
         <div className="p-6">
-            <h2 className="font-bold uppercase text-indigo-500 mb-1">{categoryId.name}</h2>
+            <h2 className="font-bold uppercase text-indigo-500 mb-1">cat</h2>
             <div className="h-[1px] w-full bg-indigo-400 mb-1" />
 
             <div className="space-y-[2px]">
@@ -31,7 +28,7 @@ const CategorySettingSidebar = ({categoryId}) => {
                     permission ? (
                         <div
                             key={path}
-                            onClick={() => router.push(`/setting/category/${categoryId}/${path}`)}
+                            onClick={() => router.push(`/setting/channel/${channelId}/${path}`)}
                             className={`flex rounded cursor-pointer ${
                                 active === path ? "bg-gray-300" : "hover:bg-gray-200"
                             }`}
@@ -53,7 +50,7 @@ const CategorySettingSidebar = ({categoryId}) => {
                         active === "m" ? "bg-red-500 text-white" : "text-red-500 hover:text-white hover:bg-red-500"
                     }`}
                 >
-                    <div className="block py-1 rounded">Delete Category</div>
+                    <div className="block py-1 rounded">Delete Channel</div>
                     <div className="my-auto">
                         <RiDeleteBin6Fill />
                     </div>

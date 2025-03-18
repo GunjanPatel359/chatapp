@@ -7,6 +7,102 @@ function haveSameElements(arr1, arr2) {
     return arr1.length === arr2.length && new Set(arr1).size === new Set(arr2).size && [...new Set(arr1)].every(x => new Set(arr2).has(x));
 }
 
+export const basicCategoryDetails = async (categoryId) => {
+    try {
+        if (!categoryId) {
+            return { success: false, message: "Channel ID is required" };
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            return { success: false, message: "You are not logged in" };
+        }
+        const category = await prisma.category.findFirst({
+            where: { id: categoryId },
+            select: {
+                name: true
+            }
+        })
+        if (!channel) {
+            return { success: false, message: "Channel not found" };
+        }
+        return { success: true, category }
+    } catch (error) {
+        console.error("Error in basicCategoryDetails:", error?.message || error);
+        return { success: false, message: error?.message || "An unexpected error occurred" };
+    }
+}
+
+export const getCategoryData = async (categoryId) => {
+    try {
+        if (categoryId) {
+            return { success: false, message: "categoryid is not provided" }
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            return { success: false, message: "You are not logged in" };
+        }
+        const category = await prisma.category.findFirst({
+            where: { id: categoryId },
+        })
+        if (!category) {
+            return { success: false, message: "Category not found" };
+        }
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: {
+                userId: user.id,
+                serverId: category.serverId
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            }
+        })
+        if (!userServerProfile) {
+            return { success: false, message: "User server profile not found" };
+        }
+        const server = await prisma.server.findFirst({
+            where: {
+                id: category.serverId
+            }
+        })
+        if (!server) {
+            return { success: false, message: "Server not found" };
+        }
+        if (server.ownerId == user.id || userServerProfile.roles.some((role) => role.role.adminPermission)) {
+            return await helperGetCategoryData(categoryId)
+        }
+        const serverRolesId = userServerProfile.roles.map((role) => role.role.id)
+        const categoryCheck = await prisma.category.findFirst({
+            where: {
+                id: categoryId,
+                serverId: category.serverId
+            },
+            include: {
+                categoryRoles: {
+                    where: {
+                        id: { in: [...serverRolesId] },
+                        manageChannels: { in: ["ALLOW", "NEUTRAL"] },
+                        manageRoles: { in: ["ALLOW", "NEUTRAL"] }
+                    },
+                    include: {
+                        serverRole: true
+                    }
+                }
+            }
+        })
+        if (categoryCheck.categoryRoles.some((role) => (role.manageChannels == "ALLOW" || (role.manageChannels == "NEUTRAL" && role.serverRole.manageChannels)) || (role.manageRoles == "ALLOW" || (role.manageRoles == "NEUTRAL" && role.serverRole.manageRoles)))){
+            return await helperGetCategoryData(categoryId)
+        }
+        return { success: false, message: "You do not have permission to view this category" };
+    } catch (e) {
+        console.error("Error in getCategoryData:", error?.message || error);
+        return { success: false, message: error?.message || "An unexpected error occurred" };
+    }
+}
+
 //test needed
 export const createCategory = async (serverId, categoryData) => {
     try {
@@ -36,8 +132,8 @@ export const createCategory = async (serverId, categoryData) => {
                 id: serverId,
                 serverProfiles: { some: { id: userServerProfile.id } }
             },
-            include:{
-                categories:true
+            include: {
+                categories: true
             }
         });
 
@@ -51,7 +147,7 @@ export const createCategory = async (serverId, categoryData) => {
             data: {
                 name: categoryData.name.toLocaleUpperCase(),
                 serverId,
-                order:server.categories.length,
+                order: server.categories.length,
                 defaultCategoryRole: { create: {} }
             }
         });
@@ -66,9 +162,9 @@ export const createCategory = async (serverId, categoryData) => {
 
 
 // in test
-export const updateCategory = async (serverId, categoryId, update) => {
+export const updateCategory = async ( categoryId, update) => {
     try {
-        if (!serverId || !categoryId || !update?.name) {
+        if (!categoryId || !update?.name) {
             return { success: false, message: "serverId and categoryId are required." };
         }
 
@@ -76,6 +172,14 @@ export const updateCategory = async (serverId, categoryId, update) => {
         if (!user) {
             return { success: false, message: "You are not logged in." };
         }
+        
+        const cate = await prisma.category.findFirst({
+            where: { id: categoryId },
+        })
+        if (!cate) {
+            return { success: false, message: "Category not found" };
+        }
+        const serverId = cate.serverId
 
         const userServerProfile = await prisma.serverProfile.findUnique({
             where: {
@@ -308,13 +412,13 @@ export const reorderCategory = async (serverId, categoryOrder) => {
         }
 
         const serverCategoryReorder = await prisma.$transaction(async (prisma) => {
-        
+
             // Step 2: Create a map of categoryId to order index based on the provided categoryOrder
             const newOrderMap = categoryOrder.map((categoryId, index) => ({
                 categoryId,
                 order: index,
             }));
-        
+
             // Step 3: Update each category’s order based on the new order map
             const updateCategoryPromises = newOrderMap.map(({ categoryId, order }) => {
                 return prisma.category.update({
@@ -322,14 +426,14 @@ export const reorderCategory = async (serverId, categoryOrder) => {
                     data: { order },
                 });
             });
-        
+
             // Step 4: Execute all the update operations in a single transaction
             await Promise.all(updateCategoryPromises);
-        
+
             // Step 5: Optionally, you can return the result if needed
             return { success: true, message: "Categories reordered successfully" };
         });
-        
+
 
         return { success: true, message: "Categories reordered successfully.", reorderCategory: JSON.parse(JSON.stringify(serverCategoryReorder)) };
 
@@ -338,3 +442,13 @@ export const reorderCategory = async (serverId, categoryOrder) => {
         return { success: false, message: error?.message || "An unexpected error occurred while reordering categories." };
     }
 };
+
+
+const helperGetCategoryData = async(categoryId) => {
+    const category=await prisma.category.findFirst({
+        where: {
+            id: categoryId
+        }
+    })
+    return {success:true,category}
+}

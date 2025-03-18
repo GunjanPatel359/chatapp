@@ -1,10 +1,30 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { HiMiniPlusCircle } from "react-icons/hi2";
-import { getCategoryRolesData } from "@/actions/role";
+import { FaPlus } from "react-icons/fa6";
+import { addCategoryRole, getCategoryRolesData, removeCategoryRole, updateCategoryRole, updateDefaultCategoryRole } from "@/actions/role";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { useParams } from "next/navigation";
 import { X, Minus, Check } from "lucide-react";
 import { motion } from "framer-motion";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "@/hooks/use-toast";
+import { FaLock } from "react-icons/fa";
+import { MdDeleteForever } from "react-icons/md";
 
 const PermissionRoleComponent = () => {
   const params = useParams();
@@ -13,19 +33,29 @@ const PermissionRoleComponent = () => {
   const [serverRoles, setServerRoles] = useState([]);
   const [selectedRoleId, setSelectedRoleId] = useState(null);
   const [permissions, setPermissions] = useState({});
+  const [search, setSearch] = useState('')
+  const [limit, setLimit] = useState(0);
 
   useEffect(() => {
     const fetchCategoryRoleData = async () => {
       try {
         const res = await getCategoryRolesData(params.categoryId);
         if (res.success) {
-          setCategoryRoles(res.categoryRoles.categoryRoles);
+          setLimit(res.limit)
+          const temp1 = res.categoryRoles.categoryRoles.sort((a, b) => a.serverRole.order - b.serverRole.order);
+          setCategoryRoles(temp1);
           setDefaultCategoryRole(res.categoryRoles.defaultCategoryRole);
-          setServerRoles(res.serverRoles);
 
           const defaultRole = res.categoryRoles.defaultCategoryRole;
           setSelectedRoleId(defaultRole.id);
-          setPermissions(defaultRole||{});
+          setPermissions(defaultRole || {});
+
+          let temp = res.serverRoles
+          console.log(temp)
+          // .sort((a, b) => a.order - b.order)
+          temp = temp.filter((a) => !res.categoryRoles.categoryRoles.some((role) => role.serverRoleId == a.id))
+          console.log(temp)
+          setServerRoles(temp);
         }
       } catch (error) {
         console.error(error);
@@ -36,8 +66,103 @@ const PermissionRoleComponent = () => {
 
   const handleRoleSelect = (role) => {
     setSelectedRoleId(role.id);
-    setPermissions(role.permissions ?? {});
+    setPermissions(role ?? {});
   };
+
+  const handleRoleClick = async (serverRoleId) => {
+    if (!serverRoleId) {
+      return
+    }
+    try {
+      const res = await addCategoryRole(params.categoryId, serverRoleId)
+      if (res.success) {
+        categoryRoles.push(res.category)
+        serverRoles.pop(serverRoleId)
+        setSelectedRoleId(res.category.id)
+      } else {
+        toast({
+          title: "Error",
+          variant: "destructive",
+          description: res.message,
+        })
+      }
+    } catch (error) {
+      console.error("Error assigning role:", error);
+    }
+  };
+
+  const updateRole = (idToUpdate, updatedRole) => {
+    const updatedRoles = categoryRoles.map(role =>
+      role.id === idToUpdate ? updatedRole : role
+    );
+    setCategoryRoles(updatedRoles);
+  };
+
+  const updateCategoryRolePermission = async () => {
+    try {
+      let res;
+      if (selectedRoleId == defaultCategoryRole.id) {
+        res = await updateDefaultCategoryRole(selectedRoleId, permissions)
+        if (res.success) {
+          setDefaultCategoryRole(res.updatedRole)
+          toast({
+            title: "Success",
+            variant: "success",
+            description: "@everyone role updated successfully for category",
+          })
+        } else {
+          toast({
+            title: "Error",
+            variant: "destructive",
+            description: res.message,
+          })
+        }
+      } else {
+        res = await updateCategoryRole(params.categoryId, selectedRoleId, permissions)
+        if (res.success) {
+          updateRole(selectedRoleId, res.updatedRole)
+          toast({
+            title: "Success",
+            variant: "success",
+            description: "Role updated successfully",
+          })
+        } else {
+          toast({
+            title: "Error",
+            variant: "destructive",
+            description: res.message,
+          })
+        }
+      }
+    } catch (error) {
+      console.error("Error updating role:", error);
+    }
+  }
+
+  const handleRemoveCateRole = async (id) => {
+    try {
+      const res = await removeCategoryRole(params.categoryId, id)
+      if (res.success) {
+        const temp = categoryRoles.find((role) => role.id == id).serverRole;
+        setServerRoles((prevServerRoles) => [...prevServerRoles, temp]);
+        setCategoryRoles(categoryRoles.filter((role) => role.id != id));
+
+        toast({
+          title: "Success",
+          variant: "success",
+          description: "Role removed successfully",
+        })
+      } else {
+        toast({
+          title: "Error",
+          variant: "destructive",
+          description: res.message,
+        })
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
     <div className="p-6 w-full">
@@ -48,45 +173,159 @@ const PermissionRoleComponent = () => {
       <div className="flex mt-4">
         {/* Roles Section */}
         <div className="w-[35%]">
-          <div className="flex justify-between px-3 py-2 font-bold text-indigo-600">
-            <div className="text-center">ROLES</div>
-            <div>
-              <HiMiniPlusCircle size={25} />
-            </div>
+          <div className="flex justify-between px-2 py-2 pb-1 font-bold text-indigo-600 align-middle">
+            <div className="text-center my-auto">ROLES</div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="my-auto">
+                  <FaPlus size={25} className="cursor-pointer p-[2.4px]" />
+                  {/* <HiMiniPlusCircle size={25} className="cursor-pointer" /> */}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56">
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium leading-none">Add Category Role</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Search and select role.
+                    </p>
+                  </div>
+                  {/* Search Input */}
+                  <Input
+                    placeholder="Search roles..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="h-10"
+                  />
+                  {/* Roles List */}
+                  <ScrollArea className="max-h-40 rounded-md">
+                    <div className="space-y-1">
+                      {serverRoles.length > 0 ? (
+                        serverRoles.map((role) => (
+                          <button
+                            disabled={role.order < limit}
+                            key={role.id}
+                            className={`p-2 rounded-md cursor-pointer w-full text-left flex ${role.order < limit ? "opacity-75" : "hover:bg-gray-100"}`}
+                            onClick={() => handleRoleClick(role.id)}
+                          >
+                            <span className="flex-1">
+                              {role.name}
+                            </span>
+                            <span>
+                              {role.order < limit ? <FaLock className="inline mx-auto" size={15} /> : ""}
+                            </span>
+                          </button>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No roles found</p>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="flex flex-col gap-1">
-            {[...categoryRoles, defaultCategoryRole].filter(Boolean).map((role) => (
+            {[...categoryRoles].filter(Boolean).map((role) => (
               <RoleItem
                 key={role.id}
-                name={role.name}
+                id={role.id}
+                name={role.serverRole.name}
                 color={role.color || "bg-gray-500"}
+                active={selectedRoleId === role.id}
+                clickFun={() => handleRoleSelect(role)}
+                show={role.serverRole.order >= limit}
+                handleRemoveCateRole={handleRemoveCateRole}
+              />
+            ))}
+            {defaultCategoryRole && [defaultCategoryRole].map((role) => (
+              <RoleItemDefault
+                key={role.id}
+                name={"@everyone"}
+                color={"bg-gray-500"}
                 active={selectedRoleId === role.id}
                 clickFun={() => handleRoleSelect(role)}
               />
             ))}
           </div>
-          <div className="w-full mx-auto mt-2">
+          <div className="w-full mx-auto mt-1">
             <div className="h-[1px] w-full bg-indigo-400"></div>
           </div>
         </div>
 
         {/* Permissions Section */}
-        <PermissionsDisplay permissions={permissions} setPermissions={setPermissions} />
+        <PermissionsDisplay permissions={permissions} setPermissions={setPermissions} updateCategoryRolePermission={updateCategoryRolePermission} limit={limit} />
       </div>
     </div>
   );
 };
 
-const RoleItem = ({ name, color, active, clickFun }) => {
+const RoleItem = ({ id, name, color, active, clickFun, show = true, handleRemoveCateRole }) => {
   return (
     <div
-      className={`flex items-center space-x-2 py-[5px] px-3 text-sm rounded cursor-pointer hover:bg-gray-300 ${
-        active ? "bg-gray-300" : ""
-      }`}
+      className={`flex items-center space-x-2 py-[5px] px-3 text-sm rounded cursor-pointer hover:bg-gray-300 ${active ? "bg-gray-300" : ""} 
+        ${show ? "" : "opacity-70"}`}
       onClick={clickFun}
     >
       <span className={`w-3 h-3 rounded-full ${color}`}></span>
-      <span className="text-indigo-600 font-medium">{name}</span>
+      <span className="text-indigo-600 font-medium flex flex-1">
+        <span className="flex-1 my-auto">
+          {name}
+        </span>
+        <span>
+          {show ?
+            <>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button>
+                    <MdDeleteForever className="inline text-red-500 translate-x-[2px]" size={22} />
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure you want to remove role {name}? </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will remove category role and remove all the permission record related to this.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleRemoveCateRole(id)}>Continue</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+            :
+            <>
+              <FaLock className="inline" size={17} />
+            </>
+          }
+        </span>
+      </span>
+    </div>
+  );
+};
+
+const RoleItemDefault = ({ name, color, active, clickFun, show = true }) => {
+  return (
+    <div
+      className={`flex items-center space-x-2 py-[5px] px-3 text-sm rounded cursor-pointer hover:bg-gray-300 ${active ? "bg-gray-300" : ""} 
+        ${show ? "" : "opacity-70"}`}
+      onClick={clickFun}
+    >
+      <span className={`w-3 h-3 rounded-full ${color}`}></span>
+      <span className="text-indigo-600 font-medium flex flex-1">
+        <span className="flex-1">
+          {name}
+        </span>
+        <span>
+          {show ? "" :
+            <>
+              <FaLock className="inline" size={17} />
+            </>
+          }
+        </span>
+      </span>
     </div>
   );
 };
@@ -99,10 +338,10 @@ const permissionData = {
   ],
   member: [{ key: "createInvite", title: "Create Invite", description: "Allows members to create invites." }],
   text: [
-    { key: "sendMessages", title: "Send Messages", description: "Allows members to send messages." },
+    { key: "sendMessage", title: "Send Messages", description: "Allows members to send messages." },
     { key: "attachFiles", title: "Attach Files", description: "Allows members to attach files." },
-    { key: "manageMessages", title: "Manage Messages", description: "Allows members to manage messages." },
-    { key: "seeMessageHistory", title: "See Message History", description: "Allows members to see past messages." }
+    { key: "manageMessage", title: "Manage Messages", description: "Allows members to manage messages." },
+    { key: "seemessageHistory", title: "See Message History", description: "Allows members to see past messages." }
   ],
   voice: [
     { key: "connect", title: "Connect", description: "Allows members to connect to voice channels." },
@@ -119,7 +358,8 @@ const options = [
   { value: "ALLOW", icon: Check, bg: "bg-green-500", border: "border-green-600", color: "green" }
 ];
 
-const PermissionsDisplay = ({ permissions, setPermissions }) => {
+const PermissionsDisplay = ({ permissions, setPermissions, updateCategoryRolePermission, limit }) => {
+  console.log(permissions)
   const filteredPermissions = Object.entries(permissionData)
     .flatMap(([category, perms]) =>
       perms.map(({ key, title, description }) => ({
@@ -132,7 +372,10 @@ const PermissionsDisplay = ({ permissions, setPermissions }) => {
     );
 
   return (
-    <div className="flex-1 ml-2">
+    <div className="flex-1 ml-2 overflow-y-scroll">
+      <div className="flex justify-between py-2 pb-0 font-bold text-indigo-600 align-middle">
+        <div className="text-center my-auto uppercase">Permission</div>
+      </div>
       {filteredPermissions.length > 0 ? (
         filteredPermissions.map(({ key, title, description, isAvailable }) => (
           <PermissionRow
@@ -143,29 +386,30 @@ const PermissionsDisplay = ({ permissions, setPermissions }) => {
             state={permissions}
             setState={setPermissions}
             isAvailable={isAvailable}
+            show={!permissions?.serverRole || permissions.serverRole.order >= limit}
           />
         ))
       ) : (
         <p className="text-gray-500 text-center mt-4">No permissions available for this role.</p>
       )}
       <div className="mt-4 text-end">
-        <button className="bg-indigo-500 py-2 px-4 text-white rounded cursor-pointer">Save</button>
+        <button className="bg-indigo-500 py-2 px-4 text-white rounded cursor-pointer" onClick={updateCategoryRolePermission}>Save</button>
       </div>
     </div>
   );
 };
 
-const PermissionRow = ({ title, description, state, setState, permissionKey, isAvailable }) => {
+const PermissionRow = ({ title, description, state, setState, permissionKey, isAvailable, show = true }) => {
   const currentValue = state?.[permissionKey] ?? "NEUTRAL";
 
   const handleClick = (value) => {
-    if (isAvailable) {
+    if (isAvailable && show) {
       setState((prevState) => ({ ...prevState, [permissionKey]: value }));
     }
   };
 
   return (
-    <div className={`border-b border-gray-300 py-2 ${!isAvailable && "hidden"}`}>
+    <div className={`border-b border-gray-300 py-2 ${!isAvailable && "hidden"} ${show ? "" : "opacity-70"}`}>
       <div className="flex justify-between items-center">
         <h3 className="text-indigo-600 font-medium">{title}</h3>
         <div className="flex space-x-2">
@@ -189,9 +433,8 @@ const PermissionButton = ({ type, onClick, isSelected, isDisabled }) => {
   const option = options.find((opt) => opt.value === type);
   return (
     <motion.button
-      className={`p-1 rounded border ${
-        isDisabled ? "opacity-50 cursor-not-allowed" : isSelected ? option.bg : "bg-gray-200"
-      } ${option.border} transition-all duration-300`}
+      className={`p-1 rounded border ${isDisabled ? "opacity-50 cursor-not-allowed" : isSelected ? option.bg : "bg-gray-200"
+        } ${option.border} transition-all duration-300`}
       onClick={isDisabled ? undefined : onClick}
       disabled={isDisabled}
     >
