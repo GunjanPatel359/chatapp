@@ -8,7 +8,7 @@ import { MdEventNote, MdOutlineNotes } from "react-icons/md";
 import { FaUserPlus, FaUsersCog } from "react-icons/fa";
 import { useRouter, usePathname, useParams } from "next/navigation";
 
-const CategorySettingSidebar = ({categoryId}) => {
+const CategorySettingSidebar = ({category}) => {
 
     const router = useRouter();
     const params = useParams();
@@ -23,7 +23,7 @@ const CategorySettingSidebar = ({categoryId}) => {
 
     return (
         <div className="p-6">
-            <h2 className="font-bold uppercase text-indigo-500 mb-1">{categoryId.name}</h2>
+            <h2 className="font-bold uppercase text-indigo-500 mb-1">{category.name}</h2>
             <div className="h-[1px] w-full bg-indigo-400 mb-1" />
 
             <div className="space-y-[2px]">
