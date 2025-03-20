@@ -19,6 +19,7 @@ const ServerSideBar = () => {
     const serverId = useMemo(() => params.serverId, [params?.serverId]);
     const channelId = useMemo(() => params.channelId, [params?.channelId]);
 
+    console.log(serverId,channelId,server)
     console.log(serverProfile);
 
     useEffect(() => {
@@ -181,5 +182,7 @@ const SidebarSection = ({ category, channelId, serverId }) => {
         </div>
     );
 };
+
+
 
 export default ServerSideBar;

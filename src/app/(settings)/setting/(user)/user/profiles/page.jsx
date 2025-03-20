@@ -19,10 +19,17 @@ const ProfileSettingPage = () => {
         const savedAvatar = localStorage.getItem('avatar');
         const savedBanner = localStorage.getItem('banner');
         const savedServerBanner = localStorage.getItem('serverBanner');
+        const savedDisplayName = localStorage.getItem('displayName');
+        const savedPronouns = localStorage.getItem('pronouns');
+        const savedAboutMe = localStorage.getItem('aboutMe');
+
 
         if (savedAvatar) setAvatar(savedAvatar);
         if (savedBanner) setBanner(savedBanner);
         if (savedServerBanner) setServerBanner(savedServerBanner);
+        if (savedDisplayName) setDisplayName(savedDisplayName);
+        if (savedPronouns) setPronouns(savedPronouns);
+        if (savedAboutMe) setAboutMe(savedAboutMe);
     }, []);
 
     const handleAvatarChange = (event) => {
@@ -56,6 +63,22 @@ const ProfileSettingPage = () => {
         const text = event.target.value;
         if (text.length <= 190) {
             setAboutMe(text);
+            localStorage.setItem('aboutMe', text); // Save to localStorage
+        }
+    };
+
+    const handleDisplayNameChange = (event) => {
+        const text = event.target.value;
+        setDisplayName(text);
+        localStorage.setItem('displayName', text); // Save to localStorage
+    };
+
+    const handlePronounsChange = (event) => {
+        const text = event.target.value;
+        setPronouns(text);
+        localStorage.setItem('pronouns', text); // Save to localStorage
+    };
+
         }
     };
 
@@ -87,7 +110,9 @@ const ProfileSettingPage = () => {
                                 className="w-full p-2 border rounded" 
                                 placeholder="Enter display name" 
                                 value={displayName}
+                                onChange={handleDisplayNameChange} // Updated handler
                                 onChange={(e) => setDisplayName(e.target.value)}
+
                             />
                             <label className="block text-sm font-medium mt-4 mb-2">Pronouns</label>
                             <input 
@@ -95,6 +120,7 @@ const ProfileSettingPage = () => {
                                 className="w-full p-2 border rounded" 
                                 placeholder="Enter pronouns" 
                                 value={pronouns}
+                                onChange={handlePronounsChange} // Updated handler
                                 onChange={(e) => setPronouns(e.target.value)}
                             />
                             <label className="block text-sm font-medium mt-4 mb-2">
