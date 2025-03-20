@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 
 const ProfileSettingPage = () => {
     const [activeProfile, setActiveProfile] = useState('user');
-    const [displayName, setDisplayName] = useState('ZAKOP');
-    const [pronouns, setPronouns] = useState('AKA OLLA(•U•)');
+    const [displayName, setDisplayName] = useState('');
+    const [pronouns, setPronouns] = useState('');
     const [avatar, setAvatar] = useState('/default-avatar.png'); // Default avatar
-    const [aboutMe, setAboutMe] = useState('hello');
-    const [serverNickname, setServerNickname] = useState('ZAKOP');
+    const [aboutMe, setAboutMe] = useState('');
+    const [serverNickname, setServerNickname] = useState('');
     const [serverPronouns, setServerPronouns] = useState('');
-    const [selectedServer, setSelectedServer] = useState("ZAKOP'S server");
+    const [selectedServer, setSelectedServer] = useState("");
     const [banner, setBanner] = useState('/default-banner.png'); // Default banner
     const [serverBanner, setServerBanner] = useState('/default-banner.png'); // Default server banner
 
@@ -19,10 +19,16 @@ const ProfileSettingPage = () => {
         const savedAvatar = localStorage.getItem('avatar');
         const savedBanner = localStorage.getItem('banner');
         const savedServerBanner = localStorage.getItem('serverBanner');
+        const savedDisplayName = localStorage.getItem('displayName');
+        const savedPronouns = localStorage.getItem('pronouns');
+        const savedAboutMe = localStorage.getItem('aboutMe');
 
         if (savedAvatar) setAvatar(savedAvatar);
         if (savedBanner) setBanner(savedBanner);
         if (savedServerBanner) setServerBanner(savedServerBanner);
+        if (savedDisplayName) setDisplayName(savedDisplayName);
+        if (savedPronouns) setPronouns(savedPronouns);
+        if (savedAboutMe) setAboutMe(savedAboutMe);
     }, []);
 
     const handleAvatarChange = (event) => {
@@ -56,7 +62,20 @@ const ProfileSettingPage = () => {
         const text = event.target.value;
         if (text.length <= 190) {
             setAboutMe(text);
+            localStorage.setItem('aboutMe', text); // Save to localStorage
         }
+    };
+
+    const handleDisplayNameChange = (event) => {
+        const text = event.target.value;
+        setDisplayName(text);
+        localStorage.setItem('displayName', text); // Save to localStorage
+    };
+
+    const handlePronounsChange = (event) => {
+        const text = event.target.value;
+        setPronouns(text);
+        localStorage.setItem('pronouns', text); // Save to localStorage
     };
 
     return (
@@ -87,7 +106,7 @@ const ProfileSettingPage = () => {
                                 className="w-full p-2 border rounded" 
                                 placeholder="Enter display name" 
                                 value={displayName}
-                                onChange={(e) => setDisplayName(e.target.value)}
+                                onChange={handleDisplayNameChange} // Updated handler
                             />
                             <label className="block text-sm font-medium mt-4 mb-2">Pronouns</label>
                             <input 
@@ -95,7 +114,7 @@ const ProfileSettingPage = () => {
                                 className="w-full p-2 border rounded" 
                                 placeholder="Enter pronouns" 
                                 value={pronouns}
-                                onChange={(e) => setPronouns(e.target.value)}
+                                onChange={handlePronounsChange} // Updated handler
                             />
                             <label className="block text-sm font-medium mt-4 mb-2">
                                 About Me 🌟 (max 190 characters)

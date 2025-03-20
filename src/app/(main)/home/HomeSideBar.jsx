@@ -1,11 +1,20 @@
-
+"use client";
+import React, { useState, useRef } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { FaUserFriends } from "react-icons/fa";
 import { BsBugFill } from "react-icons/bs";
 import { HiShoppingCart } from "react-icons/hi";
 import { IoSettingsSharp } from "react-icons/io5";
+import ProfileCard from 'src/components/ui/ProfileCard.tsx';
 
 const HomeSideBar = () => {
+  const [isProfileCardOpen, setIsProfileCardOpen] = useState(false);
+  const userNameRef = useRef(null);
+
+  const toggleProfileCard = () => {
+    setIsProfileCardOpen(!isProfileCardOpen);
+  };
+
   const directMessages = [
     { name: "Mohammed Farhan", status: "online" },
     { name: "APULJO", status: "online" },
@@ -43,39 +52,52 @@ const HomeSideBar = () => {
             </span>
           </div>
           <div className="p-2">
-          {directMessages.map((dm, index) => (
-            <DirectMessage
-            key={index}
-            name={dm.name}
-            status={dm.status}
-            activity={dm.activity}
-            />
-          ))}
+            {directMessages.map((dm, index) => (
+              <DirectMessage
+                key={index}
+                name={dm.name}
+                status={dm.status}
+                activity={dm.activity}
+              />
+            ))}
           </div>
         </div>
       </div>
       {/* Bottom User Info */}
       <div className="p-1 space-x-2 border-t-2 border-indigo-200 shadow shadow-gray-100">
         <div className="hover:bg-gray-200 flex items-center p-2 rounded cursor-pointer">
-        <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white">
-          G
-        </div>
-        <div className="flex-1 ml-2">
-          <h3 className="text-sm font-bold text-indigo-500">gunjanpatel</h3>
-          <p className="text-xs text-gray-400">Idle</p>
-        </div>
-        <div className="flex space-x-2 text-gray-400">
-          <button>
-            <IoSettingsSharp size={22} className="text-indigo-500 transition-all duration-500 hover:rotate-90"/>
-          </button>
-        </div>
+          <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
+            G
+          </div>
+          <div 
+            ref={userNameRef}
+            className="flex-1 ml-2 cursor-pointer" 
+            onClick={toggleProfileCard}
+          >
+            <h3 className="text-sm font-bold text-indigo-500">gunjanpatel</h3>
+            <div className="flex items-center text-xs text-gray-400">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>
+              Working
+            </div>
+          </div>
+          <div className="flex space-x-2 text-gray-400">
+            <button>
+              <IoSettingsSharp size={22} className="text-indigo-500 transition-all duration-500 hover:rotate-90"/>
+            </button>
+          </div>
         </div>
       </div>
+      
+      <ProfileCard 
+        isOpen={isProfileCardOpen}
+        onClose={() => setIsProfileCardOpen(false)}
+        triggerRef={userNameRef}
+      />
     </div>
   );
 };
 
-const SidebarItem = ({ name, icon:Icon }) => (
+const SidebarItem = ({ name, icon: Icon }) => (
   <div className="flex items-center space-x-2 p-2 hover:bg-gray-200 rounded-md cursor-pointer">
     <Icon size={20} />
     <span className="text-sm">{name}</span>
@@ -85,7 +107,7 @@ const SidebarItem = ({ name, icon:Icon }) => (
 const DirectMessage = ({ name, status, activity }) => (
   <div className="flex items-center space-x-2 p-2 hover:bg-gray-200 rounded-md cursor-pointer">
     <div
-      className={`w-10 h-10 rounded-full bg-gray-50 shadow flex items-center justify-center`}
+      className="w-10 h-10 rounded-full bg-gray-50 shadow flex items-center justify-center"
     >
       {name[0].toUpperCase()}
     </div>
