@@ -45,6 +45,139 @@ const handleDeleteChannel = async (channelId, categoryId) => {
     });
 };
 
+const helperGetChannelData = async(channelId)=>{
+    const channel = await prisma.channel.findFirst({
+        where: { id: channelId },
+        select:{
+            name:true,
+            description:true
+        }
+    })
+    return {success:true,channel}
+}
+
+export const getChannelData = async (channelId) => {
+    try {
+        if (!channelId) {
+            return { success: false, message: "Channel ID is required" };
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            return { success: false, message: "User is not authenticated" };
+        }
+        const channel = await prisma.channel.findFirst({
+            where: { id: channelId },
+            include: { category: true }
+        });
+        const categoryId = channel.categoryId
+        const serverId = channel.category.serverId
+        if (!channel) {
+            return { success: false, message: "Channel not found" };
+        }
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: {
+                userId: user.id,
+                serverId
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            }
+        })
+        if (!userServerProfile) {
+            return { success: false, message: "you are not part of this server" }
+        }
+        const server = await prisma.server.findFirst({
+            where: {
+                id: serverId
+            }
+        })
+        if (!server) {
+            return { success: false, message: "Server not found" }
+        }
+        if (server.ownerId == user.id || userServerProfile.roles.some((role) => role.role.adminPermission)) {
+            return await helperGetChannelData(channelId)
+        }
+
+        //////////////////////////////////////////////////
+        const userServerProfileIds = userServerProfile.roles.map((item) => item.roleId);
+
+
+        let categoryRoles = await prisma.category.findFirst({
+            where: { id: categoryId },
+            include: {
+                categoryRoles: {
+                    where: {
+                        serverRoleId: { in: [...userServerProfileIds] },
+                    },
+                    include: { serverRole: true },
+                },
+            },
+        });
+
+
+        categoryRoles.categoryRoles = categoryRoles.categoryRoles
+            .sort((a, b) => a.serverRole.order - b.serverRole.order);
+
+        for (const role of categoryRoles.categoryRoles) {
+            const { manageRoles, manageChannels } = role;
+
+            if (manageRoles == "ALLOW" || manageChannels == "ALLOW") {
+                isVerify = true;
+                break;
+            }
+
+            if(manageChannels=="NEUTRAL" && role.serverRole.manageChannels){
+                isVerify = true;
+                break;
+            }
+
+            if (manageRoles == "NEUTRAL" && role.serverRole.manageRoles) {
+                isVerify = true;
+                break;
+            }
+        }
+
+        if (isVerify) {
+            return await helperGetChannelData(channelId)
+        }
+
+        return { success: false, message: "you do not have permission" };
+    } catch (error) {
+        console.log(error)
+        throw new Error(error)
+    }
+}
+
+export const getChannelInfo = async (channelId) => {
+    try {
+        if (!channelId) {
+            return { success: false, message: "Channel ID is required" };
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            return { success: false, message: "You are not logged in" };
+        }
+        const channel = await prisma.channel.findFirst({
+            where: { id: channelId },
+            select: {
+                id: true,
+                name: true
+            }
+        })
+        if (!channel) {
+            return { success: false, message: "Channel not found" };
+        }
+        return { success: true, channel };
+    } catch (error) {
+        console.log(error)
+        throw new Error(error)
+    }
+}
+
 export const createChannel = async (serverId, categoryId, data) => {
     try {
         // Validate input parameters
@@ -79,8 +212,8 @@ export const createChannel = async (serverId, categoryId, data) => {
         // Verify if the category exists
         const isVerifyCategory = await prisma.category.findFirst({
             where: { id: categoryId, serverId },
-            include:{
-                channels:true
+            include: {
+                channels: true
             }
         });
 
@@ -175,10 +308,10 @@ export const createChannel = async (serverId, categoryId, data) => {
     }
 };
 
-export const updateChannel = async (serverId, categoryId, channelId, data) => {
+export const updateChannel = async (channelId, data) => {
     try {
         // Validate input parameters
-        if (!serverId || !categoryId || !channelId || !data.name || !data.description) {
+        if (!channelId || !data.name || !data.description) {
             return { success: false, message: 'Please provide all the required fields' };
         }
 
@@ -186,6 +319,16 @@ export const updateChannel = async (serverId, categoryId, channelId, data) => {
         const user = await isAuthUser();
         if (!user) {
             return { success: false, message: 'You are not logged in' };
+        }
+
+        const channel = await prisma.channel.findFirst({
+            where: { id: channelId },
+            include: { category: true }
+        });
+        const categoryId = channel.categoryId
+        const serverId = channel.category.serverId
+        if (!channel) {
+            return { success: false, message: "Channel not found" };
         }
 
         // Fetch user's server profile and roles
@@ -350,13 +493,13 @@ export const deleteChannel = async (serverId, categoryId, channelId) => {
 
         // If user is the server owner, allow deleting the channel
         if (server.ownerId === user.id) {
-            return await handleDeleteChannel(channelId,categoryId)
+            return await handleDeleteChannel(channelId, categoryId)
         }
 
         // If user is an admin, allow deleting the channel
         const isAdmin = userServerProfile.roles.some((role) => role.role.adminPermission);
         if (isAdmin) {
-            return await handleDeleteChannel(channelId,categoryId)
+            return await handleDeleteChannel(channelId, categoryId)
         }
 
         // Check if user has permission to manage channels in this category
@@ -383,7 +526,7 @@ export const deleteChannel = async (serverId, categoryId, channelId) => {
         );
 
         if (hasPermission) {
-            return await handleDeleteChannel(channelId,categoryId)
+            return await handleDeleteChannel(channelId, categoryId)
         }
 
         return { success: false, message: "You do not have permission to delete the channel" };
@@ -444,7 +587,7 @@ export const channelReorder = async (serverId, channelReorder) => {
         const existingChannelIds = new Set(
             server.categories.flatMap(category => category.channels.map(channel => channel.id))
         );
-        
+
         const providedChannelIds = new Set(
             channelReorder.flatMap(category => category.channels)
         );
@@ -467,7 +610,7 @@ export const channelReorder = async (serverId, channelReorder) => {
                     })
                 )
             ),
-        
+
             // 2️⃣ Update categories with the new channel order
             ...channelReorder.map(({ id: categoryId, channels }) =>
                 prisma.category.update({
@@ -483,7 +626,7 @@ export const channelReorder = async (serverId, channelReorder) => {
 
         console.log("Channels reordered successfully:", updateChannels);
         return { success: true, message: "Channels reordered successfully." };
-        
+
     } catch (error) {
         console.error("Error in channelReorder:", error);
         throw new Error(error.message || "Something went wrong while reordering channels.");
@@ -520,9 +663,9 @@ export const getChannel = async (serverId) => {
             where: { id: serverId },
             include: {
                 categories: {
-                    include:{
-                        channels:{
-                            orderBy:{order:"asc"}
+                    include: {
+                        channels: {
+                            orderBy: { order: "asc" }
                         }
                     },
                     orderBy: { order: "asc" }

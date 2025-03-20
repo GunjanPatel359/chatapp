@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { HiMiniPlusCircle } from "react-icons/hi2";
 import { FaPlus } from "react-icons/fa6";
-import { addCategoryRole, getCategoryRolesData, removeCategoryRole, updateCategoryRole, updateDefaultCategoryRole } from "@/actions/role";
+
+import { addChannelRole, getChannelRolesData, removeChannelRole, updateChannelRole, updateDefaultChannelRole } from "@/actions/role"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,8 +29,8 @@ import { MdDeleteForever } from "react-icons/md";
 
 const PermissionRoleComponent = () => {
   const params = useParams();
-  const [categoryRoles, setCategoryRoles] = useState([]);
-  const [defaultCategoryRole, setDefaultCategoryRole] = useState(null);
+  const [channelRoles, setChannelRoles] = useState([]);
+  const [defaultChannelRole, setDefaultChannelRole] = useState(null);
   const [serverRoles, setServerRoles] = useState([]);
   const [selectedRoleId, setSelectedRoleId] = useState(null);
   const [permissions, setPermissions] = useState({});
@@ -37,23 +38,24 @@ const PermissionRoleComponent = () => {
   const [limit, setLimit] = useState(0);
 
   useEffect(() => {
-    const fetchCategoryRoleData = async () => {
+    const fetchChannelRoleData = async () => {
       try {
-        const res = await getCategoryRolesData(params.categoryId);
+        const res = await getChannelRolesData(params.channelId);
+        console.log(res)
         if (res.success) {
           setLimit(res.limit)
-          const temp1 = res.categoryRoles.categoryRoles.sort((a, b) => a.serverRole.order - b.serverRole.order);
-          setCategoryRoles(temp1);
-          setDefaultCategoryRole(res.categoryRoles.defaultCategoryRole);
+          const temp1=res.channelRoles.channelRoles.sort((a, b) => a.serverRole.order - b.serverRole.order)
+          setChannelRoles(temp1);
+          setDefaultChannelRole(res.channelRoles.defaultChannelRole);
 
-          const defaultRole = res.categoryRoles.defaultCategoryRole;
+          const defaultRole = res.channelRoles.defaultChannelRole;
           setSelectedRoleId(defaultRole.id);
           setPermissions(defaultRole || {});
 
           let temp = res.serverRoles
           console.log(temp)
           // .sort((a, b) => a.order - b.order)
-          temp = temp.filter((a) => !res.categoryRoles.categoryRoles.some((role) => role.serverRoleId == a.id))
+          temp = temp.filter((a) => !res.channelRoles.channelRoles.some((role) => role.serverRoleId == a.id))
           console.log(temp)
           setServerRoles(temp);
         }
@@ -61,8 +63,8 @@ const PermissionRoleComponent = () => {
         console.error(error);
       }
     };
-    fetchCategoryRoleData();
-  }, [params.categoryId]);
+    fetchChannelRoleData();
+  }, [params.channelId]);
 
   const handleRoleSelect = (role) => {
     setSelectedRoleId(role.id);
@@ -74,11 +76,11 @@ const PermissionRoleComponent = () => {
       return
     }
     try {
-      const res = await addCategoryRole(params.categoryId, serverRoleId)
+      const res = await addChannelRole(params.channelId, serverRoleId)
       if (res.success) {
-        categoryRoles.push(res.category)
+        channelRoles.push(res.channel)
         serverRoles.pop(serverRoleId)
-        setSelectedRoleId(res.category.id)
+        setSelectedRoleId(res.channel.id)
       } else {
         toast({
           title: "Error",
@@ -92,23 +94,23 @@ const PermissionRoleComponent = () => {
   };
 
   const updateRole = (idToUpdate, updatedRole) => {
-    const updatedRoles = categoryRoles.map(role =>
+    const updatedRoles = channelRoles.map(role =>
       role.id === idToUpdate ? updatedRole : role
     );
-    setCategoryRoles(updatedRoles);
+    setChannelRoles(updatedRoles);
   };
 
   const updateCategoryRolePermission = async () => {
     try {
       let res;
-      if (selectedRoleId == defaultCategoryRole.id) {
-        res = await updateDefaultCategoryRole(selectedRoleId, permissions)
+      if (selectedRoleId == defaultChannelRole.id) {
+        res = await updateDefaultChannelRole(selectedRoleId, permissions)
         if (res.success) {
-          setDefaultCategoryRole(res.updatedRole)
+          setDefaultChannelRole(res.updatedRole)
           toast({
             title: "Success",
             variant: "success",
-            description: "@everyone role updated successfully for category",
+            description: "@everyone role updated successfully for channel",
           })
         } else {
           toast({
@@ -118,7 +120,7 @@ const PermissionRoleComponent = () => {
           })
         }
       } else {
-        res = await updateCategoryRole(params.categoryId, selectedRoleId, permissions)
+        res = await updateChannelRole(params.channelId, selectedRoleId, permissions)
         if (res.success) {
           updateRole(selectedRoleId, res.updatedRole)
           toast({
@@ -141,11 +143,11 @@ const PermissionRoleComponent = () => {
 
   const handleRemoveCateRole = async (id) => {
     try {
-      const res = await removeCategoryRole(params.categoryId, id)
+      const res = await removeChannelRole(params.channelId, id)
       if (res.success) {
-        const temp = categoryRoles.find((role) => role.id == id).serverRole;
+        const temp = channelRoles.find((role) => role.id == id).serverRole;
         setServerRoles((prevServerRoles) => [...prevServerRoles, temp]);
-        setCategoryRoles(categoryRoles.filter((role) => role.id != id));
+        setChannelRoles(channelRoles.filter((role) => role.id != id));
 
         toast({
           title: "Success",
@@ -166,8 +168,8 @@ const PermissionRoleComponent = () => {
 
   return (
     <div className="p-6 w-full">
-      <h2 className="text-indigo-600 text-lg font-semibold mb-2">Category Permissions</h2>
-      <p className="text-indigo-500 text-sm font-medium mb-2">Customize who can do what in this category</p>
+      <h2 className="text-indigo-600 text-lg font-semibold mb-2">Channel Permissions</h2>
+      <p className="text-indigo-500 text-sm font-medium mb-2">Customize who can do what in this channel</p>
       <div className="h-[2px] w-full bg-indigo-300"></div>
 
       <div className="flex mt-4">
@@ -185,7 +187,7 @@ const PermissionRoleComponent = () => {
               <PopoverContent className="w-56">
                 <div className="grid gap-4">
                   <div className="space-y-2">
-                    <h4 className="font-medium leading-none">Add Category Role</h4>
+                    <h4 className="font-medium leading-none">Add Channel Role</h4>
                     <p className="text-sm text-muted-foreground">
                       Search and select role.
                     </p>
@@ -226,7 +228,7 @@ const PermissionRoleComponent = () => {
             </Popover>
           </div>
           <div className="flex flex-col gap-1">
-            {[...categoryRoles].filter(Boolean).map((role) => (
+            {[...channelRoles].filter(Boolean).map((role) => (
               <RoleItem
                 key={role.id}
                 id={role.id}
@@ -238,7 +240,7 @@ const PermissionRoleComponent = () => {
                 handleRemoveCateRole={handleRemoveCateRole}
               />
             ))}
-            {defaultCategoryRole && [defaultCategoryRole].map((role) => (
+            {defaultChannelRole && [defaultChannelRole].map((role) => (
               <RoleItemDefault
                 key={role.id}
                 name={"@everyone"}
@@ -285,7 +287,7 @@ const RoleItem = ({ id, name, color, active, clickFun, show = true, handleRemove
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure you want to remove role {name}? </AlertDialogTitle>
                     <AlertDialogDescription>
-                      This action cannot be undone. This will remove category role and remove all the permission record related to this.
+                      This action cannot be undone. This will remove channel role and remove all the permission record related to this.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

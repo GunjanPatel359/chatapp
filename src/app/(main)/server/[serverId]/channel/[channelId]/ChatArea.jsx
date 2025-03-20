@@ -68,7 +68,7 @@ const ChatArea = () => {
       });
   
       socketRef.current.on("message", (message) => {
-        console.log(message);
+        console.log(message,"socket");
         setMessages((prev) => [...prev, message]);
       });
   

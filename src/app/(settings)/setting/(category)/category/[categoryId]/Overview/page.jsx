@@ -1,10 +1,45 @@
 "use client"
-import { useState } from "react";
+import { getCategoryData, updateCategory } from "@/actions/category";
+import { toast } from "@/hooks/use-toast";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const OverviewComponent = () => {
-  const [categoryName, setCategoryName] = useState("Text Channels");
+  const params=useParams()
+  const [categoryName, setCategoryName] = useState("");
 
-  const handleSave = () => {
+  useEffect(()=>{
+    const fetchCatedata=async()=>{
+      try {
+        const res=await getCategoryData(params.categoryId)
+        if(res.success){
+          setCategoryName(res.category.name)
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    fetchCatedata()
+  })
+
+  const handleSave = async() => {
+    try {
+      const res=await updateCategory(params.categoryId,{name:categoryName})
+      if(res.success){
+        toast({
+          title: "Category Updated",
+          description: "Category updated successfully",
+          variant:"success"
+        })
+      }
+    } catch (error) {
+      console.log(error)
+      toast({
+        title: "Error",
+        description: error,
+        variant:"destructive"
+      })
+    }
     console.log("Saved category name:", categoryName);
   };
 
