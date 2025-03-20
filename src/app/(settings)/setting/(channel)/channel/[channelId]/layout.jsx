@@ -1,9 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ChannelSettingSidebar from "./ChannelSettingSidebar"
+import { useParams } from "next/navigation";
 
 const ChannelSettingLayout = ({ children }) => {
+const params=useParams()
 const [loading, setLoading] = useState(false);
+
   return (
         <div className="bg-white lg:w-[980px] mx-auto h-screen py-4">
           <div className="flex h-full shadow rounded-lg">

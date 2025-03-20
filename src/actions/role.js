@@ -3,10 +3,6 @@
 import { isAuthUser } from "@/lib/authMiddleware"
 import prisma from "@/lib/db"
 
-const helperGetCategoryRole = async () => {
-
-}
-
 const helperUpdateDefaultServerRole = async (defaultRoleId, updates) => {
     const updatedRole = await prisma.defaultServerRole.update({
         where: { id: defaultRoleId },
@@ -41,8 +37,21 @@ const helperUpdateDefaultCategoryRole = async (defaultRoleId, updates) => {
     return { success: true, message: "updated category role successfully", updatedRole }
 }
 
-const helperUpdateDefaultChannelRole = async (defaultRoleId, updates)=>{
-    //working
+const helperUpdateDefaultChannelRole = async (defaultRoleId, updates) => {
+    const updatedRole=await prisma.defaultChannelRole.update({
+        where: { id: defaultRoleId },
+        data:{
+            viewChannel:updates?.viewChannel || "NEUTRAL",
+            createInvite:updates?.createInvite || "NEUTRAL",
+            sendMessage:updates?.sendMessage || "NEUTRAL",    
+            attachFiles:updates?.attachFiles || "NEUTRAL",  
+            seemessageHistory:updates?.seemessageHistory || "NEUTRAL",
+            connect:updates?.connect || "NEUTRAL",    
+            speak:updates?.speak || "NEUTRAL",  
+            video:updates?.video || "NEUTRAL",    
+        }
+    })
+    return { success: true, message: "updated channel role successfully", updatedRole }
 }
 
 // Helper function to assign the role
@@ -179,10 +188,13 @@ const helperAddChannelRole = async (channelId, roleId) => {
         data: {
             channelId: channelId,
             serverRoleId: roleId
+        },
+        include: {
+            serverRole: true
         }
     })
     console.log(addChannelRole)
-    return { success: true, message: "role added to server" }
+    return { success: true, message: "role added to server", channel: addChannelRole }
 }
 
 const helperUpdateChannelRole = async (channelRoleId, updates) => {
@@ -203,10 +215,19 @@ const helperUpdateChannelRole = async (channelRoleId, updates) => {
             video: updates?.video || "NEUTRAL",
             muteMembers: updates?.muteMembers || "NEUTRAL",
             deafenMembers: updates?.deafenMembers || "NEUTRAL",
+        },
+        include: {
+            serverRole: {
+                select: {
+                    name: true,
+                    id: true,
+                    order: true,
+                }
+            }
         }
     })
     console.log(updateChannelRole)
-    return { success: true, message: "role updated in channel" }
+    return { success: true, message: "role updated in channel", updatedRole: updateChannelRole }
 }
 
 const helperRemoveChannelRole = async (channelRoleId) => {
@@ -448,6 +469,184 @@ export const getCategoryRolesData = async (categoryId) => {
     }
 }
 
+export const getChannelRolesData = async (channelId) => {
+    try {
+        if (!channelId) {
+            return { success: false, message: "Channel ID is required" }
+        }
+
+        const user = await isAuthUser();
+        if (!user) {
+            return { success: false, message: "You are not logged in" };
+        }
+
+        const chan = await prisma.channel.findFirst({
+            where: { id: channelId },
+            include: { category: true }
+        })
+        if (!chan) {
+            return { success: false, message: "Category not found" };
+        }
+        const serverId = chan.category.serverId
+        const categoryId = chan.categoryId
+        const userServerProfile = await prisma.serverProfile.findUnique({
+            where: {
+                userId_serverId: { userId: user.id, serverId },
+                isDeleted: false
+            },
+            include: {
+                roles: {
+                    include: { role: true },
+                    orderBy: { role: { order: 'asc' } }
+                },
+            },
+        });
+
+        if (!userServerProfile) {
+            return { success: false, message: "You are not a member of this server." };
+        }
+
+        const server = await prisma.server.findUnique({
+            where: { id: serverId },
+            include: { roles: { orderBy: { order: "asc" } } },
+        });
+
+        if (!server) {
+            return { success: false, message: "Server not found." };
+        }
+
+        if ((server.ownerId == user.id) || (userServerProfile.roles.some((role) => role.role.adminPermission))) {
+            const channelRolesDelivered = await prisma.channel.findFirst({
+                where: { id: channelId },
+                include: {
+                    channelRoles: {
+                        include: {
+                            serverRole: {
+                                select: {
+                                    id: true,
+                                    order: true,
+                                    name: true
+                                }
+                            }
+                        }
+                    },
+                    defaultChannelRole: true
+                }
+            })
+            return { success: true, serverRoles: server.roles, channelRoles: channelRolesDelivered, userServerProfile, limit: 0 };
+        }
+
+        const userServerRolesId = userServerProfile.roles.map((role) => role.roleId)
+        if (userServerRolesId.length == 0) {
+            return { success: false, message: "You are not a member of this server." };
+        }
+
+        let channelRoles = await prisma.channel.findFirst({
+            where: { id: channelId },
+            include: {
+                channelRoles: {
+                    where: {
+                        serverRoleId: { in: [...userServerProfileIds] },
+                    },
+                    include: { serverRole: true },
+                },
+            },
+        });
+
+        let categoryRoles = await prisma.category.findFirst({
+            where: { id: categoryId },
+            include: {
+                categoryRoles: {
+                    where: {
+                        serverRoleId: { in: [...userServerProfileIds] },
+                    },
+                    include: { serverRole: true },
+                },
+            },
+        });
+
+        // Filter and sort roles
+        channelRoles.channelRoles = channelRoles.channelRoles
+            .sort((a, b) => a.serverRole.order - b.serverRole.order);
+
+        categoryRoles.categoryRoles = categoryRoles.categoryRoles
+            .sort((a, b) => a.serverRole.order - b.serverRole.order);
+
+        let visitedRoles = [];
+
+        let per = Number.MAX_SAFE_INTEGER;
+
+        for (const role of channelRoles.channelRoles) {
+            const { serverRoleId, manageRoles } = role;
+
+            visitedRoles.push(serverRoleId);
+
+            if (manageRoles == "ALLOW") {
+                per = Math.min(per, role.serverRole.order);
+            }
+
+            if (manageRoles == "NEUTRAL") {
+                const temp = categoryRoles.categoryRoles.find((item) => item.serverRoleId == serverRoleId);
+                if (temp) {
+                    if (temp.manageRoles == "ALLOW" || (temp.manageRoles == "NEUTRAL" && temp.serverRole.manageRoles)) {
+                        per = Math.min(per, role.serverRole.order);
+                    }
+                } else {
+                    if (role.serverRole.manageRoles) {
+                        per = Math.min(per, role.serverRole.order);
+                    }
+                }
+            }
+        }
+
+        if (visitedRoles.length > 0) {
+            categoryRoles.categoryRoles = categoryRoles.categoryRoles.filter(
+                (item) => !visitedRoles.includes(item.serverRoleId)
+            );
+        }
+
+        for (const role of categoryRoles.categoryRoles) {
+            const { manageRoles } = role;
+
+            if (manageRoles == "ALLOW") {
+                per = Math.min(per, role.serverRole.order);
+            }
+
+            if (manageRoles == "NEUTRAL" && role.serverRole.manageRoles) {
+                per = Math.min(per, role.serverRole.order);
+            }
+        }
+
+        if (per != Number.MAX_SAFE_INTEGER) {
+            const channelRoles = await prisma.channel.findFirst({
+                where: { id: channelId },
+                include: {
+                    channelRoles: {
+                        include: {
+                            serverRole: {
+                                select: {
+                                    id: true,
+                                    order: true,
+                                    name: true
+                                }
+                            }
+                        }
+                    },
+                    defaultChannelRole: true
+                }
+            })
+            return { success: true, serverRoles: server.roles, channelRoles: channelRolesDelivered, userServerProfile, limit: per };
+        }
+
+        return { success: false, message: "Something went wrong" };
+
+    } catch (error) {
+        console.log(error)
+        console.error("getChannelRoleData Error:", error.message);
+        throw new Error("Failed to retrieve category roles. Please try again later.");
+    }
+}
+
 export const updateDefaultServerRole = async (defaultRoleId, updates) => {
     try {
         if (!defaultRoleId || !updates) {
@@ -602,9 +801,168 @@ export const updateDefaultCategoryRole = async (defaultRoleId, updates) => {
     }
 }
 
-export const updateDefaultChannelRole = async () => {
+export const updateDefaultChannelRole = async (defaultRoleId, updates) => {
     try {
-        // remaining
+        if (!defaultRoleId || !updates) {
+            return { success: false, message: "Default role id is required" }
+        }
+        const user = await isAuthUser();
+        if (!user) {
+            return { success: false, message: "You are not logged in" };
+        }
+        console.log(defaultRoleId)
+        const defaultRole = await prisma.defaultChannelRole.findFirst({
+            where: {
+                id: defaultRoleId
+            },
+            select: {
+                channel: {
+                    select: {
+                        categoryId:true,
+                        category: {
+                            select: {
+                                server: {
+                                    select: {
+                                        id:true,
+                                        ownerId: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        if (!defaultRole) {
+            return { success: false, message: "Default role not found" }
+        }
+        const serverId = defaultRole.channel.category.server.id
+        const categoryId = defaultRole.channel.categoryId
+
+        const userServerProfile = await prisma.serverProfile.findUnique({
+            where: {
+                userId_serverId: {
+                    userId: user.id,
+                    serverId: serverId
+                },
+                isDeleted: false
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            }
+        });
+
+        if(!userServerProfile){
+            return { success: false, message: "User server profile not found" }
+        }
+
+        if(defaultRole.channel.category.server.ownerId==user.id || userServerProfile.roles.some((role)=>role.role.adminPermission)){
+            return await helperUpdateDefaultChannelRole(defaultRoleId, updates); 
+        }
+
+        ////////////////////////////////////////////////////////////////////
+
+        const userServerProfileIds = userServerProfile.roles.map((item) => item.roleId);
+
+        let channelRoles = await prisma.channel.findFirst({
+            where: { id: channelId },
+            include: {
+                channelRoles: {
+                    where: {
+                        serverRoleId: { in: [...userServerProfileIds] },
+                    },
+                    include: { serverRole: true },
+                },
+            },
+        });
+
+        let categoryRoles = await prisma.category.findFirst({
+            where: { id: categoryId },
+            include: {
+                categoryRoles: {
+                    where: {
+                        serverRoleId: { in: [...userServerProfileIds] },
+                    },
+                    include: { serverRole: true },
+                },
+            },
+        });
+
+        // Filter and sort roles
+        channelRoles.channelRoles = channelRoles.channelRoles
+            .sort((a, b) => a.serverRole.order - b.serverRole.order);
+
+        categoryRoles.categoryRoles = categoryRoles.categoryRoles
+            .sort((a, b) => a.serverRole.order - b.serverRole.order);
+
+        let visitedRoles = [];
+        let isVerify = false;
+
+        for (const role of channelRoles.channelRoles) {
+            const { serverRoleId, manageRoles } = role;
+
+            visitedRoles.push(serverRoleId);
+
+            if (manageRoles == "ALLOW") {
+                isVerify = true;
+                break;
+            }
+
+            if (manageRoles == "NEUTRAL") {
+                const temp = categoryRoles.categoryRoles.find((item) => item.serverRoleId == serverRoleId);
+                if (temp) {
+                    if (temp.manageRoles == "ALLOW" || (temp.manageRoles == "NEUTRAL" && temp.serverRole.manageRoles)) {
+                        isVerify = true;
+                        break;
+                    }
+                } else {
+                    if (role.serverRole.manageRoles) {
+                        isVerify = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (isVerify) {
+            return await helperUpdateDefaultChannelRole(defaultRoleId, updates);
+        }
+
+        if (visitedRoles.length > 0) {
+            categoryRoles.categoryRoles = categoryRoles.categoryRoles.filter(
+                (item) => !visitedRoles.includes(item.serverRoleId)
+            );
+        }
+
+        if (categoryRoles.categoryRoles.length == 0) {
+            return { success: false, message: "Permission denied" };
+        }
+
+        for (const role of categoryRoles.categoryRoles) {
+            const { manageRoles } = role;
+
+            if (manageRoles == "ALLOW") {
+                isVerify = true;
+                break;
+            }
+
+            if (manageRoles == "NEUTRAL" && role.serverRole.manageRoles) {
+                isVerify = true;
+                break;
+            }
+        }
+
+        if (isVerify) {
+            return await helperUpdateDefaultChannelRole(defaultRoleId, updates);
+        }
+
+        return { success: false, message: "You do not have permission" };
+
     } catch (error) {
         console.error("updateDefaultChannelRole Error:", error.message);
         throw new Error("Failed to update channel default role. Please try again later.");
@@ -820,7 +1178,12 @@ export const editServerRole = async (serverId, roleId, role) => {
 };
 
 export const removeServerRole = async () => {
-    //remaining
+    try {
+
+    } catch (error) {
+        console.error("removeServerRole Error:", error.message);
+        throw new Error(error.message || "An error occurred while editing the role.");
+    }
 }
 
 
@@ -1215,9 +1578,9 @@ export const removeCategoryRole = async (categoryId, categoryRoleId) => {
 
 
 // remaining
-export const addChannelRole = async (serverId, categoryId, channelId, roleId) => {
+export const addChannelRole = async (channelId, roleId) => {
     try {
-        if (!serverId || !categoryId || !channelId || !roleId) {
+        if (!channelId || !roleId) {
             return { success: false, message: "Please provide all the fields" };
         }
 
@@ -1225,6 +1588,16 @@ export const addChannelRole = async (serverId, categoryId, channelId, roleId) =>
         if (!user) {
             return { success: false, message: "User not defined" };
         }
+
+        const chan = await prisma.channel.findFirst({
+            where: { id: channelId },
+            include: { category: true }
+        })
+        if (!chan) {
+            return { success: false, message: "Category not found" };
+        }
+        const serverId = chan.category.serverId
+        const categoryId = chan.categoryId
 
         const userServerProfile = await prisma.serverProfile.findUnique({
             where: {
@@ -1413,9 +1786,9 @@ export const addChannelRole = async (serverId, categoryId, channelId, roleId) =>
     }
 };
 
-export const updateChannelRole = async (serverId, categoryId, channelId, channelRoleId, updates) => {
+export const updateChannelRole = async (channelId, channelRoleId, updates) => {
     try {
-        if (!serverId || !categoryId || !channelId || !channelRoleId || !updates) {
+        if (!channelId || !channelRoleId || !updates) {
             return { success: false, message: "Please provide all the fields" };
         }
 
@@ -1423,6 +1796,16 @@ export const updateChannelRole = async (serverId, categoryId, channelId, channel
         if (!user) {
             return { success: false, message: "User not defined" };
         }
+
+        const chan = await prisma.channel.findFirst({
+            where: { id: channelId },
+            include: { category: true }
+        })
+        if (!chan) {
+            return { success: false, message: "Category not found" };
+        }
+        const serverId = chan.category.serverId
+        const categoryId = chan.categoryId
 
         const userServerProfile = await prisma.serverProfile.findUnique({
             where: {
@@ -1612,9 +1995,9 @@ export const updateChannelRole = async (serverId, categoryId, channelId, channel
     }
 };
 
-export const removeChannelRole = async (serverId, categoryId, channelId, channelRoleId) => {
+export const removeChannelRole = async (channelId, channelRoleId) => {
     try {
-        if (!serverId || !categoryId || !channelId || !channelRoleId) {
+        if (!channelId || !channelRoleId) {
             return { success: false, message: "Server ID, Category ID, Channel ID, Channel Role ID are required" };
         }
 
@@ -1622,6 +2005,17 @@ export const removeChannelRole = async (serverId, categoryId, channelId, channel
         if (!user) {
             return { success: false, message: "User is not authenticated" };
         }
+
+        const chan = await prisma.channel.findFirst({
+            where: { id: channelId },
+            include: { category: true }
+        })
+        if (!chan) {
+            return { success: false, message: "Category not found" };
+        }
+        const serverId = chan.category.serverId
+        const categoryId = chan.categoryId
+
 
         const userServerProfile = await prisma.serverProfile.findUnique({
             where: {
