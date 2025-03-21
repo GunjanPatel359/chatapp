@@ -108,7 +108,6 @@ const ProfileSettingPage = () => {
                                 placeholder="Enter display name" 
                                 value={displayName}
                                 onChange={handleDisplayNameChange} // Updated handler
-                                // onChange={(e) => setDisplayName(e.target.value)}
 
                             />
                             <label className="block text-sm font-medium mt-4 mb-2">Pronouns</label>
@@ -118,7 +117,6 @@ const ProfileSettingPage = () => {
                                 placeholder="Enter pronouns" 
                                 value={pronouns}
                                 onChange={handlePronounsChange} // Updated handler
-                                // onChange={(e) => setPronouns(e.target.value)}
                             />
                             <label className="block text-sm font-medium mt-4 mb-2">
                                 About Me 🌟 (max 190 characters)
