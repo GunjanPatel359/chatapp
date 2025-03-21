@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 
 const ProfileSettingPage = () => {
     const [activeProfile, setActiveProfile] = useState('user');
-    const [displayName, setDisplayName] = useState('');
-    const [pronouns, setPronouns] = useState('');
+    const [displayName, setDisplayName] = useState('ZAKOP');
+    const [pronouns, setPronouns] = useState('AKA OLLA(•U•)');
     const [avatar, setAvatar] = useState('/default-avatar.png'); // Default avatar
-    const [aboutMe, setAboutMe] = useState('');
-    const [serverNickname, setServerNickname] = useState('');
+    const [aboutMe, setAboutMe] = useState('hello');
+    const [serverNickname, setServerNickname] = useState('ZAKOP');
     const [serverPronouns, setServerPronouns] = useState('');
-    const [selectedServer, setSelectedServer] = useState("");
+    const [selectedServer, setSelectedServer] = useState("ZAKOP'S server");
     const [banner, setBanner] = useState('/default-banner.png'); // Default banner
     const [serverBanner, setServerBanner] = useState('/default-banner.png'); // Default server banner
 
@@ -108,7 +108,6 @@ const ProfileSettingPage = () => {
                                 placeholder="Enter display name" 
                                 value={displayName}
                                 onChange={handleDisplayNameChange} // Updated handler
-                                onChange={(e) => setDisplayName(e.target.value)}
 
                             />
                             <label className="block text-sm font-medium mt-4 mb-2">Pronouns</label>
@@ -118,7 +117,6 @@ const ProfileSettingPage = () => {
                                 placeholder="Enter pronouns" 
                                 value={pronouns}
                                 onChange={handlePronounsChange} // Updated handler
-                                onChange={(e) => setPronouns(e.target.value)}
                             />
                             <label className="block text-sm font-medium mt-4 mb-2">
                                 About Me 🌟 (max 190 characters)
@@ -183,7 +181,7 @@ const ProfileSettingPage = () => {
                                             </div>
                                         </div>
                                         <div className="text-lg font-bold">{displayName}</div>
-                                        <div className="text-sm">{displayName} • {pronouns}</div>
+                                        <div className="text-sm">aka_{displayName} • {pronouns}</div>
                                         {aboutMe && (
                                             <div className="mt-2 text-sm text-gray-700">
                                                 <span className="font-medium">About Me:</span> {aboutMe}
@@ -209,7 +207,7 @@ const ProfileSettingPage = () => {
                                 value={selectedServer}
                                 onChange={(e) => setSelectedServer(e.target.value)}
                             >
-                                <option value="server">ZAKOP's server</option>
+                                <option value="ZAKIR HUSSAIN'S server">ZAKOP's server</option>
                                 <option value="Other Server">Other Server</option>
                             </select>
 
