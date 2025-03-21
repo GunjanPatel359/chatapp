@@ -79,9 +79,6 @@ const ProfileSettingPage = () => {
         localStorage.setItem('pronouns', text); // Save to localStorage
     };
 
-        }
-    };
-
     return (
         <div className="bg-gray-50 text-indigo-500 p-6">
             <h2 className="text-xl font-bold">Profiles</h2>
