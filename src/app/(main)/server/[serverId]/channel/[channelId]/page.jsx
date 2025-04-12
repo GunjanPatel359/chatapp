@@ -4,6 +4,8 @@ import ChannelHeader from "./ChannelHeader";
 import ChatArea from "./ChatArea";
 import { useParams } from "next/navigation";
 import { getChannel } from "@/actions/user";
+import VideoArea from "./VideoArea";
+// import { LottiePlayer } from "lottie-react";
 
 const ChannelPage = () => {
     const params = useParams();
@@ -18,6 +20,7 @@ const ChannelPage = () => {
             try {
                 const res = await getChannel(params.channelId);
                 if (res.success) {
+                    console.log(res.channel)
                     setChannelInfo(res.channel);
                 }
             } catch (error) {
@@ -31,7 +34,10 @@ const ChannelPage = () => {
     }, [params?.channelId]); // Runs when channelId changes
 
     if (loading) {
-        return <div className="h-screen flex items-center justify-center">Loading...</div>;
+        return (
+            <div className="h-screen flex items-center justify-center">Loading...</div>            
+        )
+
     }
 
     return (
@@ -40,11 +46,27 @@ const ChannelPage = () => {
             <ChannelHeader channel={channelInfo || { name: "Loading...", description: "" }} />
 
             {/* Main Chat Section */}
-            <div className="flex-1 flex">
-                <ChatArea />
-                {/* Sidebar (Optional) */}
-                <div className="w-64 bg-indigo-500">reserved</div>
-            </div>
+            {
+                channelInfo?.type == "TEXT" ? (
+                    <div className="flex-1 flex">
+                        <ChatArea />
+                        {/* Sidebar (Optional) */}
+                        <div className="w-64 bg-indigo-500">reserved</div>
+                    </div>
+                ) : (
+                    <div className="flex-1 flex">
+                        <VideoArea
+                            roomName={channelInfo.id}
+                            userId={"1452"}
+                            role={"waitforit"}
+                        />
+                        {/* <ChatArea /> */}
+                        {/* Sidebar (Optio2nal) */}
+                        {/* <div className="w-64 bg-indigo-500">reserved</div> */}
+                    </div>
+                )
+            }
+
         </div>
     );
 };

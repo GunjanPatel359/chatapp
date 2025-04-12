@@ -46,7 +46,12 @@ const SideBar = () => {
             className="h-screen w-20 flex flex-col bg-white shadow-lg justify-between"
         >
             <div>
-                <SideBarIcon icon={<FaFire size="30" />} text="Home" active={active=="home"} redirect={`/home`} />
+                <MainSideBarIcon
+                    icon={<img src="/chatverse-white.svg" className="object-cover text-center text-white" width={65} height={65} alt="Chatverse" />}
+                    text="Home"
+                    active={active === "home"}
+                    redirect="/home"
+                />
                 <Divider />
             </div>
             <div className="flex-1 overflow-y-scroll scrollbar-none my-1">
@@ -130,6 +135,32 @@ const SideBarIcon = ({ icon, text = "tooltip 💡", active, redirect }) => {
     </div>
     )
 };
+
+const MainSideBarIcon = ({ icon, text = "tooltip 💡", active, redirect }) => {
+    const router = useRouter()
+    return (
+        <div>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div
+                            className={`relative flex items-center justify-center h-14 w-14 mt-2 mb-2 mx-auto transition-all duration-500 ease-out cursor-pointer shadow-lg group hover:rounded-[16px]
+                     ${active ? "bg-indigo-600 text-white rounded-[12px]" : "border border-dashed border-indigo-500 hover:bg-indigo-600 bg-indigo-600 text-white  hover:rounded-[16px] rounded-[50px]"} `}
+                            onClick={() => router.push(`${redirect}`)}
+                        >
+                            <div className={`absolute -translate-x-10 w-2 rounded bg-indigo-500 transition-all ${active ? "h-10" : "h-4 group-hover:h-8"}`} />
+                            {icon}
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="left" sideOffset={13}>
+                        <p>{text}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        </div>
+    )
+};
+
 
 const Divider = () => (
     <hr
