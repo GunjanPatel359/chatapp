@@ -1,5 +1,5 @@
-import { useParams, usePathname, useRouter } from 'next/navigation';
 import React from 'react'
+import { useParams, usePathname, useRouter } from 'next/navigation';
 
 import { FaRegUserCircle } from "react-icons/fa";
 // import { RiDeleteBin6Fill } from "react-icons/ri";
@@ -8,11 +8,12 @@ import { FaRegUserCircle } from "react-icons/fa";
 // import { FaUserPlus, FaUsersCog } from "react-icons/fa";
 
 const UserSettingSidebar = () => {
+    const router=useRouter()
     const pathname=usePathname()
     const active=pathname.split("/").filter(Boolean).pop();
     const menuItems = [
         { name: "My Account", path: "account"},
-        { name: "Profiles", path: "profile"},
+        { name: "Profiles", path: "profiles"},
         // { name: "Roles", path: "server-roles", icon: HiMiniUsers },
         // { name: "Categories", path: "server-categories", icon: MdEventNote },
         // { name: "Channels", path: "server-channels", icon: MdOutlineNotes }
@@ -32,7 +33,7 @@ const UserSettingSidebar = () => {
             permission ? (
                 <div
                     key={path}
-                    // onClick={() => router.push(`/setting/server/${serverId}/${path}`)}
+                    onClick={() => router.push(`/setting/user/${path}`)}
                     className={`flex rounded cursor-pointer ${
                         active === path ? "bg-gray-300" : "hover:bg-gray-200"
                     }`}

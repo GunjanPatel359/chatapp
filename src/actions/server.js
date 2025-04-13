@@ -90,6 +90,7 @@ export const createServer = async (name, description, categories, formData) => {
             // Create the server profile for the user
             await prisma.serverProfile.create({
                 data: {
+                    name:user.username,
                     userId: user.id,
                     serverId: createdServer.id
                 },
