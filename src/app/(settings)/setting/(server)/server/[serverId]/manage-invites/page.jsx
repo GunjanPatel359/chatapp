@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle } from "lucide-react";
 
-export const InviteAccessToggle = () => {
+const InviteAccessToggle = () => {
   const [inviteDisabled, setInviteDisabled] = useState(false);
 
   return (
