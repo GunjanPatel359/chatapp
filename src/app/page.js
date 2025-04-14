@@ -120,11 +120,11 @@ export default function Home() {
       <div className="text-center z-10 mb-12">
         <h1 className="text-6xl font-bold text-white">Welcome To ChatVerse</h1>
         <button
-            onClick={handleNavigateHome}
-            className="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-lg hover:bg-indigo-700 transition duration-300"
-          >
-            Get Started
-          </button>
+          onClick={handleNavigateHome}
+          className="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-lg hover:bg-indigo-700 transition duration-300"
+        >
+          Get Started
+        </button>
       </div>
 
       {/* Main content container */}

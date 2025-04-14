@@ -30,7 +30,7 @@ export const CreateChannelModal = ({ children,categoryId, categoryName, serverId
 
     try {
         console.log(typed)
-      const res=await createChannel(serverId,categoryId,{ name, description, typed });
+      const res=await createChannel(serverId,categoryId,{ name, description, type:typed });
       if(res.success){
           setName("");
           setDescription("");

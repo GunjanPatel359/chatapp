@@ -14,13 +14,13 @@ import { reorderCategory } from "@/actions/category";
 import { BsPlus } from "react-icons/bs";
 import { FaPlus } from "react-icons/fa6";
 
-import {CreateCategoryModal} from "@/components/modals/createCategoryModal"
+import { CreateCategoryModal } from "@/components/modals/createCategoryModal"
 
 const ItemType = "CATEGORY";
 
 // Drag-and-Drop Category Item
 const CategoryItem = ({ category, index, moveCategory }) => {
-  const router=useRouter()
+  const router = useRouter()
   const [{ isDragging }, ref] = useDrag({
     type: ItemType,
     item: { index },
@@ -52,7 +52,7 @@ const CategoryItem = ({ category, index, moveCategory }) => {
           </span>
           <div className="flex space-x-2">
             <button className="p-1 hover:bg-indigo-600 border border-indigo-500 bg-white text-indigo-500 hover:text-white transition rounded-full">
-              <BiSolidEdit size={19} onClick={()=>router.push(`/setting/category/${category.id}`)} />
+              <BiSolidEdit size={19} onClick={() => router.push(`/setting/category/${category.id}`)} />
             </button>
             <button className="p-1 hover:bg-indigo-600 border border-indigo-500 bg-white text-indigo-500 hover:text-white transition rounded-full">
               <PiDotsThreeOutlineFill size={19} />
@@ -93,20 +93,20 @@ const ServerCategories = () => {
     });
   }, []);
   console.log(categories)
-  const handleReOrder=async()=>{
+  const handleReOrder = async () => {
     try {
-      const category=categories.map((cat)=>cat.id)
+      const category = categories.map((cat) => cat.id)
       console.log(category)
-      const res=await reorderCategory(params?.serverId,category)
+      const res = await reorderCategory(params?.serverId, category)
       console.log(res?.reorderCategory)
-      if(res){
+      if (res) {
         console.log("updated successfully")
       }
     } catch (error) {
       toast({
         title: "Error",
-        description:error,
-        variant:"destructive"
+        description: error,
+        variant: "destructive"
       })
     }
   }
@@ -125,18 +125,18 @@ const ServerCategories = () => {
         <div className="mt-5">
           <div className="flex items-center justify-between mb-4">
             <CreateCategoryModal serverId={params.serverId}>
-            <button className="bg-indigo-500 hover:bg-indigo-600 px-3 py-2 rounded-md text-white flex">
-              <FaPlus size={20} className="inline my-auto mr-1"/> Create Category
-            </button>
+              <button className="bg-indigo-500 hover:bg-indigo-600 px-3 py-2 rounded-md text-white flex">
+                <FaPlus size={20} className="inline my-auto mr-1" /> Create Category
+              </button>
             </CreateCategoryModal>
           </div>
           <h2 className="mb-2 flex justify-between">
             <span className="font-bold">
               Total Categories: {categories.length}
             </span>
-            <span 
-            onClick={handleReOrder}
-            className="bg-indigo-500 text-white px-3 py-[3px] rounded my-auto cursor-pointer hover:bg-indigo-600"
+            <span
+              onClick={handleReOrder}
+              className="bg-indigo-500 text-white px-3 py-[3px] rounded my-auto cursor-pointer hover:bg-indigo-600"
             >
               save
             </span>

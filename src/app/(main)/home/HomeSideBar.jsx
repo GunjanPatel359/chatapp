@@ -1,13 +1,17 @@
 "use client";
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { FaUserFriends } from "react-icons/fa";
 import { BsBugFill } from "react-icons/bs";
 import { HiShoppingCart } from "react-icons/hi";
 import { IoSettingsSharp } from "react-icons/io5";
 import ProfileCard from 'src/components/ui/ProfileCard.tsx';
+import { toast } from '@/hooks/use-toast';
+import { getUserProfile } from '@/actions/user';
 
 const HomeSideBar = () => {
+  const [user,setUser]=useState('')
+
   const [isProfileCardOpen, setIsProfileCardOpen] = useState(false);
   const userNameRef = useRef(null);
 
@@ -27,6 +31,24 @@ const HomeSideBar = () => {
     { name: "Carl-bot", status: "playing", activity: "/games | carl.gg" },
     { name: "Dyno", status: "online" },
   ];
+
+  useEffect(()=>{
+    const initiate=async()=>{
+      try {
+        const res=await getUserProfile()
+        if(res.success){
+          setUser(res.user)
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant:"destructive"
+        })
+      }
+    }
+    initiate()
+  },[])
 
   return (
     <div className="w-[300px] h-screen bg-gray-50 text-indigo-500 flex flex-col pt-2">
@@ -89,10 +111,12 @@ const HomeSideBar = () => {
       </div>
       
       <ProfileCard 
+      profile={user}
         isOpen={isProfileCardOpen}
         onClose={() => setIsProfileCardOpen(false)}
         triggerRef={userNameRef}
       />
+
     </div>
   );
 };

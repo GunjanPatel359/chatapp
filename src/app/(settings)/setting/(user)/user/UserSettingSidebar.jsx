@@ -1,5 +1,5 @@
-import { useParams, usePathname, useRouter } from 'next/navigation';
 import React from 'react'
+import { useParams, usePathname, useRouter } from 'next/navigation';
 
 import { FaRegUserCircle } from "react-icons/fa";
 // import { RiDeleteBin6Fill } from "react-icons/ri";
@@ -8,11 +8,12 @@ import { FaRegUserCircle } from "react-icons/fa";
 // import { FaUserPlus, FaUsersCog } from "react-icons/fa";
 
 const UserSettingSidebar = () => {
-    const pathname=usePathname()
-    const active=pathname.split("/").filter(Boolean).pop();
+    const router = useRouter()
+    const pathname = usePathname()
+    const active = pathname.split("/").filter(Boolean).pop();
     const menuItems = [
-        { name: "My Account", path: "account"},
-        { name: "Profiles", path: "profile"},
+        { name: "My Account", path: "account" },
+        { name: "Profiles", path: "profiles" },
         // { name: "Roles", path: "server-roles", icon: HiMiniUsers },
         // { name: "Categories", path: "server-categories", icon: MdEventNote },
         // { name: "Channels", path: "server-channels", icon: MdOutlineNotes }
@@ -22,28 +23,26 @@ const UserSettingSidebar = () => {
     //     { name: "Members", path: "manage-members", icon: FaUsersCog },
     //     { name: "Invites", path: "manage-invites", icon: FaUserPlus }
     // ];
-  return (
-    <div className="p-6">
-    <h2 className="font-bold uppercase text-indigo-500 mb-1">{"User Settings"}</h2>
-    <div className="h-[1px] w-full bg-indigo-400 mb-1" />
+    return (
+        <div className="p-6">
+            <h2 className="font-bold uppercase text-indigo-500 mb-1">{"User Settings"}</h2>
+            <div className="h-[1px] w-full bg-indigo-400 mb-1" />
 
-    <div className="space-y-[2px]">
-        {menuItems.map(({ name, path, permission = true }) =>
-            permission ? (
-                <div
-                    key={path}
-                    // onClick={() => router.push(`/setting/server/${serverId}/${path}`)}
-                    className={`flex rounded cursor-pointer ${
-                        active === path ? "bg-gray-300" : "hover:bg-gray-200"
-                    }`}
-                >
-                    <div className="block py-1 rounded text-indigo-500 pl-2">{name}</div>
-                </div>
-            ) : null
-        )}
-    </div>
+            <div className="space-y-[2px]">
+                {menuItems.map(({ name, path, permission = true }) =>
+                    permission ? (
+                        <div
+                            key={path}
+                            onClick={() => router.push(`/setting/user/${path}`)}
+                            className={`flex rounded cursor-pointer ${active === path ? "bg-gray-300" : "hover:bg-gray-200"
+                                }`}>
+                            <div className="block py-1 rounded text-indigo-500 pl-2">{name}</div>
+                        </div>
+                    ) : null
+                )}
+            </div>
 
-    {/* <h2 className="font-bold uppercase text-indigo-500 mt-1 mb-1">User Management</h2>
+            {/* <h2 className="font-bold uppercase text-indigo-500 mt-1 mb-1">User Management</h2>
     <div className="h-[1px] w-full bg-indigo-400 mb-1" />
     <div>
         {userManagementItems.map(({ name, path, icon: Icon }) => (
@@ -76,8 +75,8 @@ const UserSettingSidebar = () => {
             </div>
         </div>
     </div> */}
-</div>
-  )
+        </div>
+    )
 }
 
 export default UserSettingSidebar

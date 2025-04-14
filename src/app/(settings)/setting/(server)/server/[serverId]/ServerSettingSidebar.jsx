@@ -11,9 +11,9 @@ import { serverSetting } from "@/hooks/zusthook";
 
 const ServerSettingSideBar = () => {
     const { user, userServerProfile } = serverSetting();
-    
+
     if (!user || !userServerProfile) return <div>Loading...</div>;
-    console.log(user,userServerProfile)
+    console.log(user, userServerProfile)
     const { server, roles } = userServerProfile;
     const owner = server?.ownerId === user?.id;
     const isAdmin = roles?.some(role => role.role.adminPermission);
@@ -48,9 +48,8 @@ const ServerSettingSideBar = () => {
                         <div
                             key={path}
                             onClick={() => router.push(`/setting/server/${serverId}/${path}`)}
-                            className={`flex rounded cursor-pointer ${
-                                active === path ? "bg-gray-300" : "hover:bg-gray-200"
-                            }`}
+                            className={`flex rounded cursor-pointer ${active === path ? "bg-gray-300" : "hover:bg-gray-200"
+                                }`}
                         >
                             <div className="my-auto mx-1 text-indigo-500">
                                 <Icon size={20} />
@@ -68,9 +67,8 @@ const ServerSettingSideBar = () => {
                     <div
                         key={path}
                         onClick={() => router.push(`/setting/server/${serverId}/${path}`)}
-                        className={`flex rounded cursor-pointer ${
-                            active === path ? "bg-gray-300" : "hover:bg-gray-200"
-                        }`}
+                        className={`flex rounded cursor-pointer ${active === path ? "bg-gray-300" : "hover:bg-gray-200"
+                            }`}
                     >
                         <div className="my-auto mx-1 text-indigo-500">
                             <Icon size={20} />
@@ -84,9 +82,8 @@ const ServerSettingSideBar = () => {
             <div className="mt-2">
                 <div
                     onClick={() => router.push("m")}
-                    className={`flex justify-between px-2 rounded cursor-pointer border border-red-500 ${
-                        active === "m" ? "bg-red-500 text-white" : "text-red-500 hover:text-white hover:bg-red-500"
-                    }`}
+                    className={`flex justify-between px-2 rounded cursor-pointer border border-red-500 ${active === "m" ? "bg-red-500 text-white" : "text-red-500 hover:text-white hover:bg-red-500"
+                        }`}
                 >
                     <div className="block py-1 rounded">Delete Server</div>
                     <div className="my-auto">

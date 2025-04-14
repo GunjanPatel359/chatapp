@@ -4,11 +4,11 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { BiPlus, BiSolidEdit } from "react-icons/bi"
 import { MdEventNote } from "react-icons/md";
-import {channelReorder, getChannel} from "@/actions/channel"
+import { channelReorder, getChannel } from "@/actions/channel"
 import { useParams } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 
-import {CreateChannelModal} from "@/components/modals/createChannelModal"
+import { CreateChannelModal } from "@/components/modals/createChannelModal"
 
 const ItemTypes = {
   CATEGORY: "CATEGORY",
@@ -17,14 +17,14 @@ const ItemTypes = {
 
 // Category component (no drag functionality here)
 const CategoryItem = ({ category, index, moveChannel }) => {
-  const params=useParams()
+  const params = useParams()
   return (
     <div className="p-3 bg-white text-indigo-500 rounded shadow-md">
       <div className="flex justify-between items-center pl-2">
         <span className="font-bold text-sm">{category.name}</span>
         <span className="pr-1">
           <CreateChannelModal categoryName={category.name} categoryId={category.id} serverId={params.serverId}>
-          <BiPlus size={26} className="hover:scale-105 cursor-pointer" />
+            <BiPlus size={26} className="hover:scale-105 cursor-pointer" />
           </CreateChannelModal>
         </span>
       </div>
@@ -82,28 +82,28 @@ const ChannelItem = ({ channel, index, categoryIndex, moveChannel }) => {
     >
       <span className=""># {channel.name}</span>
       <span>
-          <BiSolidEdit size={19} className="hover:text-indigo-600 transition-all hover:scale-110" />
+        <BiSolidEdit size={19} className="hover:text-indigo-600 transition-all hover:scale-110" />
       </span>
     </div>
   );
 };
 
 const ServerChannels = () => {
-  const params=useParams()
+  const params = useParams()
   const [categories, setCategories] = useState([]);
 
-  useEffect(()=>{
-    const initiatePage=async()=>{
+  useEffect(() => {
+    const initiatePage = async () => {
       try {
-        const res=await getChannel(params.serverId)
-        if(res.success){
+        const res = await getChannel(params.serverId)
+        if (res.success) {
           setCategories(res.categories)
         }
-        if(!res.success){
+        if (!res.success) {
           toast({
             title: "Error",
-            description:res.message,
-            variant:"destructive"
+            description: res.message,
+            variant: "destructive"
           })
         }
       } catch (error) {
@@ -111,7 +111,7 @@ const ServerChannels = () => {
       }
     }
     initiatePage()
-  },[params.serverId])
+  }, [params.serverId])
 
   // Function to move channels between categories
   const moveChannel = (
@@ -134,24 +134,24 @@ const ServerChannels = () => {
     setCategories(updatedCategories);
   };
 
-  const handleChannelReorder=async()=>{
+  const handleChannelReorder = async () => {
     try {
-      const temp=categories.map((cate)=>{return {id:cate.id,channels:cate.channels.map((chan)=>chan.id)}})
+      const temp = categories.map((cate) => { return { id: cate.id, channels: cate.channels.map((chan) => chan.id) } })
       console.log(temp)
-      const res=await channelReorder(params.serverId,temp)
-      if(res.success){
+      const res = await channelReorder(params.serverId, temp)
+      if (res.success) {
         toast({
           title: "Success",
           description: "Channels reordered successfully",
-          variant:"success"
+          variant: "success"
         })
       }
     } catch (error) {
       console.log(error)
       toast({
         title: "Error",
-        description:error.message,
-        variant:"destructive"
+        description: error.message,
+        variant: "destructive"
       })
     }
   }
@@ -168,12 +168,12 @@ const ServerChannels = () => {
       <DndProvider backend={HTML5Backend}>
         <div className="text-indigo-500">
           <div className="flex items-center justify-between mb-4">
-            
+
           </div>
           <div className="flex justify-between mb-1">
-          <h2 className="font-bold mb-2">Channels - {categories.reduce((sum, cate) => sum + cate.channels.length, 0)}</h2>
-          <span className="bg-indigo-500 text-white py-1 px-3 rounded cursor-pointer hover:bg-indigo-600" onClick={handleChannelReorder}>Save</span>
-            </div>
+            <h2 className="font-bold mb-2">Channels - {categories.reduce((sum, cate) => sum + cate.channels.length, 0)}</h2>
+            <span className="bg-indigo-500 text-white py-1 px-3 rounded cursor-pointer hover:bg-indigo-600" onClick={handleChannelReorder}>Save</span>
+          </div>
           <div className="space-y-2">
             {categories.map((category, index) => (
               <CategoryItem

@@ -1,5 +1,6 @@
+// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+const config = {
 	darkMode: ["class"],
 	content: [
 		"./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -50,10 +51,12 @@ module.exports = {
 			addUtilities({
 				'.scrollbar-none': {
 					'::-webkit-scrollbar': { display: 'none' },
-					'-ms-overflow-style': 'none', // For Internet Explorer
-					'scrollbar-width': 'none', // For Firefox
+					'-ms-overflow-style': 'none',
+					'scrollbar-width': 'none',
 				},
 			});
 		}
 	],
 };
+
+export default config;

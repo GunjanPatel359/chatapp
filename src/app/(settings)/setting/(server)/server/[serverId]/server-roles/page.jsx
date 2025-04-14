@@ -236,31 +236,28 @@ const SortableRow = ({ id, roleName, roleCount }) => {
             <div className="flex space-x-4 mb-4 border-b border-gray-200">
               <button
                 onClick={() => setActiveSection("display")}
-                className={`pb-2 text-sm font-medium ${
-                  activeSection === "display"
+                className={`pb-2 text-sm font-medium ${activeSection === "display"
                     ? "text-indigo-500 border-b-2 border-indigo-500"
                     : "text-gray-500 hover:text-gray-700"
-                }`}
+                  }`}
               >
                 Display
               </button>
               <button
                 onClick={() => setActiveSection("permissions")}
-                className={`pb-2 text-sm font-medium ${
-                  activeSection === "permissions"
+                className={`pb-2 text-sm font-medium ${activeSection === "permissions"
                     ? "text-indigo-500 border-b-2 border-indigo-500"
                     : "text-gray-500 hover:text-gray-700"
-                }`}
+                  }`}
               >
                 Permissions
               </button>
               <button
                 onClick={() => setActiveSection("manage")}
-                className={`pb-2 text-sm font-medium ${
-                  activeSection === "manage"
+                className={`pb-2 text-sm font-medium ${activeSection === "manage"
                     ? "text-indigo-500 border-b-2 border-indigo-500"
                     : "text-gray-500 hover:text-gray-700"
-                }`}
+                  }`}
               >
                 Manage Access
               </button>
@@ -292,9 +289,8 @@ const SortableRow = ({ id, roleName, roleCount }) => {
                       </p>
                     </div>
                     <button
-                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
-                        permissions.viewChannels ? "bg-indigo-500" : "bg-gray-300"
-                      }`}
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${permissions.viewChannels ? "bg-indigo-500" : "bg-gray-300"
+                        }`}
                       onClick={() =>
                         setPermissions((prev) => ({
                           ...prev,
@@ -303,9 +299,8 @@ const SortableRow = ({ id, roleName, roleCount }) => {
                       }
                     >
                       <div
-                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                          permissions.viewChannels ? "translate-x-4" : "translate-x-0"
-                        }`}
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${permissions.viewChannels ? "translate-x-4" : "translate-x-0"
+                          }`}
                       />
                     </button>
                   </div>
@@ -319,9 +314,8 @@ const SortableRow = ({ id, roleName, roleCount }) => {
                       </p>
                     </div>
                     <button
-                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
-                        permissions.manageChannels ? "bg-indigo-500" : "bg-gray-300"
-                      }`}
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${permissions.manageChannels ? "bg-indigo-500" : "bg-gray-300"
+                        }`}
                       onClick={() =>
                         setPermissions((prev) => ({
                           ...prev,
@@ -330,9 +324,8 @@ const SortableRow = ({ id, roleName, roleCount }) => {
                       }
                     >
                       <div
-                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                          permissions.manageChannels ? "translate-x-4" : "translate-x-0"
-                        }`}
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${permissions.manageChannels ? "translate-x-4" : "translate-x-0"
+                          }`}
                       />
                     </button>
                   </div>
@@ -346,9 +339,8 @@ const SortableRow = ({ id, roleName, roleCount }) => {
                       </p>
                     </div>
                     <button
-                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
-                        permissions.manageRoles ? "bg-indigo-500" : "bg-gray-300"
-                      }`}
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${permissions.manageRoles ? "bg-indigo-500" : "bg-gray-300"
+                        }`}
                       onClick={() =>
                         setPermissions((prev) => ({
                           ...prev,
@@ -357,9 +349,8 @@ const SortableRow = ({ id, roleName, roleCount }) => {
                       }
                     >
                       <div
-                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                          permissions.manageRoles ? "translate-x-4" : "translate-x-0"
-                        }`}
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${permissions.manageRoles ? "translate-x-4" : "translate-x-0"
+                          }`}
                       />
                     </button>
                   </div>
@@ -371,7 +362,7 @@ const SortableRow = ({ id, roleName, roleCount }) => {
             {activeSection === "manage" && (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">Manage Access</label>
-                
+
                 {/* Search Members Input */}
                 <div className="mt-2 flex items-center bg-gray-50 border border-indigo-500 rounded-md p-2">
                   <input

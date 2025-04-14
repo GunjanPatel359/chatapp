@@ -44,7 +44,7 @@ const PermissionRoleComponent = () => {
         console.log(res)
         if (res.success) {
           setLimit(res.limit)
-          const temp1=res.channelRoles.channelRoles.sort((a, b) => a.serverRole.order - b.serverRole.order)
+          const temp1 = res.channelRoles.channelRoles.sort((a, b) => a.serverRole.order - b.serverRole.order)
           setChannelRoles(temp1);
           setDefaultChannelRole(res.channelRoles.defaultChannelRole);
 
