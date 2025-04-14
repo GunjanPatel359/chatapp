@@ -16,28 +16,28 @@ import { Label } from "@/components/ui/label";
 import { AlertTriangle } from "lucide-react";
 
 const InviteAccessToggle = () => {
-  const [inviteDisabled, setInviteDisabled] = useState(false);
+    const [inviteDisabled, setInviteDisabled] = useState(false);
 
-  return (
-    <div className="flex items-center justify-between gap-4 bg-red-50 border border-red-200 text-red-500 p-4 rounded-md shadow-sm mb-3">
-      <div className="flex items-start gap-3">
-        <div className="">
-        <AlertTriangle className="w-6 h-6 mt-0.5 text-red-400" />
+    return (
+        <div className="flex items-center justify-between gap-4 bg-red-50 border border-red-200 text-red-500 p-4 rounded-md shadow-sm mb-3">
+            <div className="flex items-start gap-3">
+                <div className="">
+                    <AlertTriangle className="w-6 h-6 mt-0.5 text-red-400" />
+                </div>
+                <div className="space-y-1">
+                    <p className="font-semibold">Disable server invites</p>
+                    <p className="text-sm text-red-400">
+                        Turn this off to prevent anyone from creating or using invite links to join the server.
+                    </p>
+                </div>
             </div>
-        <div className="space-y-1">
-          <p className="font-semibold">Disable server invites</p>
-          <p className="text-sm text-red-400">
-            Turn this off to prevent anyone from creating or using invite links to join the server.
-          </p>
+            <Switch
+                checked={inviteDisabled}
+                onCheckedChange={setInviteDisabled}
+                className="bg-red-200 data-[state=checked]:bg-red-500"
+            />
         </div>
-      </div>
-      <Switch
-        checked={inviteDisabled}
-        onCheckedChange={setInviteDisabled}
-        className="bg-red-200 data-[state=checked]:bg-red-500"
-      />
-    </div>
-  );
+    );
 };
 
 
@@ -101,7 +101,7 @@ const InviteList = () => {
                     </Button>
                 </CreateInviteModal>
             </div>
-            <InviteAccessToggle/>
+            <InviteAccessToggle />
 
             <div className="overflow-x-auto bg-gray-50 border rounded-lg">
                 <table className="w-full table-auto text-sm text-left">

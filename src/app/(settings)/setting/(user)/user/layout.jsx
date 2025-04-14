@@ -9,12 +9,12 @@ const Layout = ({ children }) => {
             <div className="flex h-full shadow rounded-lg">
                 {!loading ? (
                     <>
-                    <div className="w-[80%] mx-auto flex">
-                        <div className="w-[250px] bg-gray-100">
-                            <UserSettingSidebar />
+                        <div className="w-[80%] mx-auto flex">
+                            <div className="w-[250px] bg-gray-100">
+                                <UserSettingSidebar />
+                            </div>
+                            <div className="flex-1 bg-gray-50 overflow-y-scroll scrollbar-none">{children}</div>
                         </div>
-                        <div className="flex-1 bg-gray-50 overflow-y-scroll scrollbar-none">{children}</div>
-                    </div>
                     </>
                 ) : (
                     <div>

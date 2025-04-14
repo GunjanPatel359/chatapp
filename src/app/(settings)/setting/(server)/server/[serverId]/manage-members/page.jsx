@@ -146,11 +146,10 @@ const MemberRow = ({ member, isSelected, onSelect }) => {
           {member.roles.map((role, idx) => (
             <span
               key={idx}
-              className={`px-2 py-0.5 text-xs rounded ${
-                role.toLowerCase() === 'admin'
+              className={`px-2 py-0.5 text-xs rounded ${role.toLowerCase() === 'admin'
                   ? 'bg-red-50 text-red-700 border border-red-200'
                   : 'bg-blue-50 text-blue-700 border border-blue-200'
-              }`}
+                }`}
             >
               <Shield className="h-3 w-3 mr-1 inline" />
               {role}
@@ -162,14 +161,12 @@ const MemberRow = ({ member, isSelected, onSelect }) => {
       <td className="py-4">
         <div className="flex items-center justify-end gap-1 pr-3">
           <Bell
-            className={`h-4 w-4 ${
-              member.signals ? 'text-green-500' : 'text-gray-400'
-            }`}
+            className={`h-4 w-4 ${member.signals ? 'text-green-500' : 'text-gray-400'
+              }`}
           />
           <User
-            className={`h-4 w-4 ${
-              member.messages ? 'text-indigo-500' : 'text-gray-400'
-            }`}
+            className={`h-4 w-4 ${member.messages ? 'text-indigo-500' : 'text-gray-400'
+              }`}
           />
         </div>
       </td>
@@ -214,9 +211,8 @@ const TableHeader = ({ label, sortable, sortKey, currentSort, sortDirection, onS
   return (
     <th className="px-4 py-3 text-left">
       <div
-        className={`flex items-center gap-1 ${
-          sortable ? 'cursor-pointer hover:text-gray-900' : ''
-        }`}
+        className={`flex items-center gap-1 ${sortable ? 'cursor-pointer hover:text-gray-900' : ''
+          }`}
         onClick={handleClick}
       >
         <span className="text-sm text-gray-600">{label}</span>
@@ -250,7 +246,7 @@ const ManageMembers = () => {
   };
 
   useEffect(() => {
-    const filtered = members.filter(member => 
+    const filtered = members.filter(member =>
       member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       member.tag.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -304,9 +300,9 @@ const ManageMembers = () => {
       alert("No members selected. Please select members to prune.");
       return;
     }
-    
+
     alert(`${selectedMembers.length} members pruned. Selected members have been removed from the server.`);
-    
+
     setFilteredMembers(prev => prev.filter(member => !selectedMembers.includes(member.id)));
     setSelectedMembers([]);
     setSelectAll(false);
@@ -362,25 +358,25 @@ const ManageMembers = () => {
                       className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
                     />
                   </th>
-                  <TableHeader 
-                    label="Name" 
-                    sortable 
+                  <TableHeader
+                    label="Name"
+                    sortable
                     sortKey="name"
                     currentSort={sortBy}
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   />
-                  <TableHeader 
-                    label="Member Since" 
-                    sortable 
+                  <TableHeader
+                    label="Member Since"
+                    sortable
                     sortKey="memberSince"
                     currentSort={sortBy}
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   />
-                  <TableHeader 
-                    label="Joined Discord" 
-                    sortable 
+                  <TableHeader
+                    label="Joined Discord"
+                    sortable
                     sortKey="joinedDiscord"
                     currentSort={sortBy}
                     sortDirection={sortDirection}
