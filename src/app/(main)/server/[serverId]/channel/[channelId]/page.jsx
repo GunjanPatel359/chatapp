@@ -5,6 +5,8 @@ import ChatArea from "./ChatArea";
 import { useParams } from "next/navigation";
 import { getChannel } from "@/actions/user";
 import VideoArea from "./VideoArea";
+import TempVideoArea from "./TempVideoArea";
+import Temp from "./Temp";
 // import { LottiePlayer } from "lottie-react";
 
 const ChannelPage = () => {
@@ -40,6 +42,7 @@ const ChannelPage = () => {
 
     }
 
+    console.log(channelInfo.type)
     return (
         <div className="flex flex-col h-screen flex-1">
             {/* Header */}
@@ -55,10 +58,19 @@ const ChannelPage = () => {
                     </div>
                 ) : (
                     <div className="flex-1 flex">
-                        <VideoArea
+                        {/* <VideoArea
                             roomName={channelInfo.id}
                             userId={"1452"}
                             role={"waitforit"}
+                        /> */}
+                        {/* <TempVideoArea
+                        roomName={channelInfo.id}
+                        userId={"1452"}
+                        role={"waitforit"}
+                        /> */}
+                        <Temp
+                        roomName={channelInfo.id}
+                        userId={"1452"}
                         />
                         {/* <ChatArea /> */}
                         {/* Sidebar (Optio2nal) */}
