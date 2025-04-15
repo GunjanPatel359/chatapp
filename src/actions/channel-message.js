@@ -273,7 +273,9 @@ const dbHelperCreateMessage = async (channelId, content, serverProfileId) => {
         const userServerProfile = await prisma.serverProfile.findFirst({
             where: { id: sendMessage.serverProfileId }
         });
+        console.log(sendMessage,userServerProfile)
         sendMessage.serverProfile=userServerProfile
+        console.log(sendMessage)
         console.log("Message created:", sendMessage);
         const response = await fetch(`${webSocketServer}/send-message`, {
             method: "POST",
@@ -312,6 +314,7 @@ const dbHelperTokenCreateMessage = async (channelId, content, user, serverId) =>
                 serverProfileId: userServerProfile.id
             }
         });
+        sendMessage.serverProfile=userServerProfile
         console.log("Message created with help of token:", sendMessage);
         const response = await fetch(`${process.env.WEB_SOCKET_SERVER}/send-message`, {
             method: "POST",

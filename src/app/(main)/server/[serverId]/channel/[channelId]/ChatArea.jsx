@@ -116,7 +116,7 @@ const ChatArea = () => {
       const res = await sendMessage(params.serverId, params.channelId, chatInput,localStorage.getItem(channelId));
       if (res.success) {
         setChatInput("");
-        console.log(res)
+        // console.log(res)
         if(res.token){
           localStorage.setItem(channelId,res.token[channelId])
         }
@@ -164,7 +164,7 @@ const ChatArea = () => {
 };
 
 const MessageDialogOther = ({ item }) => {
-  console.log(item)
+  // console.log(item)
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
     const formattedDate = date.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
@@ -180,7 +180,7 @@ const MessageDialogOther = ({ item }) => {
       <div className="rounded-full bg-red-300 w-12 h-12"></div>
       <div className="flex flex-col ml-2 flex-1">
         <div className="flex">
-          <div className="font-bold">{item.serverProfile.name}</div>
+          <div className="font-bold">{item.serverProfile?.name || "abc"}</div>
           <div className="text-xs my-auto ml-2">{formattedDate}</div>
           <div className="text-xs my-auto ml-1">{formattedTime}</div>
         </div>
