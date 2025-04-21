@@ -1,54 +1,67 @@
 "use client";
 
 import { serverSetting } from "@/hooks/zusthook";
+import { updateServerAvatar } from "@/actions/server";
 import React, { useState } from "react";
 import { IoInformationCircle } from "react-icons/io5";
 
 const Overview = () => {
-  const { server, updateServerLogo } = serverSetting(); // Add updateServerLogo to your Zustand store
+  const { server } = serverSetting();
   const [serverName, setServerName] = useState(server?.name || "");
   const [welcomeMessage, setWelcomeMessage] = useState(true);
   const [stickerPrompt, setStickerPrompt] = useState(true);
-  const [logo, setLogo] = useState(server?.logo || null); // State to store the uploaded logo
-  const [showPopup, setShowPopup] = useState(false); // State to control the popup
+  const [logo, setLogo] = useState(server?.imageUrl || null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [error, setError] = useState(null);
 
   if (!server) {
     return <div>Loading</div>;
   }
 
-  // Handle logo upload
-  const handleLogoUpload = (event) => {
+  const handleLogoUpload = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setLogo(e.target.result); // Set the logo as a base64 string
-        setShowPopup(true); // Show the popup
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Invalid file type. Only PNG, JPG, and JPEG are allowed.");
+      return;
     }
+
+    // Validate file size (1MB)
+    const maxSizeInBytes = 1 * 1024 * 1024;
+    if (file.size > maxSizeInBytes) {
+      setError("File size exceeds the 1MB limit.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setLogo(e.target.result);
+      setShowPopup(true);
+    };
+    reader.readAsDataURL(file);
   };
 
-  // Handle popup confirmation
   const handleConfirmUpdate = async () => {
     try {
-      // Call an API to update the server logo in the database
-      const response = await fetch("/api/updateServerLogo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ serverId: server.id, logo }),
-      });
-      const data = await response.json();
+      const formData = new FormData();
+      const fileInput = document.querySelector('#logo-upload');
+      formData.append('file', fileInput.files[0]);
+
+      const data = await updateServerAvatar(server.id,formData);
 
       if (data.success) {
-        // Update the logo in the Zustand store
-        updateServerLogo(logo);
-        setShowPopup(false); // Close the popup
+        updateServerAvatar(data.img_url);
+        setShowPopup(false);
+        setError(null);
       } else {
-        console.error("Failed to update logo:", data.message);
+        setError(data.message || "Failed to update logo");
       }
-    } catch (error) {
-      console.error("Error updating logo:", error);
+    } catch (err) {
+      setError("Error updating logo");
+      console.error(err);
     }
   };
 
@@ -66,7 +79,7 @@ const Overview = () => {
       <div className="flex justify-center items-center w-28 h-28 py-8 bg-gray-50 rounded-full mx-auto cursor-pointer">
         <input
           type="file"
-          accept="image/*"
+          accept="image/png, image/jpeg, image/jpg"
           onChange={handleLogoUpload}
           className="hidden"
           id="logo-upload"
@@ -83,6 +96,7 @@ const Overview = () => {
           )}
         </label>
       </div>
+      {error && <p className="text-red-500 text-sm text-center mt-2">{error}</p>}
 
       {/* Popup for Confirmation */}
       {showPopup && (
@@ -110,7 +124,7 @@ const Overview = () => {
         </div>
       )}
 
-      {/* Server Name */}
+      {/* Rest of the existing UI remains unchanged */}
       <div className="mb-2">
         <h2 className="text-indigo-500 font-semibold">Server Name</h2>
         <input
@@ -121,7 +135,6 @@ const Overview = () => {
         />
       </div>
 
-      {/* Server Description */}
       <div className="mb-4">
         <h3 className="text-indigo-500 mt-4 font-semibold">Server Description</h3>
         <textarea
@@ -131,7 +144,6 @@ const Overview = () => {
         ></textarea>
       </div>
 
-      {/* System Messages Settings */}
       <div>
         <h2 className="font-semibold mb-2 text-indigo-500">System Messages Settings</h2>
         <div className="mb-4">

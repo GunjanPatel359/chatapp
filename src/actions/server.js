@@ -167,7 +167,7 @@ export const updateServerAvatar = async (serverId, formData) => {
             return { success: false, message: response.error }
         }
         console.log(response)
-        img_url = response.data.url;
+        let img_url = response.data.url;
         console.log("Image URL:", img_url);
         if (server.imageUrl) {
             await utapi.deleteFiles(server.imageUrl)

@@ -9,12 +9,8 @@ const members = [
     name: 'Chatverse bot',
     tag: 'Chatverse bot#4313',
     avatarUrl: 'https://i.pravatar.cc/150?img=1',
-    memberSince: '12 days ago',
-    joinedDiscord: '12 days ago',
-    joinMethod: 'Unknown',
     roles: ['Admin'],
     roleCount: 1,
-    signals: true,
     messages: false
   },
   {
@@ -22,12 +18,8 @@ const members = [
     name: 'BlueWillow',
     tag: 'BlueWillow#6557',
     avatarUrl: 'https://i.pravatar.cc/150?img=2',
-    memberSince: '1 year ago',
-    joinedDiscord: '2 years ago',
-    joinMethod: 'Unknown',
     roles: ['BlueWillow'],
     roleCount: 1,
-    signals: true,
     messages: false
   },
   {
@@ -35,12 +27,8 @@ const members = [
     name: 'SoundCloud',
     tag: 'SoundCloud#3508',
     avatarUrl: 'https://i.pravatar.cc/150?img=3',
-    memberSince: '1 year ago',
-    joinedDiscord: '3 years ago',
-    joinMethod: 'Unknown',
     roles: ['SoundCloud'],
     roleCount: 1,
-    signals: true,
     messages: false
   },
   {
@@ -48,12 +36,8 @@ const members = [
     name: 'ServerStats',
     tag: 'ServerStats#0197',
     avatarUrl: 'https://i.pravatar.cc/150?img=4',
-    memberSince: '1 year ago',
-    joinedDiscord: '6 years ago',
-    joinMethod: 'Unknown',
     roles: ['ServerStats'],
     roleCount: 1,
-    signals: true,
     messages: false
   },
   {
@@ -61,12 +45,8 @@ const members = [
     name: 'Birthday Bot',
     tag: 'Birthday Bot#5876',
     avatarUrl: 'https://i.pravatar.cc/150?img=5',
-    memberSince: '1 year ago',
-    joinedDiscord: '5 years ago',
-    joinMethod: 'Unknown',
     roles: ['Birthday Bot'],
     roleCount: 1,
-    signals: true,
     messages: false
   },
   {
@@ -74,12 +54,8 @@ const members = [
     name: 'gunjanpatel',
     tag: 'gunjanpatel',
     avatarUrl: 'https://i.pravatar.cc/150?img=6',
-    memberSince: '1 year ago',
-    joinedDiscord: '4 years ago',
-    joinMethod: 'Sever Discovery',
     roles: ['Admin', 'Developer'],
     roleCount: 2,
-    signals: true,
     messages: true
   }
 ];
@@ -110,7 +86,6 @@ const MemberRow = ({ member, isSelected, onSelect }) => {
     <tr className="border-b border-gray-100">
       <td className="py-4 pl-4">
         <input
-          type="checkbox"
           id={`select-${member.id}`}
           checked={isSelected}
           onChange={(e) => onSelect(member.id, e.target.checked)}
@@ -138,9 +113,6 @@ const MemberRow = ({ member, isSelected, onSelect }) => {
           </div>
         </div>
       </td>
-      <td className="py-4 text-sm text-gray-600">{member.memberSince}</td>
-      <td className="py-4 text-sm text-gray-600">{member.joinedDiscord}</td>
-      <td className="py-4 text-sm text-gray-600">{member.joinMethod}</td>
       <td className="py-4">
         <div className="flex items-center gap-1.5">
           {member.roles.map((role, idx) => (
@@ -160,10 +132,7 @@ const MemberRow = ({ member, isSelected, onSelect }) => {
       </td>
       <td className="py-4">
         <div className="flex items-center justify-end gap-1 pr-3">
-          <Bell
-            className={`h-4 w-4 ${member.signals ? 'text-green-500' : 'text-gray-400'
-              }`}
-          />
+
           <User
             className={`h-4 w-4 ${member.messages ? 'text-indigo-500' : 'text-gray-400'
               }`}
@@ -233,17 +202,8 @@ const ManageMembers = () => {
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [filteredMembers, setFilteredMembers] = useState(members);
   const [selectAll, setSelectAll] = useState(false);
-  const [sortBy, setSortBy] = useState('memberSince');
-  const [sortDirection, setSortDirection] = useState('desc');
-
-  const parseTimeAgo = (timeAgo) => {
-    const [value, unit] = timeAgo.split(' ');
-    const numValue = parseInt(value);
-    if (unit.includes('day')) return numValue;
-    if (unit.includes('month')) return numValue * 30;
-    if (unit.includes('year')) return numValue * 365;
-    return 0;
-  };
+  const [sortBy, setSortBy] = useState('name');
+  const [sortDirection, setSortDirection] = useState('asc');
 
   useEffect(() => {
     const filtered = members.filter(member =>
@@ -255,13 +215,8 @@ const ManageMembers = () => {
 
   const sortMembers = (members, key, direction) => {
     return [...members].sort((a, b) => {
-      let aValue = a[key];
-      let bValue = b[key];
-
-      if (key === 'memberSince' || key === 'joinedDiscord') {
-        aValue = parseTimeAgo(aValue);
-        bValue = parseTimeAgo(bValue);
-      }
+      const aValue = a[key];
+      const bValue = b[key];
 
       if (direction === 'asc') {
         return aValue > bValue ? 1 : -1;
@@ -352,7 +307,6 @@ const ManageMembers = () => {
                 <tr>
                   <th className="px-4 py-3 text-left">
                     <input
-                      type="checkbox"
                       checked={selectAll}
                       onChange={(e) => handleSelectAll(e.target.checked)}
                       className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
@@ -366,25 +320,7 @@ const ManageMembers = () => {
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   />
-                  <TableHeader
-                    label="Member Since"
-                    sortable
-                    sortKey="memberSince"
-                    currentSort={sortBy}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  />
-                  <TableHeader
-                    label="Joined Discord"
-                    sortable
-                    sortKey="joinedDiscord"
-                    currentSort={sortBy}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  />
-                  <TableHeader label="Join Method" />
                   <TableHeader label="Roles" />
-                  <TableHeader label="Signals" />
                   <th className="px-4 py-3 text-left"></th>
                 </tr>
               </thead>
@@ -400,7 +336,7 @@ const ManageMembers = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
                       No members found
                     </td>
                   </tr>

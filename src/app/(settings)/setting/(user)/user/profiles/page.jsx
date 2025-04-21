@@ -186,7 +186,6 @@ const ProfilePage = () => {
                     className="w-full p-2 border rounded"
                     value={pronouns}
                     onChange={(e) => setPronouns(e.target.value)}
-                    placeholder="e.g. he/him, she/her, they/them"
                 />
 
                 <label className="block mt-4 mb-2 font-medium">
