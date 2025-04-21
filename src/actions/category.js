@@ -22,7 +22,7 @@ export const basicCategoryDetails = async (categoryId) => {
                 name: true
             }
         })
-        if (!channel) {
+        if (!category) {
             return { success: false, message: "Channel not found" };
         }
         return { success: true, category }

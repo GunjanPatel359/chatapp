@@ -19,7 +19,7 @@ const ServerSideBar = () => {
     const serverId = useMemo(() => params.serverId, [params?.serverId]);
     const channelId = useMemo(() => params.channelId, [params?.channelId]);
 
-    console.log(serverId,channelId,server)
+    console.log(serverId, channelId, server)
     console.log(serverProfile);
 
     useEffect(() => {
@@ -111,7 +111,23 @@ const ServerSideBar = () => {
                     </div>
                 </>
             ) : (
-                <div>Loading</div>
+                <div className="relative w-full h-full bg-indigo-200 overflow-hidden">
+                    <div className="absolute left-0 w-full h-full bg-gradient-to-b from-transparent via-white/30 to-transparent animate-slide-custom" />
+                    <style jsx>{`
+        @keyframes slide-down {
+          0% {
+            top: -100%;
+          }
+          100% {
+            top: 100%;
+          }
+        }
+        .animate-slide-custom {
+          animation: slide-down 2s infinite;
+          top: -100%;
+        }
+      `}</style>
+                </div>
             )}
         </div>
     );
@@ -125,8 +141,8 @@ const SidebarItem = ({ channel, channelId, serverId, isSelected, isVisible }) =>
             className={`transition-all duration-500 ease-in-out ${!isSelected && isVisible ? "opacity-100 max-h-screen" : "opacity-0 max-h-0"} ${isSelected && "opacity-100 max-h-screen"}`}
         >
             <div className={`flex items-center rounded-md justify-between cursor-pointer px-2 py-[5px] mb-[2px] ${channelId === channel.id ? "bg-gray-300" : "hover:bg-gray-200"} group`}>
-                <div className="flex items-center space-x-1" 
-                onClick={() => router.push(`/server/${serverId}/channel/${channel.id}`)}>
+                <div className="flex items-center space-x-1"
+                    onClick={() => router.push(`/server/${serverId}/channel/${channel.id}`)}>
                     {channel.type === "TEXT" && <FaHashtag />}
                     {channel.type === "VOICE" && <HiSpeakerWave />}
                     <span className="text-sm">{channel.name}</span>
@@ -160,7 +176,7 @@ const SidebarSection = ({ category, channelId, serverId }) => {
                 </span>
                 <span className="flex">
                     <FaPlus className="my-auto mr-0 transition-all duration-300 ease-out group-hover:mr-[3px]" size={15} />
-                    <IoSettingsSharp className="my-auto hover:rotate-90 transition-all duration-500 group-hover:opacity-100 max-w-0 group-hover:max-w-8" size={16} onClick={() => router.push(`/setting/category/${category.id}`)}  />
+                    <IoSettingsSharp className="my-auto hover:rotate-90 transition-all duration-500 group-hover:opacity-100 max-w-0 group-hover:max-w-8" size={16} onClick={() => router.push(`/setting/category/${category.id}`)} />
                 </span>
             </div>
 

@@ -11,23 +11,27 @@ model User {
   id             String          @id @default(cuid()) @map("_id")
   email          String          @unique
   username       String          @unique
+  displayName    String?
+  description    String?
+  pronoun        String?
   avatarUrl      String?
+  bannerUrl      String?
   serverProfiles ServerProfile[] // Servers the user has joined
   ownedServers   Server[] // Servers the user owns
 
   Dms String[]
 
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Server {
-  id             String          @id @default(cuid()) @map("_id")
-  name           String
-  description    String
-  imageUrl       String?
-  ownerId        String
-  owner          User            @relation(fields: [ownerId], references: [id])
+  id          String  @id @default(cuid()) @map("_id")
+  name        String
+  description String
+  imageUrl    String?
+  ownerId     String
+  owner       User    @relation(fields: [ownerId], references: [id])
 
   roles          ServerRole[] // Global roles for the server
   categories     Category[]      @relation("serverCategory")
@@ -36,15 +40,40 @@ model Server {
   defaultServerRoleId String?
   defaultServerRole   DefaultServerRole?
 
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  inviteOn  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Invites Invites[]
 }
+
+model Invites {
+  id              String         @id @default(cuid()) @map("_id")
+  server          Server        @relation(fields: [serverId], references: [id])
+  serverId        String
+  serverProfileId String
+  serverProfile   ServerProfile  @relation(fields: [serverProfileId], references: [id])
+  inviteOn        Boolean        @default(true)
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // working
+  inviteString    String
+  expiresAt       DateTime       // When the invite link expires
+  currentCount    Int            @default(0) // How many times it's been used
+  limitMember     Int            // Maximum allowed uses
+}
+
+
 
 model ServerProfile {
   id          String  @id @default(cuid()) @map("_id")
   name        String?
   description String?
   imageUrl    String?
+  bannerUrl   String?
+  pronoun     String?
 
   roles    UserRoleAssignment[] // Roles assigned to this user for the server
   // categoryRoles     UserCategoryRole[]   // User-specific roles for categories
@@ -56,13 +85,14 @@ model ServerProfile {
 
   isDeleted Boolean @default(false)
 
-  // Ensure one profile per user per server
-  @@unique([userId, serverId])
-
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   messages ChannelMessage[] @ignore
+
+  // Ensure one profile per user per server
+  @@unique([userId, serverId])
+  Invites Invites[]
 }
 
 model DefaultServerRole {
@@ -102,7 +132,7 @@ model DefaultCategoryRole {
   viewChannel PermissionType @default(ALLOW)
 
   //member permission
-  createInvite PermissionType @default(NEUTRAL)
+  // createInvite PermissionType @default(NEUTRAL)
   // changeNickname Boolean @default(true)
   // manageNickname Boolean @default(false)
 
@@ -121,13 +151,13 @@ model DefaultChannelRole {
   id   String @id @default(cuid()) @map("_id")
   name String @default("everyone")
 
-  channelId   String  @unique
-  channel     Channel @relation(fields: [channelId], references: [id])
+  channelId   String         @unique
+  channel     Channel        @relation(fields: [channelId], references: [id])
   // general permission
   viewChannel PermissionType @default(ALLOW)
 
   //member permission
-  createInvite PermissionType @default(NEUTRAL)
+  // createInvite PermissionType @default(NEUTRAL)
   // changeNickname Boolean @default(true)
   // manageNickname Boolean @default(false)
 
@@ -195,8 +225,8 @@ model Category {
   defaultCategoryRoleId String?
   defaultCategoryRole   DefaultCategoryRole?
 
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum PermissionType {
@@ -218,7 +248,7 @@ model CategoryRole {
   manageRoles    PermissionType @default(NEUTRAL)
 
   //member permission
-  createInvite PermissionType @default(NEUTRAL)
+  // createInvite PermissionType @default(NEUTRAL)
 
   // text channel permission
   sendMessage       PermissionType @default(NEUTRAL)
@@ -240,11 +270,11 @@ enum ChannelType {
 }
 
 model Channel {
-  order        Int
-  id           String        @id @default(cuid()) @map("_id")
-  name         String
-  description  String
-  type         ChannelType
+  order       Int
+  id          String      @id @default(cuid()) @map("_id")
+  name        String
+  description String
+  type        ChannelType
 
   categoryId   String
   category     Category      @relation("categoryChannels", fields: [categoryId], references: [id])
@@ -253,8 +283,8 @@ model Channel {
   defaultChannelRoleId String?
   defaultChannelRole   DefaultChannelRole?
 
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ChannelRole {
@@ -269,7 +299,7 @@ model ChannelRole {
   manageRoles PermissionType @default(NEUTRAL)
 
   // member permission
-  createInvite PermissionType @default(NEUTRAL)
+  // createInvite PermissionType @default(NEUTRAL)
 
   // text channel permission
   sendMessage       PermissionType @default(NEUTRAL)
@@ -294,7 +324,7 @@ model UserRoleAssignment {
 }
 
 model ChannelMessage {
-  id              String @id @default(cuid()) @map("_id")
+  id              String        @id @default(cuid()) @map("_id")
   channelId       String
   serverProfileId String
   serverProfile   ServerProfile @relation(fields: [serverProfileId], references: [id])
@@ -311,7 +341,6 @@ model ChannelMessage {
 
   @@index([channelId])
 }
-
 
 model DirectMessage {
   id         String @id @default(cuid()) @map("_id")
