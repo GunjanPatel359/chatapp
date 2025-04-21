@@ -51,7 +51,7 @@ const HomeSideBar = () => {
   },[])
 
   return (
-    <div className="w-[300px] h-screen bg-gray-50 text-indigo-500 flex flex-col pt-2">
+    <div className="w-[300px] h-screen bg-gray-50 text-indigo-500 flex flex-col pt-2 border-r-2 border-indigo-50">
       <div className="overflow-y-scroll scrollbar-none">
         {/* Navigation */}
         <div className="flex flex-col space-y-1 px-4">

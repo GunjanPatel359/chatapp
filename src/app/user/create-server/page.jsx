@@ -1,5 +1,6 @@
 "use client";
 
+
 import React, { useRef } from "react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -22,9 +23,10 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { createServer } from "@/actions/server";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const CreateServerPage = () => {
-    const router=useRouter()
+    const router = useRouter()
     const { toast } = useToast()
     const fileInputRef = useRef(null);
     const [imageAvatar, setImageAvatar] = useState("")
@@ -39,9 +41,9 @@ const CreateServerPage = () => {
         // Validate file type
         if (!allowedTypes.includes(file.type)) {
             toast({
-                title:"Invalid file type",
-                description:"Please upload a PNG, JPG, or JPEG file.",
-                variant:"destructive"
+                title: "Invalid file type",
+                description: "Please upload a PNG, JPG, or JPEG file.",
+                variant: "destructive"
             });
             return;
         }
@@ -49,9 +51,9 @@ const CreateServerPage = () => {
         // Validate file size
         if (file.size > maxSize) {
             toast({
-                title:"Invalid file size",
-                description:"File size exceeds 1MB. Please choose a smaller file.",
-                variant:"destructive"
+                title: "Invalid file size",
+                description: "File size exceeds 1MB. Please choose a smaller file.",
+                variant: "destructive"
             });
             return;
         }
@@ -186,7 +188,7 @@ const CreateServerPage = () => {
             })
         }
         const imagedata = new FormData();
-        if(imageAvatar){
+        if (imageAvatar) {
             imagedata.append("file", imageAvatar);
         }
         try {
@@ -219,11 +221,22 @@ const CreateServerPage = () => {
     return (
         <div className="min-h-screen bg-white">
 
-            <div className="w-full h-20 bg-red-500">
-                <h1>
-                    header (logo with name)
-                </h1>
-            </div>
+            <header className="w-full h-20 bg-white border-b border-gray-200 flex items-center px-6">
+                <div className="flex items-center space-x-3">
+                    {/* Logo */}
+                    <Image
+                        src="/chatverse.svg"
+                        alt="Chatverse Logo"
+                        width={40}
+                        height={40}
+                        className="block"
+                    />
+                    {/* App Name */}
+                    <h1 className="text-xl font-semibold text-indigo-500 cursor-pointer" onClick={()=>router.push("/home")}>
+                        Chatverse
+                    </h1>
+                </div>
+            </header>
 
             <div className="flex">
                 {/* Server Structure Preview */}
@@ -495,7 +508,7 @@ const ChannelManager = ({
                         <SortableContext
                             items={category.channels.map(
                                 (channel) => `${category.id}:${channel.id}`
-                            )||[]}
+                            ) || []}
                             strategy={verticalListSortingStrategy}
                         >
                             <div className="pl-2">
