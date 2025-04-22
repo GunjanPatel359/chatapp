@@ -66,7 +66,7 @@ const HomeSideBar = () => {
         {/* Direct Messages */}
         <div className="flex-1 scrollbar-none">
           <div className="flex justify-between px-4 mb-1">
-            <h3 className=" text-sm my-auto font-semibold text-indigo-600 justify-center">
+            <h3 className="text-sm my-auto font-semibold text-indigo-600 justify-center">
               DIRECT MESSAGES
             </h3>
             <span className="my-auto cursor-pointer">
