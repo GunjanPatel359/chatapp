@@ -85,18 +85,30 @@ const HomeSideBar = () => {
           </div>
         </div>
       </div>
+      
       {/* Bottom User Info */}
       <div className="p-1 space-x-2 border-t-2 border-indigo-200 shadow shadow-gray-100">
         <div className="hover:bg-gray-200 flex items-center p-2 rounded cursor-pointer">
-          <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
-            G
-          </div>
+          {user?.imageUrl ? (
+            // ✅ If user has image, show image
+            <img 
+              src={user.imageUrl}
+              alt="User Avatar"
+              className="w-8 h-8 rounded-full object-cover"
+            />
+          ) : (
+            // ✅ If no image, show first character
+            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
+              {user?.username ? user.username.charAt(0).toUpperCase() : 'U'}
+            </div>
+          )}
+          
           <div 
             ref={userNameRef}
-            className="flex-1 ml-2 cursor-pointer" 
+            className="flex-1 ml-2 cursor-pointer"
             onClick={toggleProfileCard}
           >
-            <h3 className="text-sm font-bold text-indigo-500">gunjanpatel</h3>
+            <h3 className="text-sm font-bold text-indigo-500">{user?.username || "Unknown User"}</h3>
             <div className="flex items-center text-xs text-gray-400">
               <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>
               Working
@@ -109,6 +121,7 @@ const HomeSideBar = () => {
           </div>
         </div>
       </div>
+
       
       <ProfileCard 
       profile={user}

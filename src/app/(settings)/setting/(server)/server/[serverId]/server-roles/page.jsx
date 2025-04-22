@@ -275,9 +275,9 @@ const SortableRow = ({ id, roleName, roleCount }) => {
               </div>
             )}
 
-            {/* Permissions Section */}
+            {/* Scrollable Permissions Section */}
             {activeSection === "permissions" && (
-              <div className="mb-4">
+              <div className="mb-4 max-h-64 overflow-y-auto pr-1">
                 <label className="block text-sm font-medium text-gray-700">Permissions</label>
                 <div className="mt-2 space-y-4">
                   {/* View Channels Permission */}
@@ -289,8 +289,9 @@ const SortableRow = ({ id, roleName, roleCount }) => {
                       </p>
                     </div>
                     <button
-                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${permissions.viewChannels ? "bg-indigo-500" : "bg-gray-300"
-                        }`}
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.viewChannels ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
                       onClick={() =>
                         setPermissions((prev) => ({
                           ...prev,
@@ -299,8 +300,9 @@ const SortableRow = ({ id, roleName, roleCount }) => {
                       }
                     >
                       <div
-                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${permissions.viewChannels ? "translate-x-4" : "translate-x-0"
-                          }`}
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.viewChannels ? "translate-x-4" : "translate-x-0"
+                        }`}
                       />
                     </button>
                   </div>
@@ -314,8 +316,9 @@ const SortableRow = ({ id, roleName, roleCount }) => {
                       </p>
                     </div>
                     <button
-                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${permissions.manageChannels ? "bg-indigo-500" : "bg-gray-300"
-                        }`}
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.manageChannels ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
                       onClick={() =>
                         setPermissions((prev) => ({
                           ...prev,
@@ -324,8 +327,9 @@ const SortableRow = ({ id, roleName, roleCount }) => {
                       }
                     >
                       <div
-                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${permissions.manageChannels ? "translate-x-4" : "translate-x-0"
-                          }`}
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.manageChannels ? "translate-x-4" : "translate-x-0"
+                        }`}
                       />
                     </button>
                   </div>
@@ -339,8 +343,9 @@ const SortableRow = ({ id, roleName, roleCount }) => {
                       </p>
                     </div>
                     <button
-                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${permissions.manageRoles ? "bg-indigo-500" : "bg-gray-300"
-                        }`}
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.manageRoles ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
                       onClick={() =>
                         setPermissions((prev) => ({
                           ...prev,
@@ -349,8 +354,407 @@ const SortableRow = ({ id, roleName, roleCount }) => {
                       }
                     >
                       <div
-                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${permissions.manageRoles ? "translate-x-4" : "translate-x-0"
-                          }`}
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.manageRoles ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* MEMBER PERMISSIONS */}
+                  <div className="pt-2">
+                    <h3 className="text-xs font-semibold text-gray-500 tracking-wider">Member Permissions</h3>
+                  </div>
+                  
+                  {/* Create Invite */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Create Invite</p>
+                      <p className="text-xs text-gray-500">
+                        Allows members to create invites for channels.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.createInvite ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          createInvite: !prev.createInvite,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.createInvite ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Kick Members */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Kick Members</p>
+                      <p className="text-xs text-gray-500">
+                        Allows kicking members from the server.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.kickMembers ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          kickMembers: !prev.kickMembers,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.kickMembers ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Ban Members */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Ban Members</p>
+                      <p className="text-xs text-gray-500">
+                        Allows banning members from the server.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.banMembers ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          banMembers: !prev.banMembers,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.banMembers ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Timeout Members */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Timeout Members</p>
+                      <p className="text-xs text-gray-500">
+                        Allows timing out members temporarily.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.timeOutMembers ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          timeOutMembers: !prev.timeOutMembers,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.timeOutMembers ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* TEXT CHANNEL PERMISSIONS */}
+                  <div className="pt-2">
+                    <h3 className="text-xs font-semibold text-gray-500  tracking-wider">Text Channel Permissions</h3>
+                  </div>
+                  
+                  {/* Send Messages */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Send Messages</p>
+                      <p className="text-xs text-gray-500">
+                        Allows sending messages in text channels.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.sendMessage ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          sendMessage: !prev.sendMessage,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.sendMessage ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Attach Files */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Attach Files</p>
+                      <p className="text-xs text-gray-500">
+                        Allows uploading and attaching files in messages.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.attachFiles ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          attachFiles: !prev.attachFiles,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.attachFiles ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Manage Messages */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Manage Messages</p>
+                      <p className="text-xs text-gray-500">
+                        Allows deleting and managing other users' messages.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.manageMessage ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          manageMessage: !prev.manageMessage,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.manageMessage ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* See Message History */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">See Message History</p>
+                      <p className="text-xs text-gray-500">
+                        Allows viewing previous messages before joining.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.seemessageHistory ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          seemessageHistory: !prev.seemessageHistory,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.seemessageHistory ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* VOICE CHANNEL PERMISSIONS */}
+                  <div className="pt-2">
+                    <h3 className="text-xs font-semibold text-gray-500 tracking-wider">Voice Channel Permissions</h3>
+                  </div>
+                  
+                  {/* Connect */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Connect</p>
+                      <p className="text-xs text-gray-500">
+                        Allows connecting to a voice channel.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.connect ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          connect: !prev.connect,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.connect ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Speak */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Speak</p>
+                      <p className="text-xs text-gray-500">
+                        Allows speaking in a voice channel.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.speak ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          speak: !prev.speak,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.speak ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Video */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Video</p>
+                      <p className="text-xs text-gray-500">
+                        Allows sharing video in a voice channel.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.video ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          video: !prev.video,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.video ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Mute Members */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Mute Members</p>
+                      <p className="text-xs text-gray-500">
+                        Allows muting members in a voice channel.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.muteMembers ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          muteMembers: !prev.muteMembers,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.muteMembers ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Deafen Members */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Deafen Members</p>
+                      <p className="text-xs text-gray-500">
+                        Allows deafening members in a voice channel.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.deafenMembers ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          deafenMembers: !prev.deafenMembers,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.deafenMembers ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* ADMIN PERMISSION */}
+                  <div className="pt-2">
+                    <h3 className="text-xs font-semibold text-gray-500 tracking-wider">Administrator</h3>
+                  </div>
+                  
+                  {/* Admin Permission */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Admin Permission</p>
+                      <p className="text-xs text-gray-500">
+                        Grants all permissions and bypasses channel-specific overrides.
+                      </p>
+                    </div>
+                    <button
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors ${
+                        permissions.adminPermission ? "bg-indigo-500" : "bg-gray-300"
+                      }`}
+                      onClick={() =>
+                        setPermissions((prev) => ({
+                          ...prev,
+                          adminPermission: !prev.adminPermission,
+                        }))
+                      }
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          permissions.adminPermission ? "translate-x-4" : "translate-x-0"
+                        }`}
                       />
                     </button>
                   </div>
