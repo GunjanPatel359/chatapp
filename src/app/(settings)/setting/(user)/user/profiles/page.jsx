@@ -473,7 +473,7 @@ const ServerPage = () => {
                     className="w-full p-2 border rounded"
                     value={serverPronouns}
                     onChange={(e) => setServerPronouns(e.target.value)}
-                    placeholder="e.g. they/them"
+                    placeholder=""
                 />
 
                 <label className="block mt-4 mb-2 font-medium">

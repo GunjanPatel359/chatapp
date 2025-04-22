@@ -96,7 +96,7 @@ const HomeSideBar = () => {
             className="flex-1 ml-2 cursor-pointer" 
             onClick={toggleProfileCard}
           >
-            <h3 className="text-sm font-bold text-indigo-500">gunjanpatel</h3>
+            <h3 className="text-sm font-bold text-indigo-500">{user?.username}</h3>
             <div className="flex items-center text-xs text-gray-400">
               <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>
               Working
