@@ -289,3 +289,56 @@ export const updateServerInfo = async (serverId, name, description) => {
         throw new Error(error.message || "Error occurred updateServerInfo")
     }
 }
+
+export const serverJoinedMembersList=async(serverId)=>{
+    try {
+        if (!serverId) {
+            return { success: false, message: "serverId is required" }
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            return { success: false, message: "User is not authenticated" }
+        } 
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: {
+                userId: user.id,
+                serverId: serverId,
+                isDeleted: false
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                },
+                server:true
+            }
+        })
+        if (!userServerProfile) {
+            return { success: false, message: "User is not a member of the server" }
+        }
+        if(userServerProfile.server.ownerId==user.id || userServerProfile.roles.some((role)=>role.role.adminPermission||role.role.manageRoles)){
+            const members=await prisma.serverProfile.findMany({
+                where: { serverId: serverId, isDeleted: false }, 
+                include: { 
+                    user: true,
+                    roles:{
+                        include:{
+                            role:true,
+                        },
+                        orderBy:{
+                            role:{
+                                order:"asc"
+                            }
+                        }
+                    }
+                }
+            })
+            return { success: true, members: members };
+        }
+        return { success: false, message: "You do not have permission to view the members list" }
+    } catch (error) {
+        console.error(error);
+        throw new Error(error.message || "Error occurred serverJoinedMembersList")
+    }
+}
