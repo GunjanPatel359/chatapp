@@ -649,6 +649,7 @@ export const getChannelRolesData = async (channelId) => {
 
 export const updateDefaultServerRole = async (defaultRoleId, updates) => {
     try {
+        console.log(defaultRoleId,updates)
         if (!defaultRoleId || !updates) {
             return { success: false, message: "Default role id is required" }
         }
@@ -1001,7 +1002,7 @@ export const getServerRoles = async (serverId) => {
         // Fetch server details including roles
         const server = await prisma.server.findUnique({
             where: { id: serverId },
-            include: { roles: { orderBy: { order: "asc" } } },
+            include: { roles: { orderBy: { order: "asc" } },defaultServerRole:true },
         });
 
         if (!server) {
@@ -1010,7 +1011,7 @@ export const getServerRoles = async (serverId) => {
 
         // If the user is the server owner, return all roles
         if (server.ownerId == user.id) {
-            return { success: true, roles: server.roles };
+            return { success: true, roles: server.roles,defaultServerRole:server.defaultServerRole };
         }
 
         // Validate user permissions
@@ -1023,7 +1024,7 @@ export const getServerRoles = async (serverId) => {
         }
 
         // Return server roles
-        return { success: true, roles: server.roles };
+        return { success: true, roles: server.roles,defaultServerRole:server.defaultServerRole };
     } catch (error) {
         console.error("getServerRoles Error:", error.message);
         throw new Error("Failed to retrieve server roles. Please try again later.");
@@ -1112,6 +1113,7 @@ export const createServerRole = async (serverId, role) => {
 //testing needed
 export const editServerRole = async (serverId, roleId, role) => {
     try {
+        console.log(role)
         // Validate inputs
         if (!serverId || !roleId || !role?.name) {
             return { success: false, message: "Server ID, role ID, and role details are required." };
@@ -2202,6 +2204,7 @@ export const removeChannelRole = async (channelId, channelRoleId) => {
 export const reorderServerRole = async (serverId, serverRoleOrder) => {
     try {
         // Check if serverId and serverRoleOrder are valid
+        console.log(serverRoleOrder)
         if (!serverId || serverRoleOrder.length === 0 || !Array.isArray(serverRoleOrder)) {
             return { success: false, message: "serverId or serverRoleOrder is missing or invalid" };
         }
@@ -2304,3 +2307,141 @@ export const reorderServerRole = async (serverId, serverRoleOrder) => {
         return { success: false, message: error.message || "Something went wrong" };
     }
 };
+
+
+export const getServerRoleInfo=async(serverId,roleId)=>{
+    try {
+        if(!serverId || !roleId){
+            return {success:false,message:"serverId and roleId is required"}
+        }
+        const user=await isAuthUser();
+        if(!user){
+            return {success:false,message:"please login to continue"}
+        }
+
+        const server = await prisma.server.findFirst({
+            where: {
+              id: serverId
+            },
+            include: {
+              roles: {
+                where: {
+                  id: roleId
+                }
+              }
+            }
+          });          
+          if (!server || server.roles.length === 0) {
+            return { success: false, message: "server not found or role not found" };
+          }
+          
+        const userServerProfile=await prisma.serverProfile.findFirst({
+            where:{
+                serverId:serverId,
+                userId:user.id,
+                isDeleted:false
+            },
+            include:{
+                roles:{
+                    include:{
+                        role:true
+                    },
+                    orderBy:{
+                        role:{
+                            order:"asc"
+                        }
+                    }
+                }
+            }
+        })
+        if(!userServerProfile){
+            return {success:false,message:"user server profile not found"}
+        }
+        if(user.id==server.ownerId || userServerProfile.roles.some((role)=>role.role.adminPermission || role.role.manageRoles)){
+            const role=await prisma.serverRole.findFirst({
+                where:{
+                    id:roleId,
+                },
+                include:{
+                    UserRoleAssignment:{
+                        include:{
+                            serverProfile:{
+                                include:{
+                                    user:true
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+            return {success:true,role}
+        }
+        return {success:false,message:"you do not have permission to view this role"}
+
+    } catch (error) {
+        console.error("Error in getServerRoleInfo:", error);
+        return { success: false, message: error.message || "Something went wrong" };
+    }
+}
+
+export const getDefaultServerRoleInfo=async(serverId,defaultRoleId)=>{
+    try {
+        if(!serverId || !defaultRoleId){
+            return {success:false,message:"serverId and roleId is required"}
+        }
+        const user=await isAuthUser();
+        if(!user){
+            return {success:false,message:"please login to continue"}
+        }
+
+        const defaultServerRoleCheck= await prisma.defaultServerRole.findFirst({
+            where:{
+                id:defaultRoleId,
+                serverId:serverId
+            }
+        })
+
+        if(!defaultServerRoleCheck){
+            return {success:false,message:"server role not found"}
+        }
+
+        const server = await prisma.server.findFirst({
+            where: {
+              id: serverId
+            }
+          });          
+          if (!server) {
+            return { success: false, message: "server not found or role not found" };
+          }
+          
+        const userServerProfile=await prisma.serverProfile.findFirst({
+            where:{
+                serverId:serverId,
+                userId:user.id,
+                isDeleted:false
+            },
+            include:{
+                roles:{
+                    include:{
+                        role:true
+                    },
+                    orderBy:{
+                        role:{
+                            order:"asc"
+                        }
+                    }
+                }
+            }
+        })
+        if(!userServerProfile){
+            return {success:false,message:"user server profile not found"}
+        }
+        if(user.id==server.ownerId || userServerProfile.roles.some((role)=>role.role.adminPermission || role.role.manageRoles)){
+            return {success:true,role:defaultServerRoleCheck}
+        }
+        return {success:false,message:"you do not have permission to view this role"}
+    } catch (error) {
+        console.error("Error in getDefaultServerRoleInfo:", error);
+        return { success: false, message: error.message || "Something went wrong" };
+    }
+}

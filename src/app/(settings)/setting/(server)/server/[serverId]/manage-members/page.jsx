@@ -2,65 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { MoreVertical, UserPlus, User, Shield, Bell, Search, ArrowDown, ArrowUp } from "lucide-react";
+import { serverJoinedMembersList } from '@/actions/server';
+import { useParams } from 'next/navigation';
 
-const members = [
-  {
-    id: '1',
-    name: 'Chatverse bot',
-    tag: 'Chatverse bot#4313',
-    avatarUrl: 'https://i.pravatar.cc/150?img=1',
-    roles: ['Admin'],
-    roleCount: 1,
-    messages: false
-  },
-  {
-    id: '2',
-    name: 'BlueWillow',
-    tag: 'BlueWillow#6557',
-    avatarUrl: 'https://i.pravatar.cc/150?img=2',
-    roles: ['BlueWillow'],
-    roleCount: 1,
-    messages: false
-  },
-  {
-    id: '3',
-    name: 'SoundCloud',
-    tag: 'SoundCloud#3508',
-    avatarUrl: 'https://i.pravatar.cc/150?img=3',
-    roles: ['SoundCloud'],
-    roleCount: 1,
-    messages: false
-  },
-  {
-    id: '4',
-    name: 'ServerStats',
-    tag: 'ServerStats#0197',
-    avatarUrl: 'https://i.pravatar.cc/150?img=4',
-    roles: ['ServerStats'],
-    roleCount: 1,
-    messages: false
-  },
-  {
-    id: '5',
-    name: 'Birthday Bot',
-    tag: 'Birthday Bot#5876',
-    avatarUrl: 'https://i.pravatar.cc/150?img=5',
-    roles: ['Birthday Bot'],
-    roleCount: 1,
-    messages: false
-  },
-  {
-    id: '6',
-    name: 'gunjanpatel',
-    tag: 'gunjanpatel',
-    avatarUrl: 'https://i.pravatar.cc/150?img=6',
-    roles: ['Admin', 'Developer'],
-    roleCount: 2,
-    messages: true
-  }
-];
-
-const MemberRow = ({ member, isSelected, onSelect }) => {
+// MemberRow Component
+const MemberRow = ({ member }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const getInitials = (name) => {
@@ -84,22 +30,14 @@ const MemberRow = ({ member, isSelected, onSelect }) => {
 
   return (
     <tr className="border-b border-gray-100">
-      <td className="py-4 pl-4">
-        <input
-          id={`select-${member.id}`}
-          checked={isSelected}
-          onChange={(e) => onSelect(member.id, e.target.checked)}
-          className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-        />
-      </td>
       <td className="py-4 pl-2">
         <div className="flex items-center gap-3">
           <div className="relative h-9 w-9 rounded-full ring-2 ring-white/10">
-            {member.avatarUrl ? (
+            {member.imageUrl ? (
               <img
-                src={member.avatarUrl}
+                src={member.imageUrl}
                 alt={member.name}
-                className="h-full w-full rounded-full object-cover"
+                className="h-full w-full rounded-full object-cover mx-2"
               />
             ) : (
               <div className="h-full w-full rounded-full bg-gray-300 text-gray-700 flex items-center justify-center text-sm">
@@ -109,7 +47,7 @@ const MemberRow = ({ member, isSelected, onSelect }) => {
           </div>
           <div className="flex flex-col">
             <span className="font-medium text-sm text-gray-900">{member.name}</span>
-            <span className="text-xs text-gray-500">{member.tag}</span>
+            <span className="text-xs text-gray-500"> @{member.user.username}</span>
           </div>
         </div>
       </td>
@@ -132,11 +70,7 @@ const MemberRow = ({ member, isSelected, onSelect }) => {
       </td>
       <td className="py-4">
         <div className="flex items-center justify-end gap-1 pr-3">
-
-          <User
-            className={`h-4 w-4 ${member.messages ? 'text-indigo-500' : 'text-gray-400'
-              }`}
-          />
+          <User className={`h-4 w-4 ${member.messages ? 'text-indigo-500' : 'text-gray-400'}`} />
         </div>
       </td>
       <td className="py-4 pr-4">
@@ -154,13 +88,13 @@ const MemberRow = ({ member, isSelected, onSelect }) => {
                 className="flex items-center gap-2 px-4 py-2 text-gray-900 hover:bg-gray-100 w-full text-left"
               >
                 <UserPlus className="h-4 w-4" />
-                <span>Add Role</span>
+                <span className='whitespace-nowrap'>Add Role</span>
               </button>
               <button
                 onClick={handleKickMember}
                 className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-gray-100 w-full text-left"
               >
-                <span>Kick Member</span>
+                <span className='whitespace-nowrap'>Kick Member</span>
               </button>
             </div>
           )}
@@ -170,6 +104,7 @@ const MemberRow = ({ member, isSelected, onSelect }) => {
   );
 };
 
+// TableHeader Component
 const TableHeader = ({ label, sortable, sortKey, currentSort, sortDirection, onSort }) => {
   const handleClick = () => {
     if (sortable && sortKey && onSort) {
@@ -180,49 +115,56 @@ const TableHeader = ({ label, sortable, sortKey, currentSort, sortDirection, onS
   return (
     <th className="px-4 py-3 text-left">
       <div
-        className={`flex items-center gap-1 ${sortable ? 'cursor-pointer hover:text-gray-900' : ''
-          }`}
+        className={`flex items-center gap-1 ${sortable ? 'cursor-pointer hover:text-gray-900' : ''}`}
         onClick={handleClick}
       >
         <span className="text-sm text-gray-600">{label}</span>
         {sortable && sortKey === currentSort && (
-          sortDirection === 'asc' ? (
-            <ArrowUp className="h-4 w-4 text-gray-600" />
-          ) : (
-            <ArrowDown className="h-4 w-4 text-gray-600" />
-          )
+          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4 text-gray-600" /> : <ArrowDown className="h-4 w-4 text-gray-600" />
         )}
       </div>
     </th>
   );
 };
 
+// ManageMembers Component
 const ManageMembers = () => {
+  const params = useParams();
+  const [members, setMembers] = useState([]);
+  const [filteredMembers, setFilteredMembers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedMembers, setSelectedMembers] = useState([]);
-  const [filteredMembers, setFilteredMembers] = useState(members);
-  const [selectAll, setSelectAll] = useState(false);
   const [sortBy, setSortBy] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
+
+  // Fetch members from API
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const res = await serverJoinedMembersList(params.serverId); // replace with your endpoint
+        console.log(res);
+        setMembers(res.members);
+        setFilteredMembers(sortMembers(res.members, sortBy, sortDirection)); // Sorting immediately after fetching
+      } catch (error) {
+        console.error("Failed to fetch members:", error);
+      }
+    };
+
+    fetchMembers();
+  }, [params.serverId, sortBy, sortDirection]);
 
   useEffect(() => {
     const filtered = members.filter(member =>
       member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.tag.toLowerCase().includes(searchQuery.toLowerCase())
+      member.tag?.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredMembers(sortMembers(filtered, sortBy, sortDirection));
-  }, [searchQuery, sortBy, sortDirection]);
+  }, [searchQuery, members, sortBy, sortDirection]);
 
-  const sortMembers = (members, key, direction) => {
-    return [...members].sort((a, b) => {
-      const aValue = a[key];
-      const bValue = b[key];
-
-      if (direction === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
+  const sortMembers = (data, key, direction) => {
+    return [...data].sort((a, b) => {
+      const aValue = a[key]?.toLowerCase?.() || '';
+      const bValue = b[key]?.toLowerCase?.() || '';
+      return direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
     });
   };
 
@@ -230,46 +172,13 @@ const ManageMembers = () => {
     const newDirection = sortBy === key && sortDirection === 'desc' ? 'asc' : 'desc';
     setSortBy(key);
     setSortDirection(newDirection);
-    setFilteredMembers(sortMembers(filteredMembers, key, newDirection));
-  };
-
-  const handleSelectMember = (id, isSelected) => {
-    if (isSelected) {
-      setSelectedMembers(prev => [...prev, id]);
-    } else {
-      setSelectedMembers(prev => prev.filter(memberId => memberId !== id));
-    }
-  };
-
-  const handleSelectAll = (checked) => {
-    setSelectAll(checked);
-    if (checked) {
-      setSelectedMembers(filteredMembers.map(member => member.id));
-    } else {
-      setSelectedMembers([]);
-    }
-  };
-
-  const handlePrune = () => {
-    if (selectedMembers.length === 0) {
-      alert("No members selected. Please select members to prune.");
-      return;
-    }
-
-    alert(`${selectedMembers.length} members pruned. Selected members have been removed from the server.`);
-
-    setFilteredMembers(prev => prev.filter(member => !selectedMembers.includes(member.id)));
-    setSelectedMembers([]);
-    setSelectAll(false);
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex flex-col gap-8">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Recent Members
-          </h1>
+          <h1 className="text-2xl font-semibold text-indigo-500">Manage Members</h1>
           <div className="flex gap-3">
             <div className="relative rounded-md flex items-center overflow-hidden border border-gray-300">
               <Search className="absolute left-3 h-4 w-4 text-gray-500" />
@@ -282,36 +191,20 @@ const ManageMembers = () => {
               />
             </div>
             <button
+              onClick={() => handleSort('name')}
               className="flex items-center gap-2 h-10 px-4 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-100"
             >
               <span>Sort</span>
-              {sortDirection === 'asc' ? (
-                <ArrowUp className="h-4 w-4" />
-              ) : (
-                <ArrowDown className="h-4 w-4" />
-              )}
-            </button>
-            <button
-              className="h-10 px-4 bg-red-500 text-white rounded-md hover:bg-red-600"
-              onClick={handlePrune}
-            >
-              Prune
+              {sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
             </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-md border border-gray-200 overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+        <div className="bg-gray-50 rounded-md border border-gray-200 overflow-hidden shadow-sm">
+          <div className="overflow-x-auto h-[300px]">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left">
-                    <input
-                      checked={selectAll}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
-                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                    />
-                  </th>
                   <TableHeader
                     label="Name"
                     sortable
@@ -322,6 +215,7 @@ const ManageMembers = () => {
                   />
                   <TableHeader label="Roles" />
                   <th className="px-4 py-3 text-left"></th>
+                  <th className="px-4 py-3 text-left"></th>
                 </tr>
               </thead>
               <tbody>
@@ -330,13 +224,11 @@ const ManageMembers = () => {
                     <MemberRow
                       key={member.id}
                       member={member}
-                      isSelected={selectedMembers.includes(member.id)}
-                      onSelect={handleSelectMember}
                     />
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
                       No members found
                     </td>
                   </tr>
