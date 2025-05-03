@@ -70,8 +70,7 @@ const helperCreateServerRole = async (serverId, role, order) => {
     const newRole = await prisma.serverRole.create({
         data: {
             serverId: serverId,
-            name: role.name,
-            name: role.name,
+            name: role.name.trim(),
             viewChannel: role?.viewChannel || true,
             manageChannels: role?.manageChannels || false,
             manageRoles: role?.manageRoles || false,
@@ -100,7 +99,7 @@ const helperUpdateServerRole = async (roleId, role) => {
     const updatedRole = await prisma.serverRole.update({
         where: { id: roleId },
         data: {
-            name: role.name,
+            name: role.name.trim(),
             viewChannel: role?.viewChannel || true,
             manageChannels: role?.manageChannels || false,
             manageRoles: role?.manageRoles || false,
@@ -1034,7 +1033,7 @@ export const getServerRoles = async (serverId) => {
 export const createServerRole = async (serverId, role) => {
     try {
         // Validate inputs
-        if (!serverId || !role?.name) {
+        if (!serverId || !role?.name.trim()) {
             return { success: false, message: "Please provide a valid server ID and role name." };
         }
 
@@ -1115,7 +1114,7 @@ export const editServerRole = async (serverId, roleId, role) => {
     try {
         console.log(role)
         // Validate inputs
-        if (!serverId || !roleId || !role?.name) {
+        if (!serverId || !roleId || !role?.name.trim()) {
             return { success: false, message: "Server ID, role ID, and role details are required." };
         }
 

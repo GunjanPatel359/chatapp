@@ -5,23 +5,29 @@ import prisma from "@/lib/db";
 import { isAuthUser } from "@/lib/authMiddleware";
 import { decodeToken, generateToken } from "@/lib/tokenConfig";
 
-const handleGetServerCategoryAndChannels = async (serverId) => {
-  const server = await prisma.server.findFirst({
-    where: {
-      id: serverId,
-    },
-    include: {
-      categories: {
-        include: {
-          channels: {
-            orderBy: { order: "asc" },
+export const handleGetServerCategoryAndChannels = async (serverId) => {
+  try {
+    const server = await prisma.server.findUnique({
+      where: { id: serverId },
+      include: {
+        categories: {
+          orderBy: { order: "asc" },
+          include: {
+            channels: {
+              orderBy: { order: "asc" },
+            },
           },
         },
-        orderBy: { order: "asc" },
       },
-    },
-  });
-  return { success: true, server: JSON.parse(JSON.stringify(server)) };
+    });
+
+    if (!server) return { success: false, message: "Server not found" };
+
+    return { success: true, server: JSON.parse(JSON.stringify(server)) };
+  } catch (error) {
+    console.error("[handleGetServerCategoryAndChannels ERROR]", error);
+    return { success: false, message: "Internal server error" };
+  }
 };
 
 export const getAllUserJoinedServer = async () => {
@@ -53,71 +59,219 @@ export const getAllUserJoinedServer = async () => {
 };
 
 //improvement needed
+// export const getServer = async (serverId) => {
+//   try {
+//     if (!serverId) {
+//       return { success: false, message: "Please provide a server id" };
+//     }
+//     const user = await isAuthUser();
+//     if (!user) {
+//       return { success: false, message: "Please login to continue" };
+//     }
+//     console.log(user);
+//     const userServerProfile = await prisma.serverProfile.findFirst({
+//       where: {
+//         userId: user.id,
+//         serverId: serverId,
+//         isDeleted: false,
+//       },
+//       include: {
+//         roles: {
+//           include: {
+//             role: true,
+//           },
+//         },
+//         server: true,
+//       },
+//     });
+//     console.log(userServerProfile);
+//     if (!userServerProfile) {
+//       return { success: false, message: "You are not a member of this server" };
+//     }
+//     if (userServerProfile.server.ownerId == user.id) {
+//       return await handleGetServerCategoryAndChannels(serverId);
+//     }
+//     const isAdmin = userServerProfile.roles.some(
+//       (role) => role.role.adminPermission
+//     );
+//     if (isAdmin) {
+//       return await handleGetServerCategoryAndChannels(serverId);
+//     }
+//     const userServerRoles = userServerProfile.roles.map((role) => role.roleId);
+//     let server = await prisma.server.findFirst({
+//       where: {
+//         id: serverId,
+//       },
+//       include: {
+//         categories: {
+//           include: {
+//             channels: {
+//               include: {
+//                 channelRoles: {
+//                   where: {
+//                     serverRoleId: {
+//                       in: userServerRoles,
+//                     },
+//                   },
+//                 },
+//                 defaultChannelRole: true,
+//               },
+//               orderBy: { order: "asc" },
+//             },
+//             categoryRoles: {
+//               where: {
+//                 serverRoleId: {
+//                   in: userServerRoles,
+//                 },
+//               },
+//             },
+//             defaultCategoryRole: true,
+//           },
+//           orderBy: { order: "asc" },
+//         },
+//       },
+//     });
+
+//     server.categories = server.categories.filter((category) => {
+//       category.channels = category.channels.filter((channel) => {
+//         if (channel.defaultChannelRole.viewChannel) {
+//           return channel;
+//         }
+//         if (
+//           channel.channelRoles.some(
+//             (chanRole) =>
+//               chanRole.viewChannel === "ALLOW" ||
+//               (chanRole.viewChannel === "NEUTRAL" &&
+//                 (category.categoryRoles?.some(
+//                   (catRole) => catRole.serverRoleId == chanRole.serverRoleId
+//                 )
+//                   ? category.categoryRoles.some(
+//                     (cateRole) =>
+//                       cateRole.serverRoleId === chanRole.serverRoleId &&
+//                       (cateRole.viewChannel === "ALLOW" ||
+//                         (cateRole.viewChannel === "NEUTRAL" &&
+//                           userServerProfile.roles.some(
+//                             (serRole) =>
+//                               serRole.roleId === chanRole.serverRoleId &&
+//                               serRole.role.viewChannel
+//                           )))
+//                   )
+//                   : userServerProfile.roles.some(
+//                     (serRole) =>
+//                       serRole.roleId === chanRole.serverRoleId &&
+//                       serRole.role.viewChannel
+//                   )))
+//           )
+//         ) {
+//           return channel;
+//         }
+//       });
+//       // if (category.channels != []) {
+//       //     return category.channels
+//       // }
+//       if (category.defaultCategoryRole.viewChannel) {
+//         return category.channels;
+//       }
+//       if (
+//         category.categoryRoles.some(
+//           (catRol) =>
+//             catRol.viewChannel == "ALLOW" ||
+//             (catRol.viewChannel == "NEUTRAL" &&
+//               userServerProfile.roles.find(
+//                 (role) =>
+//                   role.role.viewChannel && role.roleId == catRol.serverRoleId
+//               ))
+//         )
+//       ) {
+//         return category.channels;
+//       }
+//     });
+
+//     return { success: true, server: JSON.parse(JSON.stringify(server)) };
+//   } catch (error) {
+//     console.log(error);
+//     throw new Error(error);
+//   }
+// };
+
+// export const getChannel = async (channelId) => {
+//   try {
+//     if (!channelId) {
+//       return { success: false, message: "Channel ID is required" };
+//     }
+//     const user = await isAuthUser();
+//     if (!user) {
+//       return { success: false, message: "Please login to continue" };
+//     }
+//     const channel = await prisma.channel.findUnique({
+//       where: {
+//         id: channelId,
+//       },
+//     });
+//     if (!channel) {
+//       return { success: false, message: "Channel not found" };
+//     }
+//     return { success: true, channel: JSON.parse(JSON.stringify(channel)) };
+//   } catch (error) {
+//     console.log(error);
+//     throw new Error(`getChannel: ${error}`);
+//   }
+// };
+
+// ✅ Get the server with its categories, channels, and roles
 export const getServer = async (serverId) => {
   try {
     if (!serverId) {
       return { success: false, message: "Please provide a server id" };
     }
+
+    // Check if the user is authenticated
     const user = await isAuthUser();
     if (!user) {
       return { success: false, message: "Please login to continue" };
     }
-    console.log(user);
+
+    // Fetch the user's server profile for the given serverId
     const userServerProfile = await prisma.serverProfile.findFirst({
       where: {
         userId: user.id,
-        serverId: serverId,
+        serverId,
         isDeleted: false,
       },
       include: {
-        roles: {
-          include: {
-            role: true,
-          },
-        },
+        roles: { include: { role: true } },
         server: true,
       },
     });
-    console.log(userServerProfile);
+
     if (!userServerProfile) {
       return { success: false, message: "You are not a member of this server" };
     }
-    if (userServerProfile.server.ownerId == user.id) {
+
+    // If the user is the server owner or has admin permission, fetch all categories and channels
+    if (userServerProfile.server.ownerId === user.id || userServerProfile.roles.some((role) => role.role.adminPermission)) {
       return await handleGetServerCategoryAndChannels(serverId);
     }
-    const isAdmin = userServerProfile.roles.some(
-      (role) => role.role.adminPermission
-    );
-    if (isAdmin) {
-      return await handleGetServerCategoryAndChannels(serverId);
-    }
+
+    // Otherwise, filter categories and channels based on the user's roles
     const userServerRoles = userServerProfile.roles.map((role) => role.roleId);
-    let server = await prisma.server.findFirst({
-      where: {
-        id: serverId,
-      },
+
+    const server = await prisma.server.findUnique({
+      where: { id: serverId },
       include: {
         categories: {
           include: {
             channels: {
               include: {
                 channelRoles: {
-                  where: {
-                    serverRoleId: {
-                      in: userServerRoles,
-                    },
-                  },
+                  where: { serverRoleId: { in: userServerRoles } },
                 },
                 defaultChannelRole: true,
               },
               orderBy: { order: "asc" },
             },
             categoryRoles: {
-              where: {
-                serverRoleId: {
-                  in: userServerRoles,
-                },
-              },
+              where: { serverRoleId: { in: userServerRoles } },
             },
             defaultCategoryRole: true,
           },
@@ -126,206 +280,234 @@ export const getServer = async (serverId) => {
       },
     });
 
+    if (!server) {
+      return { success: false, message: "Server not found" };
+    }
+
+    // Filter out channels and categories the user does not have permission to view
     server.categories = server.categories.filter((category) => {
       category.channels = category.channels.filter((channel) => {
-        if (channel.defaultChannelRole.viewChannel) {
-          return channel;
-        }
-        if (
+        const canViewChannel =
+          channel.defaultChannelRole.viewChannel ||
           channel.channelRoles.some(
             (chanRole) =>
               chanRole.viewChannel === "ALLOW" ||
               (chanRole.viewChannel === "NEUTRAL" &&
-                (category.categoryRoles?.some(
-                  (catRole) => catRole.serverRoleId == chanRole.serverRoleId
-                )
-                  ? category.categoryRoles.some(
-                    (cateRole) =>
-                      cateRole.serverRoleId === chanRole.serverRoleId &&
-                      (cateRole.viewChannel === "ALLOW" ||
-                        (cateRole.viewChannel === "NEUTRAL" &&
-                          userServerProfile.roles.some(
-                            (serRole) =>
-                              serRole.roleId === chanRole.serverRoleId &&
-                              serRole.role.viewChannel
-                          )))
-                  )
-                  : userServerProfile.roles.some(
-                    (serRole) =>
-                      serRole.roleId === chanRole.serverRoleId &&
-                      serRole.role.viewChannel
-                  )))
-          )
-        ) {
-          return channel;
-        }
+                userServerProfile.roles.some(
+                  (role) => role.roleId === chanRole.serverRoleId && role.role.viewChannel
+                ))
+          );
+        return canViewChannel;
       });
-      // if (category.channels != []) {
-      //     return category.channels
-      // }
-      if (category.defaultCategoryRole.viewChannel) {
-        return category.channels;
-      }
-      if (
+
+      return (
+        category.defaultCategoryRole.viewChannel ||
         category.categoryRoles.some(
-          (catRol) =>
-            catRol.viewChannel == "ALLOW" ||
-            (catRol.viewChannel == "NEUTRAL" &&
-              userServerProfile.roles.find(
-                (role) =>
-                  role.role.viewChannel && role.roleId == catRol.serverRoleId
+          (catRole) =>
+            catRole.viewChannel === "ALLOW" ||
+            (catRole.viewChannel === "NEUTRAL" &&
+              userServerProfile.roles.some(
+                (role) => role.roleId === catRole.serverRoleId && role.role.viewChannel
               ))
         )
-      ) {
-        return category.channels;
-      }
+      );
     });
 
     return { success: true, server: JSON.parse(JSON.stringify(server)) };
   } catch (error) {
-    console.log(error);
-    throw new Error(error);
+    console.log("[getServer ERROR]", error);
+    return { success: false, message: "Internal server error" };
   }
 };
 
+// ✅ Get the channel details based on channelId
 export const getChannel = async (channelId) => {
   try {
     if (!channelId) {
       return { success: false, message: "Channel ID is required" };
     }
+
+    // Check if the user is authenticated
     const user = await isAuthUser();
     if (!user) {
       return { success: false, message: "Please login to continue" };
     }
+
+    // Fetch the channel details
     const channel = await prisma.channel.findUnique({
-      where: {
-        id: channelId,
-      },
+      where: { id: channelId },
     });
+
     if (!channel) {
       return { success: false, message: "Channel not found" };
     }
+
     return { success: true, channel: JSON.parse(JSON.stringify(channel)) };
   } catch (error) {
-    console.log(error);
-    throw new Error(`getChannel: ${error}`);
+    console.log("[getChannel ERROR]", error);
+    return { success: false, message: "Failed to fetch channel" };
   }
 };
 
+//
+// export const serverSettingFetch = async (serverId) => {
+//   try {
+//     if (!serverId) {
+//       return { success: false, message: "Please provide a server id" };
+//     }
+//     const user = await isAuthUser();
+//     if (!user) {
+//       return { success: false, message: "Please login to continue" };
+//     }
+//     let serverSetting = await prisma.serverProfile.findFirst({
+//       where: {
+//         serverId: serverId,
+//         userId: user.id,
+//         isDeleted: false,
+//       },
+//       include: {
+//         roles: {
+//           include: {
+//             role: true,
+//           },
+//         },
+//         server: true,
+//       },
+//     });
+//     if (!serverSetting) {
+//       return { success: false, message: "Server setting not found" };
+//     }
+//     if (serverSetting.server.ownerId == user.id) {
+//       return {
+//         success: true,
+//         serverSetting: JSON.parse(JSON.stringify(serverSetting)),
+//         user: JSON.parse(JSON.stringify(user)),
+//       };
+//     }
+//     serverSetting.roles = serverSetting.roles.sort(
+//       (a, b) => a.role.order - b.role.order
+//     );
+//     const isVerifiedToLook = serverSetting.roles.some(
+//       (role) => role.role.adminPermission || role.role.manageRoles
+//     );
+//     if (!isVerifiedToLook) {
+//       return {
+//         success: false,
+//         message: "You don't have permission to view this server",
+//       };
+//     }
+//     return {
+//       success: true,
+//       serverSetting: JSON.parse(JSON.stringify(serverSetting)),
+//       user: JSON.parse(JSON.stringify(user)),
+//     };
+//   } catch (error) {
+//     console.log(error);
+//     throw new Error(`serverSettingFetch: ${error}`);
+//   }
+// };
+
+// ✅ Fetch server settings with permissions check
 export const serverSettingFetch = async (serverId) => {
   try {
-    if (!serverId) {
-      return { success: false, message: "Please provide a server id" };
-    }
+    if (!serverId) return { success: false, message: "Please provide a server id" };
+
     const user = await isAuthUser();
-    if (!user) {
-      return { success: false, message: "Please login to continue" };
-    }
+    if (!user) return { success: false, message: "Please login to continue" };
+
+    // Fetch user server settings and roles
     let serverSetting = await prisma.serverProfile.findFirst({
-      where: {
-        serverId: serverId,
-        userId: user.id,
-        isDeleted: false,
-      },
+      where: { serverId, userId: user.id, isDeleted: false },
       include: {
-        roles: {
-          include: {
-            role: true,
-          },
-        },
+        roles: { include: { role: true } },
         server: true,
       },
     });
-    if (!serverSetting) {
-      return { success: false, message: "Server setting not found" };
-    }
-    if (serverSetting.server.ownerId == user.id) {
+
+    if (!serverSetting) return { success: false, message: "Server setting not found" };
+
+    // If user is the server owner, return server settings
+    if (serverSetting.server.ownerId === user.id) {
       return {
         success: true,
-        serverSetting: JSON.parse(JSON.stringify(serverSetting)),
-        user: JSON.parse(JSON.stringify(user)),
+        serverSetting: serverSetting,
+        user: user,
       };
     }
-    serverSetting.roles = serverSetting.roles.sort(
-      (a, b) => a.role.order - b.role.order
-    );
-    const isVerifiedToLook = serverSetting.roles.some(
+
+    // Sort roles by order
+    serverSetting.roles = serverSetting.roles.sort((a, b) => a.role.order - b.role.order);
+
+    // Check if user has permission to view the server settings
+    const hasPermission = serverSetting.roles.some(
       (role) => role.role.adminPermission || role.role.manageRoles
     );
-    if (!isVerifiedToLook) {
-      return {
-        success: false,
-        message: "You don't have permission to view this server",
-      };
+
+    if (!hasPermission) {
+      return { success: false, message: "You don't have permission to view this server" };
     }
-    return {
-      success: true,
-      serverSetting: JSON.parse(JSON.stringify(serverSetting)),
-      user: JSON.parse(JSON.stringify(user)),
-    };
+
+    return { success: true, serverSetting: serverSetting, user: user };
   } catch (error) {
-    console.log(error);
-    throw new Error(`serverSettingFetch: ${error}`);
+    console.log("[serverSettingFetch ERROR]", error);
+    return { success: false, message: "An error occurred while fetching server settings" };
   }
 };
 
 export const updateUserImage = async (formData) => {
   try {
-    if (!formData) {
-      return { success: false, message: "No image provided" };
-    }
+    if (!formData) return { success: false, message: "No image provided" };
+
     const file = formData.get("file");
-    if (!file) {
-      return { success: false, message: "No image provided" };
-    }
+    if (!file) return { success: false, message: "No image provided" };
+
     const user = await isAuthUser();
-    if (!user) {
-      return { success: false, message: "User not found" };
-    }
+    if (!user) return { success: false, message: "User not found" };
+
     const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
     if (!allowedTypes.includes(file.type)) {
-      return {
-        success: false,
-        message: "Invalid file type. Only PNG, JPG, and JPEG are allowed.",
-      };
+      return { success: false, message: "Invalid file type. Only PNG, JPG, and JPEG are allowed." };
     }
 
     const maxSizeInBytes = 1 * 1024 * 1024; // 1MB
     if (file.size > maxSizeInBytes) {
       return { success: false, message: "File size exceeds the 1MB limit" };
     }
+
     const utapi = new UTApi();
     const response = await utapi.uploadFiles(file);
-    if (!response) {
-      return { success: false, message: "failed to upload the file" };
+
+    if (response?.error) {
+      return { success: false, message: response.error || "Failed to upload the file" };
     }
-    if (response.error) {
-      return { success: false, message: response.error };
+
+    const img_url = response?.data?.url;
+    if (!img_url) {
+      return { success: false, message: "Image upload failed, no URL returned" };
     }
-    console.log(response);
-    let img_url = response.data.url;
-    console.log("Image URL:", img_url);
+
+    // Delete old avatar if it exists
     if (user?.avatarUrl) {
-      await utapi.deleteFiles(user.avatarUrl)
+      await utapi.deleteFiles(user.avatarUrl);
     }
+
+    // Update user avatar URL in the database
     const userUpdate = await prisma.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        avatarUrl: img_url,
-      },
+      where: { id: user.id },
+      data: { avatarUrl: img_url },
     });
+
     if (!userUpdate) {
       return { success: false, message: "Failed to update user image" };
     }
-    console.log(userUpdate);
+
     return { success: true, url: img_url };
   } catch (error) {
-    console.log(error);
-    throw new Error(error);
+    console.log("[updateUserImage ERROR]", error);
+    return { success: false, message: "An error occurred while updating the user image" };
   }
 };
+
 
 export const updateUserBanner = async (formData) => {
   try {
@@ -384,30 +566,38 @@ export const updateUserBanner = async (formData) => {
 
 export const updateUserProfile = async (displayName, pronoun, description) => {
   try {
+
+    // Fetch the authenticated user
     const user = await isAuthUser();
     if (!user) {
       return { success: false, message: "User not found" };
     }
+
+    // Update user profile in the database
     const userUpdate = await prisma.user.update({
       where: {
         id: user.id,
       },
       data: {
-        displayName: displayName,
-        pronoun: pronoun,
-        description: description,
+        displayName,
+        pronoun,
+        description,
       },
     });
+
+    // Check if update was successful
     if (!userUpdate) {
       return { success: false, message: "Failed to update user profile" };
     }
-    console.log(userUpdate);
-    return { success: true, message: "successfully updated" };
+
+    return { success: true, message: "Profile successfully updated" };
   } catch (error) {
-    console.log(error);
-    throw new Error(error);
+    // Log the error for troubleshooting
+    console.error("[updateUserProfile ERROR]", error);
+    return { success: false, message: "An error occurred while updating the profile" };
   }
 };
+
 
 export const checkChannelViewPermission = async (channelId, token = null) => {
   try {
