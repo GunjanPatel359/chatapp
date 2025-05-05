@@ -51,7 +51,7 @@ const ServerHomePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
+      <div className="flex-1 min-h-screen flex items-center justify-center bg-gray-50">
         <p className="text-gray-600">Loading...</p>
       </div>
     );
@@ -59,14 +59,14 @@ const ServerHomePage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
+      <div className="flex-1 min-h-screen flex items-center justify-center bg-gray-50">
         <p className="text-red-500">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center bg-gray-50 overflow-hidden">
+    <div className="flex-1 relative min-h-screen flex items-center justify-center bg-gray-50 overflow-hidden">
       {/* Glowing Background */}
       <div className="absolute -top-32 left-1/2 transform -translate-x-1/2 w-[80vw] max-w-[500px] h-[80vw] max-h-[500px] bg-indigo-300 opacity-30 rounded-full blur-3xl z-0" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100 via-transparent to-white z-0" />
