@@ -289,3 +289,43 @@ export const updateServerInfo = async (serverId, name, description) => {
         throw new Error(error.message || "Error occurred updateServerInfo")
     }
 }
+export const getServerInfo=async(serverId)=>{
+    try {
+        if(!serverId){
+            return {success:false,message:"serverId required"}
+        }
+        const user=await isAuthUser();
+        if(!user){
+            return {success:false,message:"please login to proceed"}
+        }
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: {
+                userId: user.id,
+                serverId: serverId,
+                isDeleted: false
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            }
+        })
+        if (!userServerProfile) {
+            return { success: false, message: "User is not a member of the server" }
+        }
+        const server = await prisma.server.findFirst({
+            where: {
+                id: serverId
+            }
+        })
+        if(!server){
+            return {success:false,message:"server not found"}
+        }
+        return {success:true,server}
+    } catch (error) {
+        console.error(error);
+        throw new Error(error.message || "Error occurred getServerInfo")
+    }
+}

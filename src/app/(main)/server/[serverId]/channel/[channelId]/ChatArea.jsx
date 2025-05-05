@@ -9,11 +9,8 @@ import { fetchMessagesTrial, sendMessage } from "@/actions/channel-message.js";
 import { useParams } from "next/navigation";
 import { io } from "socket.io-client";
 import { checkChannelViewPermission } from "@/actions/user";
-
 import { webSocketServer } from "@/server";
-
-// Import your getUserProfile function
-import { getUserProfile } from "@/actions/user"; // Adjust the path accordingly
+import { getUserProfile } from "@/actions/user";
 
 const ChatArea = () => {
   const params = useParams();
@@ -22,11 +19,16 @@ const ChatArea = () => {
   const [messages, setMessages] = useState([]);
   const [cursor, setCursor] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null); // Store the user profile here
+  const [user, setUser] = useState(null);
   const messagesRef = useRef(null);
   const socketRef = useRef(null);
 
-  // Fetch user profile when component mounts
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Fetch user profile
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -57,6 +59,7 @@ const ChatArea = () => {
     setLoading(true);
     const res = await fetchMessagesTrial(params.serverId, channelId, localStorage.getItem(channelId));
     if (res.success) {
+      // Ensure messages are sorted chronologically (oldest first)
       const sortedMessages = res.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
       setMessages(sortedMessages);
       setCursor(res.cursor);
@@ -71,10 +74,9 @@ const ChatArea = () => {
     const initiateToken = async () => {
       try {
         const res = await checkChannelViewPermission(channelId, localStorage.getItem(channelId));
-
         if (res.success && res.token) {
-          localStorage.setItem(channelId, res.token[channelId]); // Update token every time
-          connectSocket(res.token[channelId]); // Connect WebSocket with new token
+          localStorage.setItem(channelId, res.token[channelId]);
+          connectSocket(res.token[channelId]);
         } else {
           throw new Error("Invalid token");
         }
@@ -90,17 +92,18 @@ const ChatArea = () => {
       if (!channelId || socketRef.current) return;
 
       socketRef.current = io(`${webSocketServer}/channel`, {
-        query: { channelId, token }, // Always send the latest token
+        query: { channelId, token },
       });
 
       socketRef.current.on("message", (message) => {
         console.log(message, "socket");
+        // Append new message to the end
         setMessages((prev) => [...prev, message]);
       });
 
       socketRef.current.on("disconnect", () => {
         console.log("Socket disconnected. Reconnecting...");
-        initiateToken(); // Get new token before reconnecting
+        initiateToken();
       });
 
       return () => {
@@ -109,8 +112,14 @@ const ChatArea = () => {
       };
     };
 
-    initiateToken(); // Always fetch the latest token before connecting
+    initiateToken();
   }, [channelId]);
+
+  const scrollToBottom = () => {
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }
+  };
 
   const handleScroll = async () => {
     if (!messagesRef.current || !cursor) return;
@@ -118,11 +127,16 @@ const ChatArea = () => {
     if (messagesRef.current.scrollTop === 0) {
       const res = await fetchMessagesTrial(params.serverId, channelId, cursor, localStorage.getItem(channelId));
       if (res.success) {
-        setMessages((prev) => [...res.messages, ...prev]);
+        // Prepend older messages to maintain chronological order
+        const sortedNewMessages = res.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        setMessages((prev) => [...sortedNewMessages, ...prev]);
         setCursor(res.cursor);
         if (res.token) {
           localStorage.setItem(channelId, res.token[channelId]);
         }
+        // Maintain scroll position after loading older messages
+        const previousHeight = messagesRef.current.scrollHeight;
+        messagesRef.current.scrollTop = messagesRef.current.scrollHeight - previousHeight;
       }
     }
   };
@@ -137,9 +151,8 @@ const ChatArea = () => {
     }
 
     try {
-      const content = chatInput; // save it locally
-      setChatInput(""); // clear input early
-
+      const content = chatInput;
+      setChatInput("");
       const res = await sendMessage(params.serverId, params.channelId, content, localStorage.getItem(channelId));
       if (res.success) {
         if (res.token) {
@@ -226,6 +239,5 @@ const MessageDialogOther = ({ item, user }) => {
     </div>
   );
 };
-
 
 export default ChatArea;
