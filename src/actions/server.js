@@ -7,7 +7,7 @@ import prisma from "@/lib/db";
 export const createServer = async (name, description, categories, formData) => {
     try {
         console.log("hi")
-        if (!name || !description) {
+        if (!name.trim() || !description.trim()) {
             return { success: false, message: "name and description are required" };
         }
 
@@ -53,9 +53,9 @@ export const createServer = async (name, description, categories, formData) => {
         const server = await prisma.$transaction(async (prisma) => {
             const createdServer = await prisma.server.create({
                 data: {
-                    name,
+                    name:name.trim(),
                     imageUrl: img_url || "", // Store the uploaded image URL if available
-                    description,
+                    description:description.trim(),
                     ownerId: user.id,
                     categories: categories.length > 0
                         ? {
@@ -238,7 +238,7 @@ export const getCategories = async (serverId) => {
 
 export const updateServerInfo = async (serverId, name, description) => {
     try {
-        if (!name || !description) {
+        if (!name.trim() || !description.trim()) {
             return { success: false, message: "name and description are required" }
         }
         const user = await isAuthUser()
@@ -279,8 +279,8 @@ export const updateServerInfo = async (serverId, name, description) => {
                 id: serverId
             },
             data: {
-                name: name,
-                description: description
+                name: name.trim(),
+                description: description.trim()
             }
         })
         return { success: true, message: "Server updated successfully" }
@@ -340,5 +340,46 @@ export const serverJoinedMembersList=async(serverId)=>{
     } catch (error) {
         console.error(error);
         throw new Error(error.message || "Error occurred serverJoinedMembersList")
+    }
+}
+
+export const getServerInfo=async(serverId)=>{
+    try {
+        if(!serverId){
+            return {success:false,message:"serverId required"}
+        }
+        const user=await isAuthUser();
+        if(!user){
+            return {success:false,message:"please login to proceed"}
+        }
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: {
+                userId: user.id,
+                serverId: serverId,
+                isDeleted: false
+            },
+            include: {
+                roles: {
+                    include: {
+                        role: true
+                    }
+                }
+            }
+        })
+        if (!userServerProfile) {
+            return { success: false, message: "User is not a member of the server" }
+        }
+        const server = await prisma.server.findFirst({
+            where: {
+                id: serverId
+            }
+        })
+        if(!server){
+            return {success:false,message:"server not found"}
+        }
+        return {success:true,server}
+    } catch (error) {
+        console.error(error);
+        throw new Error(error.message || "Error occurred getServerInfo")
     }
 }
