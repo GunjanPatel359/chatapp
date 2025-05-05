@@ -1,11 +1,12 @@
-import HomeSideBar from "./HomeSideBar"
-const LayoutPage=({children})=>{
-    return (
-        <div className="flex">
-            <HomeSideBar />
-            {children}
-        </div>
-    )
-}
+import HomeSideBar from "./HomeSideBar";
 
-export default LayoutPage
+const Layout = ({ children }) => {
+  return (
+    <div className="flex">
+      <HomeSideBar />
+      <div className="flex-1">{children}</div>
+    </div>
+  );
+};
+
+export default Layout;

@@ -289,6 +289,7 @@ export const updateServerInfo = async (serverId, name, description) => {
         throw new Error(error.message || "Error occurred updateServerInfo")
     }
 }
+<<<<<<< HEAD
 export const getServerInfo=async(serverId)=>{
     try {
         if(!serverId){
@@ -298,6 +299,18 @@ export const getServerInfo=async(serverId)=>{
         if(!user){
             return {success:false,message:"please login to proceed"}
         }
+=======
+
+export const serverJoinedMembersList=async(serverId)=>{
+    try {
+        if (!serverId) {
+            return { success: false, message: "serverId is required" }
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            return { success: false, message: "User is not authenticated" }
+        } 
+>>>>>>> 30dd673cc28b4969c29e606f48751c9e3077233f
         const userServerProfile = await prisma.serverProfile.findFirst({
             where: {
                 userId: user.id,
@@ -309,12 +322,18 @@ export const getServerInfo=async(serverId)=>{
                     include: {
                         role: true
                     }
+<<<<<<< HEAD
                 }
+=======
+                },
+                server:true
+>>>>>>> 30dd673cc28b4969c29e606f48751c9e3077233f
             }
         })
         if (!userServerProfile) {
             return { success: false, message: "User is not a member of the server" }
         }
+<<<<<<< HEAD
         const server = await prisma.server.findFirst({
             where: {
                 id: serverId
@@ -327,5 +346,30 @@ export const getServerInfo=async(serverId)=>{
     } catch (error) {
         console.error(error);
         throw new Error(error.message || "Error occurred getServerInfo")
+=======
+        if(userServerProfile.server.ownerId==user.id || userServerProfile.roles.some((role)=>role.role.adminPermission||role.role.manageRoles)){
+            const members=await prisma.serverProfile.findMany({
+                where: { serverId: serverId, isDeleted: false }, 
+                include: { 
+                    user: true,
+                    roles:{
+                        include:{
+                            role:true,
+                        },
+                        orderBy:{
+                            role:{
+                                order:"asc"
+                            }
+                        }
+                    }
+                }
+            })
+            return { success: true, members: members };
+        }
+        return { success: false, message: "You do not have permission to view the members list" }
+    } catch (error) {
+        console.error(error);
+        throw new Error(error.message || "Error occurred serverJoinedMembersList")
+>>>>>>> 30dd673cc28b4969c29e606f48751c9e3077233f
     }
 }
