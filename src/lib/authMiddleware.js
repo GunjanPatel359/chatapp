@@ -1,31 +1,34 @@
 "use server";
 import prisma from "./db";
-
 import { auth } from "@clerk/nextjs/server";
 
 const isAuthUser = async () => {
   try {
     const user = await auth();
-    if (!user) {
-      throw new Error("user is unauthenticated");
+
+    if (!user || !user.sessionClaims?.email || !user.sessionClaims?.username) {
+      throw new Error("User is unauthenticated or missing required fields.");
     }
-    const userData = await prisma.user.findFirst({
-      where: {
-        email: user.sessionClaims.email,
-      },
+
+    const email = user.sessionClaims.email;
+    const username = user.sessionClaims.username;
+
+    // Check if user exists
+    let userData = await prisma.user.findUnique({
+      where: { email }, // More efficient than `findFirst` with unique
     });
+
+    // Create new user if not exists
     if (!userData) {
-      const newUser = await prisma.user.create({
-        data: {
-          email: user.sessionClaims.email,
-          username: user.sessionClaims.username,
-        },
+      userData = await prisma.user.create({
+        data: { email, username },
       });
-      return newUser;
     }
+
     return userData;
   } catch (error) {
-    throw new Error(error);
+    console.error("[isAuthUser ERROR]", error);
+    throw new Error("Authentication failed");
   }
 };
 

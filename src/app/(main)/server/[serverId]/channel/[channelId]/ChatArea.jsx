@@ -10,7 +10,8 @@ import { useParams } from "next/navigation";
 import { io } from "socket.io-client";
 import { checkChannelViewPermission } from "@/actions/user";
 import { webSocketServer } from "@/server";
-import { getUserProfile } from "@/actions/user";
+
+// import { getUserProfile } from "@/actions/user";
 
 const ChatArea = () => {
   const params = useParams();
@@ -19,36 +20,40 @@ const ChatArea = () => {
   const [messages, setMessages] = useState([]);
   const [cursor, setCursor] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null);
+
   const messagesRef = useRef(null);
   const socketRef = useRef(null);
+  
+//   const [user, setUser] = useState(null);
+//   const messagesRef = useRef(null);
+//   const socketRef = useRef(null);
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+//   // Scroll to bottom when messages change
+//   useEffect(() => {
+//     scrollToBottom();
+//   }, [messages]);
 
-  // Fetch user profile
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const response = await getUserProfile();
-        if (response.success) {
-          setUser(response.user);
-        } else {
-          toast({
-            title: "Error",
-            description: "Failed to load user profile",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
-    };
+//   // Fetch user profile
+//   useEffect(() => {
+//     const fetchUserProfile = async () => {
+//       try {
+//         const response = await getUserProfile();
+//         if (response.success) {
+//           setUser(response.user);
+//         } else {
+//           toast({
+//             title: "Error",
+//             description: "Failed to load user profile",
+//             variant: "destructive",
+//           });
+//         }
+//       } catch (error) {
+//         console.error("Error fetching user profile:", error);
+//       }
+//     };
 
-    fetchUserProfile();
-  }, []);
+//     fetchUserProfile();
+//   }, []);
 
   useEffect(() => {
     if (!channelId) return;
@@ -178,7 +183,7 @@ const ChatArea = () => {
       >
         {cursor && <div className="text-center text-gray-400">Loading...</div>}
         {messages.map((item, i) => (
-          <MessageDialogOther key={i} item={item} user={user} />
+          <MessageDialogOther key={i} item={item} />
         ))}
       </div>
 
@@ -201,7 +206,7 @@ const ChatArea = () => {
   );
 };
 
-const MessageDialogOther = ({ item, user }) => {
+const MessageDialogOther = ({ item}) => {
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
     const formattedDate = date.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
@@ -216,9 +221,9 @@ const MessageDialogOther = ({ item, user }) => {
     <div className="flex mb-2">
       {/* Avatar section */}
       <div className="w-12 h-12 mr-2">
-        {user && user.imageUrl ? (
+        { item.serverProfile ? (
           <img
-            src={user.imageUrl}
+            src={item.serverProfile?.imageUrl || "./OIP.jpg"}
             alt="User Avatar"
             className="w-12 h-12 rounded-full object-cover"
           />
@@ -230,7 +235,7 @@ const MessageDialogOther = ({ item, user }) => {
       {/* Message Content */}
       <div className="flex flex-col flex-1">
         <div className="flex items-center">
-          <div className="font-bold text-indigo-600">{user?.username || "Unknown User"}</div>
+          <div className="font-bold text-indigo-600">{item.serverProfile.name || "Unknown User"}</div>
           <div className="text-xs text-gray-400 ml-2">{formattedDate}</div>
           <div className="text-xs text-gray-400 ml-1">{formattedTime}</div>
         </div>

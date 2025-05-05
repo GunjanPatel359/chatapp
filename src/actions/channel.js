@@ -181,7 +181,7 @@ export const getChannelInfo = async (channelId) => {
 export const createChannel = async (serverId, categoryId, data) => {
     try {
         // Validate input parameters
-        if (!serverId || !categoryId || !data.name || !data.description) {
+        if (!serverId || !categoryId || !data.name.trim() || !data.description) {
             return { success: false, message: 'Server ID, Category ID, name, and description are required' };
         }
 
@@ -235,7 +235,7 @@ export const createChannel = async (serverId, categoryId, data) => {
         if (server.ownerId == user.id) {
             const newChannel = await prisma.channel.create({
                 data: {
-                    name: data.name,
+                    name: data.name.trim(),
                     order: isVerifyCategory.channels.length,
                     description: data.description,
                     categoryId: categoryId,
@@ -251,7 +251,7 @@ export const createChannel = async (serverId, categoryId, data) => {
         if (isAdmin) {
             const newChannel = await prisma.channel.create({
                 data: {
-                    name: data.name,
+                    name: data.name.trim(),
                     order: isVerifyCategory.channels.length,
                     description: data.description,
                     categoryId: categoryId,
@@ -290,7 +290,7 @@ export const createChannel = async (serverId, categoryId, data) => {
         if (hasPermission) {
             const newChannel = await prisma.channel.create({
                 data: {
-                    name: data.name,
+                    name: data.name.trim(),
                     order: isVerifyCategory.channels.length,
                     description: data.description,
                     categoryId: categoryId,
@@ -311,7 +311,7 @@ export const createChannel = async (serverId, categoryId, data) => {
 export const updateChannel = async (channelId, data) => {
     try {
         // Validate input parameters
-        if (!channelId || !data.name || !data.description) {
+        if (!channelId || !data.name.trim() || !data.description) {
             return { success: false, message: 'Please provide all the required fields' };
         }
 
@@ -376,7 +376,7 @@ export const updateChannel = async (channelId, data) => {
             const updatedChannel = await prisma.channel.update({
                 where: { id: channelId },
                 data: {
-                    name: data.name,
+                    name: data.name.trim(),
                     description: data.description
                 }
             });
@@ -389,7 +389,7 @@ export const updateChannel = async (channelId, data) => {
             const updatedChannel = await prisma.channel.update({
                 where: { id: channelId },
                 data: {
-                    name: data.name,
+                    name: data.name.trim(),
                     description: data.description
                 }
             });
@@ -424,7 +424,7 @@ export const updateChannel = async (channelId, data) => {
             const updatedChannel = await prisma.channel.update({
                 where: { id: channelId },
                 data: {
-                    name: data.name,
+                    name: data.name.trim(),
                     description: data.description
                 }
             });

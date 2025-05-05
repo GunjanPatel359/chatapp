@@ -111,7 +111,7 @@ export const sendMessage = async (serverId, channelId, content, token = null) =>
     try {
 
         // Validate inputs
-        if (!serverId || !channelId || !content) {
+        if (!serverId || !channelId || !content.trim()) {
             throw new Error("Please provide all required fields.");
         }
 
@@ -169,7 +169,7 @@ export const sendMessage = async (serverId, channelId, content, token = null) =>
 
         // If the user is the owner of the server or has admin permissions, allow sending the message
         if (channel.category.server.ownerId === user.id || userServerProfile.roles.some(role => role.role.adminPermission)) {
-            await dbHelperCreateMessage(channelId, content, userServerProfile.id);
+            await dbHelperCreateMessage(channelId, content.trim(), userServerProfile.id);
             const newToken = await generateToken(channelId, user.id, { permission: { admin: true } }, tokenData?.data || null)
             return { success: true, message: "Message sent successfully.", token: { [channelId]: newToken } };
         }
@@ -199,7 +199,7 @@ export const sendMessage = async (serverId, channelId, content, token = null) =>
         // Permission check for sending messages
         const hasSendMessagePermission = checkSendMessagePermission(channelWithRoles);
         if (hasSendMessagePermission) {
-            await dbHelperCreateMessage(channelId, content, userServerProfile.id);
+            await dbHelperCreateMessage(channelId, content.trim(), userServerProfile.id);
             const newToken = await generateToken(channelId, user.id, { permission: { sendMessage: true } }, tokenData?.data)
             return { success: true, message: "Message sent successfully.", token: { [channelId]: newToken } };
         }

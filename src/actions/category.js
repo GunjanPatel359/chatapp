@@ -107,7 +107,7 @@ export const getCategoryData = async (categoryId) => {
 export const createCategory = async (serverId, categoryData) => {
     try {
         if (!serverId) return { success: false, message: "Please provide a server ID." };
-        if (!categoryData?.name) return { success: false, message: "Please provide category data with a name." };
+        if (!categoryData?.name.trim()) return { success: false, message: "Please provide category data with a name." };
 
         const user = await isAuthUser();
         if (!user) return { success: false, message: "User authentication failed." };
@@ -145,7 +145,7 @@ export const createCategory = async (serverId, categoryData) => {
 
         const category = await prisma.category.create({
             data: {
-                name: categoryData.name.toLocaleUpperCase(),
+                name: categoryData.name.trim().toLocaleUpperCase(),
                 serverId,
                 order: server.categories.length,
                 defaultCategoryRole: { create: {} }
@@ -164,7 +164,7 @@ export const createCategory = async (serverId, categoryData) => {
 // in test
 export const updateCategory = async ( categoryId, update) => {
     try {
-        if (!categoryId || !update?.name) {
+        if (!categoryId || !update?.name.trim()) {
             return { success: false, message: "serverId and categoryId are required." };
         }
 
@@ -213,7 +213,7 @@ export const updateCategory = async ( categoryId, update) => {
         if (userServerProfile.server.ownerId === user.id || userServerProfile.roles.some(item => item.role.adminPermission)) {
             const updatedCategory = await prisma.category.update({
                 where: { id: categoryId },
-                data: { name: update.name }
+                data: { name: update.name.trim() }
             });
 
             console.log(updatedCategory);
