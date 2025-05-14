@@ -47,15 +47,6 @@ const ServerSettingSideBar = () => {
 
     return (
         <div className="p-6">
-            {/* Back button */}
-            <div className="mb-3">
-                <button
-                    onClick={() => router.push(`/server/${serverId}`)}
-                    className="text-indigo-400 hover:underline text-sm"
-                >
-                    ← Back to Server
-                </button>
-            </div>
 
             {/* Server name and divider */}
             <h2 className="font-bold uppercase text-indigo-500 mb-1">{server?.name}</h2>
