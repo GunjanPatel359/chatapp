@@ -99,7 +99,7 @@ const UserServerProfileCard: React.FC<UserServerProfileCardProps> = ({ profile, 
           {/* Avatar */}
           <div className="relative h-8 mb-4">
             <div className="absolute -top-10 left-6 w-20 h-20 rounded-full border-4 border-indigo-50 overflow-hidden">
-              <img src={profile.imageUrl} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={profile?.imageUrl} alt="Avatar" className="w-full h-full object-cover" />
             </div>
           </div>
 
