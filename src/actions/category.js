@@ -452,3 +452,29 @@ const helperGetCategoryData = async(categoryId) => {
     })
     return {success:true,category}
 }
+
+export const getCategoryInfo = async (categoryId) => {
+    try {
+        if (!categoryId) {
+            return { success: false, message: "Category ID is required" };
+        }
+        const user = await isAuthUser()
+        if (!user) {
+            return { success: false, message: "You are not logged in" };
+        }
+        const category = await prisma.category.findFirst({
+            where: { id: categoryId },
+            select: {
+                id: true,
+                name: true
+            }
+        })
+        if (!category) {
+            return { success: false, message: "Category not found" };
+        }
+        return { success: true, category };
+    } catch (error) {
+        console.log(error)
+        throw new Error(error)
+    }
+}

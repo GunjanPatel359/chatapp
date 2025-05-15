@@ -99,6 +99,7 @@ const PermissionRoleComponent = () => {
   };
 
   const updateCategoryRolePermission = async () => {
+    console.log(selectedRoleId, defaultCategoryRole.id,permissions)
     try {
       let res;
       if (selectedRoleId == defaultCategoryRole.id) {
