@@ -30,7 +30,7 @@ const UserServerProfileCard: React.FC<UserServerProfileCardProps> = ({ profile, 
 
   const {
     bannerUrl = '/default-banner.png',
-    avatarUrl = '/default-avatar.png',
+    imageUrl = '/default-avatar.png',
     displayName = 'Your Name',
     pronoun = '@user • User',
     description = 'No bio yet',
