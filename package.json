@@ -44,6 +44,7 @@
     "livekit-server-sdk": "^2.12.0",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.471.2",
+    "motion": "^12.10.4",
     "next": "^15.3.0",
     "react": "^18",
     "react-beautiful-dnd": "^13.1.1",
