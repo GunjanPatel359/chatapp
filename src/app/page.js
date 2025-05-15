@@ -160,17 +160,11 @@ export default function Home() {
       <div className="flex flex-col md:flex-row items-center justify-center z-10 p-8">
         {/* Video Preview */}
         <div className="bg-white bg-opacity-10 rounded-2xl p-6 shadow-lg max-w-lg mr-0 md:mr-8 mb-8 md:mb-0">
-          <video
-            ref={videoRef}
+          <img
+            src="/chatverse-1.gif"
+            alt="Chatverse animation"
             className="w-full h-auto rounded-lg"
-            autoPlay
-            muted
-            loop
-            onError={(e) => console.error("Video loading error:", e)}
-          >
-            <source src="/chatverse-1.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+          />
         </div>
 
         {/* Promotional Text */}
@@ -191,17 +185,11 @@ export default function Home() {
       <div className="flex flex-col md:flex-row-reverse items-center justify-center z-10 p-8">
         {/* Video Preview */}
         <div className="bg-white bg-opacity-10 rounded-2xl p-6 shadow-lg max-w-lg ml-0 md:ml-8 mb-8 md:mb-0">
-          <video
-            ref={videoRef2}
+         <img
+            src="/chatverse-2.gif"
+            alt="Chatverse animation"
             className="w-full h-auto rounded-lg"
-            autoPlay
-            muted
-            loop
-            onError={(e) => console.error("Video loading error:", e)}
-          >
-            <source src="/chatverse-2.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+          />
         </div>
 
         {/* Promotional Text */}

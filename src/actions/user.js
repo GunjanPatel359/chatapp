@@ -5,7 +5,7 @@ import prisma from "@/lib/db";
 import { isAuthUser } from "@/lib/authMiddleware";
 import { decodeToken, generateToken } from "@/lib/tokenConfig";
 
-export const handleGetServerCategoryAndChannels = async (serverId) => {
+export const handleGetServerCategoryAndChannels = async (serverId,userServerProfile) => {
   try {
     const server = await prisma.server.findUnique({
       where: { id: serverId },
@@ -22,8 +22,8 @@ export const handleGetServerCategoryAndChannels = async (serverId) => {
     });
 
     if (!server) return { success: false, message: "Server not found" };
-
-    return { success: true, server: JSON.parse(JSON.stringify(server)) };
+    const { roles, ...validServerProfile } = userServerProfile;
+    return { success: true, server: JSON.parse(JSON.stringify(server)),userServerProfile:validServerProfile };
   } catch (error) {
     console.error("[handleGetServerCategoryAndChannels ERROR]", error);
     return { success: false, message: "Internal server error" };
@@ -250,7 +250,7 @@ export const getServer = async (serverId) => {
 
     // If the user is the server owner or has admin permission, fetch all categories and channels
     if (userServerProfile.server.ownerId === user.id || userServerProfile.roles.some((role) => role.role.adminPermission)) {
-      return await handleGetServerCategoryAndChannels(serverId);
+      return await handleGetServerCategoryAndChannels(serverId,userServerProfile);
     }
 
     // Otherwise, filter categories and channels based on the user's roles
@@ -312,8 +312,8 @@ export const getServer = async (serverId) => {
         )
       );
     });
-
-    return { success: true, server: JSON.parse(JSON.stringify(server)) };
+    const { roles, ...validServerProfile } = userServerProfile;
+    return { success: true, server: JSON.parse(JSON.stringify(server)), userServerProfile:validServerProfile };
   } catch (error) {
     console.log("[getServer ERROR]", error);
     return { success: false, message: "Internal server error" };

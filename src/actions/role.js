@@ -25,7 +25,6 @@ const helperUpdateDefaultCategoryRole = async (defaultRoleId, updates) => {
         where: { id: defaultRoleId },
         data: {
             viewChannel: updates?.viewChannel || "NEUTRAL",
-            createInvite: updates?.createInvite || "NEUTRAL",
             sendMessage: updates?.sendMessage || "NEUTRAL",
             attachFiles: updates?.attachFiles || "NEUTRAL",
             seemessageHistory: updates?.seemessageHistory || "NEUTRAL",
@@ -42,7 +41,6 @@ const helperUpdateDefaultChannelRole = async (defaultRoleId, updates) => {
         where: { id: defaultRoleId },
         data:{
             viewChannel:updates?.viewChannel || "NEUTRAL",
-            createInvite:updates?.createInvite || "NEUTRAL",
             sendMessage:updates?.sendMessage || "NEUTRAL",    
             attachFiles:updates?.attachFiles || "NEUTRAL",  
             seemessageHistory:updates?.seemessageHistory || "NEUTRAL",

@@ -1,5 +1,5 @@
 "use client"
-import { getCategoryData, updateCategory } from "@/actions/category";
+import { getCategoryInfo, updateCategory } from "@/actions/category";
 import { toast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -11,7 +11,7 @@ const OverviewComponent = () => {
   useEffect(() => {
     const fetchCatedata = async () => {
       try {
-        const res = await getCategoryData(params.categoryId)
+        const res = await getCategoryInfo(params.categoryId)
         if (res.success) {
           setCategoryName(res.category.name)
         }
@@ -20,7 +20,7 @@ const OverviewComponent = () => {
       }
     }
     fetchCatedata()
-  })
+  },[])
 
   const handleSave = async () => {
     try {
