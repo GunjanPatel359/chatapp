@@ -1,7 +1,7 @@
 "use client";
 import { getServer } from "@/actions/user";
 import { useParams, useRouter } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { FaHashtag } from "react-icons/fa";
 import { HiSpeakerphone } from "react-icons/hi";
 import { IoSettingsSharp } from "react-icons/io5";
@@ -10,14 +10,23 @@ import { HiSpeakerWave } from "react-icons/hi2";
 import { FaPlus } from "react-icons/fa6";
 import { serverStore } from "@/hooks/zusthook.js";
 import Image from "next/image";
+import UserServerProfileCard from "@/components/ui/UserServerProfileCard";
 
 const ServerSideBar = () => {
-    const { onsetServer, serverProfile } = serverStore();
+    const { onsetServer } = serverStore();
     const router = useRouter();
     const params = useParams();
     const [server, setServer] = useState(null);
+    const [serverProfile, setServerProfile] = useState(null);
     const serverId = useMemo(() => params.serverId, [params?.serverId]);
     const channelId = useMemo(() => params.channelId, [params?.channelId]);
+    
+    const toggleUserServerProfileCard = () => {
+        setIsUserServerProfileCard(!isUserServerProfileCard);
+    };
+    const [isUserServerProfileCard, setIsUserServerProfileCard] = useState(false);
+    const userNameRef = useRef(null);
+
 
     console.log(serverId, channelId, server)
     console.log(serverProfile);
@@ -30,6 +39,7 @@ const ServerSideBar = () => {
                     console.log(res.server);
                     onsetServer(res.server);
                     setServer(res.server);
+                    setServerProfile(res.userServerProfile);
                 }
             } catch (error) {
                 console.log(error);
@@ -87,28 +97,58 @@ const ServerSideBar = () => {
                             })}
                     </div>
 
-                    {/* Footer */}
+                   {/* Footer */}
                     <div className="p-1 space-x-2 border-t border-indigo-200 bg-gray-200 shadow">
-                        <div className="hover:bg-gray-50 flex items-center p-2 py-1 rounded cursor-pointer">
-                            <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white">
-                                G
-                            </div>
-                            <div className="flex-1 ml-2">
-                                <h3 className="text-sm font-bold text-indigo-500">
-                                    gunjanpatel
-                                </h3>
-                                <p className="text-xs text-indigo-400">Idle</p>
-                            </div>
-                            <div className="flex space-x-2 text-gray-400">
-                                <button>
-                                    <IoSettingsSharp
-                                        size={22}
-                                        className="text-indigo-500 transition-all duration-500 hover:rotate-90"
-                                    />
-                                </button>
-                            </div>
+                    <div className="hover:bg-gray-50 flex items-center p-2 py-1 rounded cursor-pointer">
+                        
+                        {/* Avatar */}
+                        {serverProfile?.imageUrl ? (
+                        <img
+                            src={serverProfile.imageUrl}
+                            alt="User Avatar"
+                            className="w-8 h-8 rounded-full object-cover"
+                        />
+                        ) : (
+                        <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white text-sm font-bold">
+                            {serverProfile?.name?.charAt(0).toUpperCase() || "G"}
+                        </div>
+                        )}
+
+                        {/* Profile Info */}
+                        <div
+                        ref={userNameRef}
+                        className="flex-1 ml-2 cursor-pointer"
+                        onClick={toggleUserServerProfileCard}
+                        >
+                        <h3 className="text-sm font-bold text-indigo-500">
+                            {serverProfile?.name || "Guest"}
+                        </h3>
+                        <div className="flex items-center text-xs text-gray-400">
+                            <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>
+                            Working
+                        </div>
+                        </div>
+
+                        {/* Settings Button */}
+                        <div className="flex space-x-2 text-gray-400">
+                        <button>
+                            <IoSettingsSharp
+                            size={22}
+                            className="text-indigo-500 transition-all duration-500 hover:rotate-90"
+                            />
+                        </button>
                         </div>
                     </div>
+
+                    {/* UserServerProfileCard Component */}
+                    <UserServerProfileCard
+                        profile={serverProfile}
+                        isOpen={isUserServerProfileCard}
+                        onClose={() => setIsUserServerProfileCard(false)}
+                        triggerRef={userNameRef}
+                    />
+                    </div>
+
                 </>
             ) : (
                 <div className="relative w-full h-full bg-indigo-200 overflow-hidden">
@@ -148,7 +188,7 @@ const SidebarItem = ({ channel, channelId, serverId, isSelected, isVisible }) =>
                     <span className="text-sm">{channel.name}</span>
                 </div>
                 <div>
-                    <IoSettingsSharp size={15} className={`hover:rotate-90 transition-all duration-500 opacity-0 group-hover:opacity-100 ${isSelected && "opacity-100"}`} onClick={() => router.push(`/setting/channel/${channel.id}`)} />
+                    <IoSettingsSharp size={15} className={`hover:rotate-90 transition-all duration-500 opacity-0 group-hover:opacity-100 ${isSelected && "opacity-100"}`} onClick={() => router.push(`/setting/channel/${channel.id}/Overview`)} />
                 </div>
             </div>
         </div>
@@ -176,7 +216,7 @@ const SidebarSection = ({ category, channelId, serverId }) => {
                 </span>
                 <span className="flex">
                     <FaPlus className="my-auto mr-0 transition-all duration-300 ease-out group-hover:mr-[3px]" size={15} />
-                    <IoSettingsSharp className="my-auto hover:rotate-90 transition-all duration-500 group-hover:opacity-100 max-w-0 group-hover:max-w-8" size={16} onClick={() => router.push(`/setting/category/${category.id}`)} />
+                    <IoSettingsSharp className="my-auto hover:rotate-90 transition-all duration-500 group-hover:opacity-100 max-w-0 group-hover:max-w-8" size={16} onClick={() => router.push(`/setting/category/${category.id}/Overview`)} />
                 </span>
             </div>
 
