@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import {createServerRole} from "@/actions/role"
 import { toast } from "@/hooks/use-toast";
 
-export const CreateServerRoleModal=({children,serverId})=>{
+export const CreateServerRoleModal=({children,serverId,setReload})=>{
   const [roleName, setRoleName] = useState("");
 
   const handleSubmit = async() => {
@@ -26,6 +27,7 @@ export const CreateServerRoleModal=({children,serverId})=>{
             description: "Your new Server role has been created",
             variant:"success"
         })
+        setReload(Date.now())
       }else{
         toast({
             title: "Error creating role",

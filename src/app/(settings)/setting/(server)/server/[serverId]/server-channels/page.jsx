@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useEffect, useState } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
@@ -7,6 +8,8 @@ import { MdEventNote } from "react-icons/md";
 import { channelReorder, getChannel } from "@/actions/channel"
 import { useParams } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
+import { FaHashtag } from "react-icons/fa";
+import { HiMiniSpeakerWave } from "react-icons/hi2";
 
 import { CreateChannelModal } from "@/components/modals/createChannelModal"
 
@@ -16,14 +19,14 @@ const ItemTypes = {
 };
 
 // Category component (no drag functionality here)
-const CategoryItem = ({ category, index, moveChannel }) => {
+const CategoryItem = ({ category, index, moveChannel, setReload }) => {
   const params = useParams()
   return (
     <div className="p-3 bg-white text-indigo-500 rounded shadow-md">
       <div className="flex justify-between items-center pl-2">
         <span className="font-bold text-sm">{category.name}</span>
         <span className="pr-1">
-          <CreateChannelModal categoryName={category.name} categoryId={category.id} serverId={params.serverId}>
+          <CreateChannelModal categoryName={category.name} categoryId={category.id} serverId={params.serverId} setReload={setReload}>
             <BiPlus size={26} className="hover:scale-105 cursor-pointer" />
           </CreateChannelModal>
         </span>
@@ -80,7 +83,7 @@ const ChannelItem = ({ channel, index, categoryIndex, moveChannel }) => {
       className={`flex items-center justify-between p-2 bg-white text-indigo-500 rounded cursor-pointer hover:bg-indigo-100 ${isDragging ? "opacity-50" : ""
         }`}
     >
-      <span className=""># {channel.name}</span>
+      <span className="">{channel.type == "TEXT" ? <FaHashtag className="inline" size={17} /> : <HiMiniSpeakerWave size={18} className="inline" />} {channel.name}</span>
       <span>
         <BiSolidEdit size={19} className="hover:text-indigo-600 transition-all hover:scale-110" />
       </span>
@@ -91,6 +94,7 @@ const ChannelItem = ({ channel, index, categoryIndex, moveChannel }) => {
 const ServerChannels = () => {
   const params = useParams()
   const [categories, setCategories] = useState([]);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     const initiatePage = async () => {
@@ -111,7 +115,7 @@ const ServerChannels = () => {
       }
     }
     initiatePage()
-  }, [params.serverId])
+  }, [params.serverId, reload])
 
   // Function to move channels between categories
   const moveChannel = (
@@ -174,13 +178,14 @@ const ServerChannels = () => {
             <h2 className="font-bold mb-2">Channels - {categories.reduce((sum, cate) => sum + cate.channels.length, 0)}</h2>
             <span className="bg-indigo-500 text-white py-1 px-3 rounded cursor-pointer hover:bg-indigo-600" onClick={handleChannelReorder}>Save</span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 overflow-y-scroll max-h-[450px] scrollbar-none">
             {categories.map((category, index) => (
               <CategoryItem
                 key={category.id}
                 category={category}
                 index={index}
                 moveChannel={moveChannel}
+                setReload={setReload}
               />
             ))}
           </div>

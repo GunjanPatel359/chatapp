@@ -78,7 +78,7 @@ const ServerSideBar = () => {
                             <IoSettingsSharp
                                 size={22}
                                 className="inline text-indigo-500 transition-all duration-500 hover:rotate-90 my-auto cursor-pointer mx-1"
-                                onClick={() => router.push(`/setting/server/${serverId}`)}
+                                onClick={() => router.push(`/setting/server/${serverId}/server-info`)}
                             />
                         </div>
                     </div>

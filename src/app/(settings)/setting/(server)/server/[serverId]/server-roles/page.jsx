@@ -1,4 +1,5 @@
 "use client";
+
 import { getServerRoles, reorderServerRole } from "@/actions/role";
 import { toast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
@@ -9,7 +10,6 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { BiSolidEdit } from "react-icons/bi";
 import { PiDotsThreeOutlineFill } from "react-icons/pi";
 import { FaUser } from "react-icons/fa";
-
 import { CreateServerRoleModal } from "@/components/modals/createServerRoleModal";
 
 import {
@@ -38,11 +38,13 @@ const serverRoles = () => {
   const [roles, setRoles] = useState([]);
   const [defaultServerRole,setDefaultServerRoleId] = useState()
   const [dragging, setDragging] = useState(false); // State to manage overlay
+  const [reload,setReload]=useState(0);
 
   useEffect(() => {
     const fetchPage = async () => {
       try {
         const res = await getServerRoles(serverId);
+        console.log(res,"amazing what is this")
         if (res.success) {
           setRoles(res.roles);
           setDefaultServerRoleId(res.defaultServerRole)
@@ -58,7 +60,7 @@ const serverRoles = () => {
     if (serverId) {
       fetchPage();
     }
-  }, [serverId]);
+  }, [params?.serverId,reload]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -129,7 +131,7 @@ const serverRoles = () => {
               <IoSearchOutline size={25} />
             </div>
           </div>
-          <CreateServerRoleModal serverId={serverId}>
+          <CreateServerRoleModal serverId={serverId} setReload={setReload}>
             <button className="bg-indigo-500 hover:bg-indigo-600 text-white font-medium text-sm py-2 px-4 ml-2 rounded whitespace-nowrap">
               Create Role
             </button>
@@ -159,6 +161,7 @@ const serverRoles = () => {
                 items={roles.map((role) => role.id)}
                 strategy={verticalListSortingStrategy}
               >
+                <div className="max-h-[370px] overflow-y-auto scrollbar-none">
                 <table className="w-full table-auto border-collapse">
                   <thead className="bg-gray-200">
                     <tr>
@@ -179,15 +182,15 @@ const serverRoles = () => {
                   <tbody>
                     {roles.map((role) => (
                       <SortableRow
+                        role={role}
                         key={role.id}
                         id={role.id}
-                        roleName={role.name}
-                        roleCount={role?.UserRoleAssignment?.length || 0}
                       />
                     ))}
-                    <EveryOneRole roleDId={defaultServerRole?.id}/>
+                    <EveryOneRole role={defaultServerRole}/>
                   </tbody>
                 </table>
+                </div>
               </SortableContext>
             </DndContext>
           ) : (
@@ -200,7 +203,7 @@ const serverRoles = () => {
   );
 };
 
-const EveryOneRole=({roleDId})=>{
+const EveryOneRole=({role})=>{
   return (
     <>
     <tr
@@ -217,7 +220,7 @@ const EveryOneRole=({roleDId})=>{
         </td>
         <td className="w-auto px-4 py-2">
           <div className="flex space-x-2">
-          <EditDefaultServerRoleModal roleId={roleDId}>
+          <EditDefaultServerRoleModal role={role}>
             <button
               className="p-1 hover:bg-indigo-600 bg-indigo-500 text-white transition rounded-full"
               // onClick={() => setSelectedRole(roleName)} // Open the modal
@@ -235,7 +238,7 @@ const EveryOneRole=({roleDId})=>{
   )
 }
 
-const SortableRow = ({ id, roleName, roleCount }) => {
+const SortableRow = ({ id, role }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const style = {
@@ -256,16 +259,16 @@ const SortableRow = ({ id, roleName, roleCount }) => {
         <td className="w-[2px] px-2 pr-0 py-2">
           <BsThreeDotsVertical className="cursor-grab" />
         </td>
-        <td className="px-4 pl-2 py-2 capitalize">{roleName}</td>
+        <td className="px-4 pl-2 py-2 capitalize">{role.name}</td>
         <td className="px-4 py-2 flex">
-          <span className="my-auto text-center">{roleCount}</span>
+          <span className="my-auto text-center">{role?.UserRoleAssignment?.length || 0}</span>
           <button className="p-1 text-indigo-500 hover:text-indigo-600 transition rounded-full ml-1">
             <FaUser size={19} />
           </button>
         </td>
         <td className="w-auto px-4 py-2">
           <div className="flex space-x-2">
-            <EditServerRoleModal roleId={id}>
+            <EditServerRoleModal role={role}>
             <button
               className="p-1 hover:bg-indigo-600 bg-indigo-500 text-white transition rounded-full"
               >

@@ -1,4 +1,5 @@
 "use client";
+
 import { CopyIcon } from "lucide-react";
 import { serverInviteInfo } from "@/actions/invite";
 import { CreateInviteModal } from "@/components/modals/createInviteModal";
@@ -40,12 +41,10 @@ const InviteAccessToggle = () => {
     );
 };
 
-
-
-
 const InviteList = () => {
     const params = useParams();
     const [inviteList, setInviteList] = useState([]);
+    const [reload, setReload] = useState(0);
 
     useEffect(() => {
         const initatePage = async () => {
@@ -71,7 +70,7 @@ const InviteList = () => {
         if (params?.serverId) {
             initatePage();
         }
-    }, [params?.serverId]);
+    }, [params?.serverId, reload]);
 
     const getTimeLeft = (expiresAt) => {
         const now = new Date();
@@ -95,7 +94,7 @@ const InviteList = () => {
                 >
                     Pause Invites
                 </Button>
-                <CreateInviteModal>
+                <CreateInviteModal setReload={setReload}>
                     <Button className="bg-blue-600 text-white hover:bg-blue-700">
                         Create Invite Link
                     </Button>
@@ -104,63 +103,79 @@ const InviteList = () => {
             <InviteAccessToggle />
 
             <div className="overflow-x-auto bg-gray-50 border rounded-lg">
-                <table className="w-full table-auto text-sm text-left">
-                    <thead className="bg-gray-100 text-gray-700 font-semibold">
-                        <tr>
-                            <th className="px-4 py-4">Inviter</th>
-                            <th className="px-4 py-4 max-w-[120px]">Invite Code</th>
-                            <th className="px-4 py-4 max-w-[80px]">Uses</th>
-                            <th className="px-4 py-4">Expires</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {inviteList.length > 0 ? (
-                            inviteList.map((invite) => (
-                                <tr key={invite.id} className="border-t hover:bg-gray-50">
-                                    <td className="px-4 py-3 flex items-center gap-2">
-                                        <img
-                                            src={invite.serverProfile?.imageUrl || "/avatar.png"}
-                                            alt="avatar"
-                                            className="w-10 h-10 rounded-full"
-                                        />
-                                        <div>
-                                            <div className="font-bold h-4 text-sm">@{invite.serverProfile?.user?.username || "Unknown"}</div>
-                                            <div className="font-medium h-4">{invite.serverProfile?.name || "Unknown"}</div>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3 font-mono text-blue-700">
-                                        <div className="flex items-center gap-2 group relative">
-                                            <span className="truncate group-hover:text-blue-900 transition">
-                                                {invite.inviteString.split("-")[0]}
-                                            </span>
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(`${serverLink}invite/${invite.inviteString}`);
-                                                    toast({
-                                                        title: "Copied to clipboard",
-                                                        description: "Full invite link has been copied.",
-                                                    });
-                                                }}
-                                                className="p-1 rounded hover:bg-gray-200 transition"
-                                                aria-label="Copy invite link"
-                                            >
-                                                <CopyIcon size={16} className="text-gray-500 group-hover:text-blue-600" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3">{invite.currentCount}/{invite.limitMember}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap">{getTimeLeft(invite.expiresAt)}</td>
-                                </tr>
-                            ))
-                        ) : (
+                <div className="max-h-[330px] overflow-y-auto">
+                    <table className="w-full table-auto text-sm text-left">
+                        <thead className="bg-gray-100 text-gray-700 font-semibold sticky top-0 z-10">
                             <tr>
-                                <td colSpan="4" className="px-4 py-4 text-center text-gray-400">
-                                    No invites found.
-                                </td>
+                                <th className="px-4 py-4">Inviter</th>
+                                <th className="px-4 py-4 max-w-[120px]">Invite Code</th>
+                                <th className="px-4 py-4 max-w-[80px]">Uses</th>
+                                <th className="px-4 py-4">Expires</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {inviteList.length > 0 ? (
+                                inviteList.map((invite) => (
+                                    <tr key={invite.id} className="border-t hover:bg-gray-50">
+                                        <td className="px-4 py-3 flex items-center gap-2">
+                                            <img
+                                                src={invite.serverProfile?.imageUrl || "/avatar.png"}
+                                                alt="avatar"
+                                                className="w-10 h-10 rounded-full"
+                                            />
+                                            <div>
+                                                <div className="font-bold h-4 text-sm">
+                                                    @{invite.serverProfile?.user?.username || "Unknown"}
+                                                </div>
+                                                <div className="font-medium h-4">
+                                                    {invite.serverProfile?.name || "Unknown"}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 font-mono text-blue-700">
+                                            <div className="flex items-center gap-2 group relative">
+                                                <span className="truncate group-hover:text-blue-900 transition">
+                                                    {invite.inviteString.split("-")[0]}
+                                                </span>
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(
+                                                            `${serverLink}invite/${invite.inviteString}`
+                                                        );
+                                                        toast({
+                                                            title: "Copied to clipboard",
+                                                            description: "Full invite link has been copied.",
+                                                        });
+                                                    }}
+                                                    className="p-1 rounded hover:bg-gray-200 transition"
+                                                    aria-label="Copy invite link"
+                                                >
+                                                    <CopyIcon
+                                                        size={16}
+                                                        className="text-gray-500 group-hover:text-blue-600"
+                                                    />
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {invite.currentCount}/{invite.limitMember}
+                                        </td>
+                                        <td className="px-4 py-3 whitespace-nowrap">
+                                            {getTimeLeft(invite.expiresAt)}
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="4" className="px-4 py-4 text-center text-gray-400">
+                                        No invites found.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
         </div>
     );

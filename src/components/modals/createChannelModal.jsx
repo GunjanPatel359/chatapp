@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,13 +21,19 @@ import { HiSpeakerWave } from "react-icons/hi2";
 
 import { createChannel } from "@/actions/channel";
 
-export const CreateChannelModal = ({ children,categoryId, categoryName, serverId }) => {
+export const CreateChannelModal = ({ children,categoryId, categoryName, serverId, setReload }) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [typed, setTyped] = useState("TEXT"); // Default to TEXT channel
 
   const handleCreateChannel = async () => {
-    if (!name.trim() || !description.trim()) return;
+    if (!name.trim() || !description.trim()) {
+      return toast({
+        title: "Alert",
+        description: "name and description is required",
+        variant: "destructive"
+      })
+    };
 
     try {
         console.log(typed)
@@ -40,6 +47,7 @@ export const CreateChannelModal = ({ children,categoryId, categoryName, serverId
             description: "Your new channel has been created",
             variant:"success"
         })
+        setReload(Date.now())
       }else{
         toast({
             title: "Error creating channel",
@@ -111,3 +119,4 @@ export const CreateChannelModal = ({ children,categoryId, categoryName, serverId
     </Dialog>
   );
 };
+

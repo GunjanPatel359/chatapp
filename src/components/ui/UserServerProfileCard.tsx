@@ -9,7 +9,7 @@ import { Button } from './button';
 interface Profile {
   bannerUrl?: string;
   imageUrl?: string;
-  username: string;
+  name: string;
   displayName?: string;
   pronoun?: string;
   description?: string;
@@ -34,7 +34,7 @@ const UserServerProfileCard: React.FC<UserServerProfileCardProps> = ({ profile, 
     displayName = 'Your Name',
     pronoun = '@user • User',
     description = 'No bio yet',
-    username = '@'
+    name = '@'
   } = profile || {};
 
   useEffect(() => {

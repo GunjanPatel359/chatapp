@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,7 +16,7 @@ import { createCategory } from "@/actions/category.js";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 
-export const CreateCategoryModal = ({ children, serverId }) => {
+export const CreateCategoryModal = ({ children, serverId,setReload }) => {
   const [name, setName] = useState("");
 
   const handleCreateCategory = async () => {
@@ -28,6 +29,7 @@ export const CreateCategoryModal = ({ children, serverId }) => {
           description: "Your new category has been created",
           variant:"success"
         })
+        setReload(Date.now())
         setName(""); // Clear input after creation
       }else{
         toast({

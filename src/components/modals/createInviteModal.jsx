@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { CopyIcon } from "lucide-react";
 import { serverLink } from "@/server";
 
-export const CreateInviteModal = ({ children }) => {
+export const CreateInviteModal = ({ children, setReload }) => {
   const params = useParams();
   const [expireAfter, setExpireAfter] = useState("7d");
   const [maxUses, setMaxUses] = useState("no-limit");
@@ -34,6 +35,7 @@ export const CreateInviteModal = ({ children }) => {
           title: "Invite created",
           description: "You can now copy the invite link",
         });
+        setReload(Date.now())
       } else {
         toast({
           title: "Failed to create invite",

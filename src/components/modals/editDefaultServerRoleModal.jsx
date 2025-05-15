@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -69,44 +70,15 @@ const PermissionToggle = ({ label, description, value, onChange }) => {
   );
 };
 
-export const EditDefaultServerRoleModal = ({ children, roleId}) => {
+export const EditDefaultServerRoleModal = ({ children, role}) => {
   const params=useParams()
   const [activeSection, setActiveSection] = useState("permissions");
-  const [permissions, setPermissions] = useState({});
+  const [permissions, setPermissions] = useState(role);
   const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    const fetchRoleData = async () => {
-      setLoading(true);
-      try {
-        const res = await getDefaultServerRoleInfo(params.serverId,roleId);
-        console.log(res)
-        if (res.success) {
-          setPermissions(res.role || {});
-        } else {
-          toast({
-            title: "Role not found",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        toast({
-          title: "Error fetching role data",
-          description: error.message,
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (roleId) {
-      fetchRoleData();
-    }
-  }, [roleId]);
 
   const handleSave = async() => {  
       try {
-        const res=await updateDefaultServerRole(roleId,permissions)
+        const res=await updateDefaultServerRole(role.id,permissions)
         console.log(res)
         if(res.success){
             toast({

@@ -82,45 +82,13 @@ const PermissionToggle = ({ label, description, value, onChange }) => {
   );
 };
 
-export const EditServerRoleModal = ({ children, roleId }) => {
+export const EditServerRoleModal = ({ children, role }) => {
   const params=useParams()
   const [activeSection, setActiveSection] = useState("display");
-  const [displayName, setDisplayName] = useState("");
-  const [permissions, setPermissions] = useState({});
+  const [displayName, setDisplayName] = useState(role.name);
+  const [permissions, setPermissions] = useState(role);
   const [members,setMembers]=useState();
   const [loading, setLoading] = useState(false);
-  console.log(members)
-  useEffect(() => {
-    const fetchRoleData = async () => {
-      setLoading(true);
-      try {
-        const res = await getServerRoleInfo(params.serverId,roleId);
-        console.log(res)
-        if (res.success) {
-          setDisplayName(res.role.name);
-          setPermissions(res.role || {});
-          setMembers(res.role.UserRoleAssignment);
-        } else {
-          toast({
-            title: "Role not found",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        toast({
-          title: "Error fetching role data",
-          description: error.message,
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (roleId) {
-      fetchRoleData();
-    }
-  }, [roleId]);
 
   const handleSave = async() => {
     if (!displayName.trim()) {
@@ -131,7 +99,7 @@ export const EditServerRoleModal = ({ children, roleId }) => {
     }
 
     try {
-      const res=await editServerRole(params.serverId,roleId,{name:displayName,permissions})
+      const res=await editServerRole(params.serverId,role.id,{name:displayName,permissions})
       if(res.success){
         toast({
           title: "Role updated",

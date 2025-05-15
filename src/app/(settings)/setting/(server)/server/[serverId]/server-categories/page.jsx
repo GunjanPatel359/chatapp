@@ -66,6 +66,7 @@ const CategoryItem = ({ category, index, moveCategory }) => {
 
 const ServerCategories = () => {
   const [categories, setCategories] = useState([]);
+  const [reload,setReload]=useState(0);
   const params = useParams();
 
   useEffect(() => {
@@ -79,9 +80,10 @@ const ServerCategories = () => {
         console.error("Error fetching categories:", error);
       }
     };
-
-    fetchCategories();
-  }, [params?.serverId]);
+    if(params?.serverId){
+      fetchCategories();
+    }
+  }, [params?.serverId,reload]);
 
   // Optimized function to move categories
   const moveCategory = useCallback((fromIndex, toIndex) => {
@@ -124,7 +126,7 @@ const ServerCategories = () => {
       <DndProvider backend={HTML5Backend}>
         <div className="mt-5">
           <div className="flex items-center justify-between mb-4">
-            <CreateCategoryModal serverId={params.serverId}>
+            <CreateCategoryModal serverId={params.serverId} setReload={setReload}>
               <button className="bg-indigo-500 hover:bg-indigo-600 px-3 py-2 rounded-md text-white flex">
                 <FaPlus size={20} className="inline my-auto mr-1" /> Create Category
               </button>
@@ -142,7 +144,7 @@ const ServerCategories = () => {
             </span>
           </h2>
 
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[400px] overflow-y-scroll scrollbar-none">
             {categories.length > 0 ? (
               categories.map((category, index) => (
                 <CategoryItem
