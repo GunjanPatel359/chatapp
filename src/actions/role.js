@@ -37,16 +37,16 @@ const helperUpdateDefaultCategoryRole = async (defaultRoleId, updates) => {
 }
 
 const helperUpdateDefaultChannelRole = async (defaultRoleId, updates) => {
-    const updatedRole=await prisma.defaultChannelRole.update({
+    const updatedRole = await prisma.defaultChannelRole.update({
         where: { id: defaultRoleId },
-        data:{
-            viewChannel:updates?.viewChannel || "NEUTRAL",
-            sendMessage:updates?.sendMessage || "NEUTRAL",    
-            attachFiles:updates?.attachFiles || "NEUTRAL",  
-            seemessageHistory:updates?.seemessageHistory || "NEUTRAL",
-            connect:updates?.connect || "NEUTRAL",    
-            speak:updates?.speak || "NEUTRAL",  
-            video:updates?.video || "NEUTRAL",    
+        data: {
+            viewChannel: updates?.viewChannel || "NEUTRAL",
+            sendMessage: updates?.sendMessage || "NEUTRAL",
+            attachFiles: updates?.attachFiles || "NEUTRAL",
+            seemessageHistory: updates?.seemessageHistory || "NEUTRAL",
+            connect: updates?.connect || "NEUTRAL",
+            speak: updates?.speak || "NEUTRAL",
+            video: updates?.video || "NEUTRAL",
         }
     })
     return { success: true, message: "updated channel role successfully", updatedRole }
@@ -646,7 +646,7 @@ export const getChannelRolesData = async (channelId) => {
 
 export const updateDefaultServerRole = async (defaultRoleId, updates) => {
     try {
-        console.log(defaultRoleId,updates)
+        console.log(defaultRoleId, updates)
         if (!defaultRoleId || !updates) {
             return { success: false, message: "Default role id is required" }
         }
@@ -816,12 +816,12 @@ export const updateDefaultChannelRole = async (defaultRoleId, updates) => {
             select: {
                 channel: {
                     select: {
-                        categoryId:true,
+                        categoryId: true,
                         category: {
                             select: {
                                 server: {
                                     select: {
-                                        id:true,
+                                        id: true,
                                         ownerId: true
                                     }
                                 }
@@ -831,7 +831,7 @@ export const updateDefaultChannelRole = async (defaultRoleId, updates) => {
                 }
             }
         });
-        
+
         if (!defaultRole) {
             return { success: false, message: "Default role not found" }
         }
@@ -855,12 +855,12 @@ export const updateDefaultChannelRole = async (defaultRoleId, updates) => {
             }
         });
 
-        if(!userServerProfile){
+        if (!userServerProfile) {
             return { success: false, message: "User server profile not found" }
         }
 
-        if(defaultRole.channel.category.server.ownerId==user.id || userServerProfile.roles.some((role)=>role.role.adminPermission)){
-            return await helperUpdateDefaultChannelRole(defaultRoleId, updates); 
+        if (defaultRole.channel.category.server.ownerId == user.id || userServerProfile.roles.some((role) => role.role.adminPermission)) {
+            return await helperUpdateDefaultChannelRole(defaultRoleId, updates);
         }
 
         ////////////////////////////////////////////////////////////////////
@@ -999,8 +999,23 @@ export const getServerRoles = async (serverId) => {
         // Fetch server details including roles
         const server = await prisma.server.findUnique({
             where: { id: serverId },
-            include: { roles: { orderBy: { order: "asc" } },defaultServerRole:true },
+            include: {
+                roles: {
+                    orderBy: {
+                        order: "asc"
+                    },
+                    include:{
+                        UserRoleAssignment:{ 
+                            include:{
+                                serverProfile:true
+                            }
+                        }
+                    }
+                },
+                defaultServerRole: true
+            },
         });
+        console.log(server) 
 
         if (!server) {
             return { success: false, message: "Server not found." };
@@ -1008,7 +1023,7 @@ export const getServerRoles = async (serverId) => {
 
         // If the user is the server owner, return all roles
         if (server.ownerId == user.id) {
-            return { success: true, roles: server.roles,defaultServerRole:server.defaultServerRole };
+            return { success: true, roles: server.roles, defaultServerRole: server.defaultServerRole };
         }
 
         // Validate user permissions
@@ -1021,7 +1036,7 @@ export const getServerRoles = async (serverId) => {
         }
 
         // Return server roles
-        return { success: true, roles: server.roles,defaultServerRole:server.defaultServerRole };
+        return { success: true, roles: server.roles, defaultServerRole: server.defaultServerRole };
     } catch (error) {
         console.error("getServerRoles Error:", error.message);
         throw new Error("Failed to retrieve server roles. Please try again later.");
@@ -2306,74 +2321,74 @@ export const reorderServerRole = async (serverId, serverRoleOrder) => {
 };
 
 
-export const getServerRoleInfo=async(serverId,roleId)=>{
+export const getServerRoleInfo = async (serverId, roleId) => {
     try {
-        if(!serverId || !roleId){
-            return {success:false,message:"serverId and roleId is required"}
+        if (!serverId || !roleId) {
+            return { success: false, message: "serverId and roleId is required" }
         }
-        const user=await isAuthUser();
-        if(!user){
-            return {success:false,message:"please login to continue"}
+        const user = await isAuthUser();
+        if (!user) {
+            return { success: false, message: "please login to continue" }
         }
 
         const server = await prisma.server.findFirst({
             where: {
-              id: serverId
+                id: serverId
             },
             include: {
-              roles: {
-                where: {
-                  id: roleId
+                roles: {
+                    where: {
+                        id: roleId
+                    }
                 }
-              }
             }
-          });          
-          if (!server || server.roles.length === 0) {
+        });
+        if (!server || server.roles.length === 0) {
             return { success: false, message: "server not found or role not found" };
-          }
-          
-        const userServerProfile=await prisma.serverProfile.findFirst({
-            where:{
-                serverId:serverId,
-                userId:user.id,
-                isDeleted:false
+        }
+
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: {
+                serverId: serverId,
+                userId: user.id,
+                isDeleted: false
             },
-            include:{
-                roles:{
-                    include:{
-                        role:true
+            include: {
+                roles: {
+                    include: {
+                        role: true
                     },
-                    orderBy:{
-                        role:{
-                            order:"asc"
+                    orderBy: {
+                        role: {
+                            order: "asc"
                         }
                     }
                 }
             }
         })
-        if(!userServerProfile){
-            return {success:false,message:"user server profile not found"}
+        if (!userServerProfile) {
+            return { success: false, message: "user server profile not found" }
         }
-        if(user.id==server.ownerId || userServerProfile.roles.some((role)=>role.role.adminPermission || role.role.manageRoles)){
-            const role=await prisma.serverRole.findFirst({
-                where:{
-                    id:roleId,
+        if (user.id == server.ownerId || userServerProfile.roles.some((role) => role.role.adminPermission || role.role.manageRoles)) {
+            const role = await prisma.serverRole.findFirst({
+                where: {
+                    id: roleId,
                 },
-                include:{
-                    UserRoleAssignment:{
-                        include:{
-                            serverProfile:{
-                                include:{
-                                    user:true
+                include: {
+                    UserRoleAssignment: {
+                        include: {
+                            serverProfile: {
+                                include: {
+                                    user: true
                                 }
                             }
                         }
                     }
                 }
             })
-            return {success:true,role}
+            return { success: true, role }
         }
-        return {success:false,message:"you do not have permission to view this role"}
+        return { success: false, message: "you do not have permission to view this role" }
 
     } catch (error) {
         console.error("Error in getServerRoleInfo:", error);
@@ -2381,62 +2396,62 @@ export const getServerRoleInfo=async(serverId,roleId)=>{
     }
 }
 
-export const getDefaultServerRoleInfo=async(serverId,defaultRoleId)=>{
+export const getDefaultServerRoleInfo = async (serverId, defaultRoleId) => {
     try {
-        if(!serverId || !defaultRoleId){
-            return {success:false,message:"serverId and roleId is required"}
+        if (!serverId || !defaultRoleId) {
+            return { success: false, message: "serverId and roleId is required" }
         }
-        const user=await isAuthUser();
-        if(!user){
-            return {success:false,message:"please login to continue"}
+        const user = await isAuthUser();
+        if (!user) {
+            return { success: false, message: "please login to continue" }
         }
 
-        const defaultServerRoleCheck= await prisma.defaultServerRole.findFirst({
-            where:{
-                id:defaultRoleId,
-                serverId:serverId
+        const defaultServerRoleCheck = await prisma.defaultServerRole.findFirst({
+            where: {
+                id: defaultRoleId,
+                serverId: serverId
             }
         })
 
-        if(!defaultServerRoleCheck){
-            return {success:false,message:"server role not found"}
+        if (!defaultServerRoleCheck) {
+            return { success: false, message: "server role not found" }
         }
 
         const server = await prisma.server.findFirst({
             where: {
-              id: serverId
+                id: serverId
             }
-          });          
-          if (!server) {
+        });
+        if (!server) {
             return { success: false, message: "server not found or role not found" };
-          }
-          
-        const userServerProfile=await prisma.serverProfile.findFirst({
-            where:{
-                serverId:serverId,
-                userId:user.id,
-                isDeleted:false
+        }
+
+        const userServerProfile = await prisma.serverProfile.findFirst({
+            where: {
+                serverId: serverId,
+                userId: user.id,
+                isDeleted: false
             },
-            include:{
-                roles:{
-                    include:{
-                        role:true
+            include: {
+                roles: {
+                    include: {
+                        role: true
                     },
-                    orderBy:{
-                        role:{
-                            order:"asc"
+                    orderBy: {
+                        role: {
+                            order: "asc"
                         }
                     }
                 }
             }
         })
-        if(!userServerProfile){
-            return {success:false,message:"user server profile not found"}
+        if (!userServerProfile) {
+            return { success: false, message: "user server profile not found" }
         }
-        if(user.id==server.ownerId || userServerProfile.roles.some((role)=>role.role.adminPermission || role.role.manageRoles)){
-            return {success:true,role:defaultServerRoleCheck}
+        if (user.id == server.ownerId || userServerProfile.roles.some((role) => role.role.adminPermission || role.role.manageRoles)) {
+            return { success: true, role: defaultServerRoleCheck }
         }
-        return {success:false,message:"you do not have permission to view this role"}
+        return { success: false, message: "you do not have permission to view this role" }
     } catch (error) {
         console.error("Error in getDefaultServerRoleInfo:", error);
         return { success: false, message: error.message || "Something went wrong" };
