@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { FaRegUserCircle } from "react-icons/fa";
+import { FaRegUserCircle, FaArrowLeft } from "react-icons/fa";
 
 const UserSettingSidebar = () => {
     const router = useRouter();
@@ -16,16 +16,6 @@ const UserSettingSidebar = () => {
 
     return (
         <div className="p-6">
-            {/* Back button */}
-            <div className="mb-3">
-                <button
-                    onClick={() => router.push("/home")}
-                    className="text-indigo-400 hover:underline text-sm"
-                >
-                    ← Back to Home
-                </button>
-            </div>
-
             <h2 className="font-bold uppercase text-indigo-500 mb-1">User Settings</h2>
             <div className="h-[1px] w-full bg-indigo-400 mb-1" />
 
