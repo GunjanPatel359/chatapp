@@ -8,7 +8,7 @@ import { Button } from './button';
 
 interface Profile {
   bannerUrl?: string;
-  avatarUrl?: string;
+  imageUrl?: string;
   username: string;
   displayName?: string;
   pronoun?: string;
