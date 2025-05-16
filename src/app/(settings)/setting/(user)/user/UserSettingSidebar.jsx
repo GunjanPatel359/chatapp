@@ -3,6 +3,8 @@
 import React from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { FaRegUserCircle, FaArrowLeft } from "react-icons/fa";
+import { SignOutButton } from '@clerk/nextjs'
+import { MdLogout } from "react-icons/md";
 
 const UserSettingSidebar = () => {
     const router = useRouter();
@@ -32,6 +34,13 @@ const UserSettingSidebar = () => {
                         </div>
                     ) : null
                 )}
+                <div className="h-[1px] w-full bg-indigo-400 mb-1" />
+                <div className="w-full h-[6px]"></div>
+                <SignOutButton>
+                    <button className="border border-red-500 text-red-500 w-full py-1 px-2 rounded hover:bg-red-500 hover:text-white transition-colors text-center">
+                       <MdLogout size={22} className="inline"/> Log out
+                    </button>
+                    </SignOutButton>
             </div>
         </div>
     );

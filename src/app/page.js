@@ -100,13 +100,13 @@ export default function Home() {
         // const res = await inviteServer(serverId, "cm6f7mwgx0000g4qg0mzevkvx");
         // console.log(res);
 
-        if (res) {
-          toast({
-            title: "Success",
-            description: "Logged",
-            variant: "success",
-          });
-        }
+        // if (res) {
+        //   toast({
+        //     title: "Success",
+        //     description: "Logged",
+        //     variant: "success",
+        //   });
+        // }
       } catch (error) {
         toast({
           title: "Error",
